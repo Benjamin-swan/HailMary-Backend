@@ -1,0 +1,52 @@
+// Prisma 스키마 — dohwa-backend
+// 자세한 정보: https://www.prisma.io/docs
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+/// 무료 사주 요청 기록.
+/// - 무료 플로에서 계산된 SajuData 원본 JSON을 캐시 (영업 비밀이므로 응답에는 안 나감)
+/// - 유료 리포트 단계에서 `id` 로 조회하여 재계산 회피
+/// - 개인정보 필드는 최소 저장. 결제 미연동 건은 보관 정책에 따라 주기적 삭제 고려 (별도 PR)
+model SajuRequest {
+  id         String   @id @db.VarChar(40) // "svr_" + ULID (총 30자 내외, 여유 40)
+  birth      DateTime @db.Date            // 생년월일 (시각 없음)
+  birthTime  String?  @db.VarChar(5)      // "HH:MM" 또는 null (unknown)
+  calendar   String   @db.VarChar(8)      // "solar" | "lunar"
+  gender     String   @db.VarChar(8)      // "male" | "female"
+  birthCity  String   @db.VarChar(32)     // "서울" 고정 (향후 확장 대비 컬럼 유지)
+  sajuData   Json                         // 전체 SajuData — 영업 비밀, 응답에 절대 포함 금지
+  createdAt  DateTime @default(now())
+
+  survey     SajuSurvey?
+
+  @@map("saju_request")
+}
+
+/// 사용자 설문 응답.
+/// - 백엔드는 step1/step2 선택지의 의미를 모름(불투명 문자열). 프론트가 surveyVersion 으로 해석.
+/// - sajuRequestId 1:1 매핑. 재제출은 upsert 로 덮어씀.
+/// - step3 자유 텍스트는 로그 출력 금지(Core Rule #8 확장).
+/// - paid 는 PR2 결제 webhook 에서 true 로 승격. 미결제 row 의 step3 는 별도 잡에서 주기적 익명화 예정.
+model SajuSurvey {
+  id             String   @id @db.VarChar(40)   // "svy_" + ULID
+  sajuRequestId  String   @unique @db.VarChar(40)
+  surveyVersion  String   @db.VarChar(16)       // "v1", "v2"...
+  step1          Json                            // string[] (슬러그 또는 라벨, 백엔드는 해석 안 함)
+  step2          Json                            // string[]
+  step3          String?  @db.Text               // 자유 텍스트. null 허용(건너뛰기)
+  paid           Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  sajuRequest    SajuRequest @relation(fields: [sajuRequestId], references: [id], onDelete: Cascade)
+
+  @@map("saju_survey")
+  @@index([paid, createdAt])
+}
