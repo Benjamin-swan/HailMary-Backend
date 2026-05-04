@@ -1,10 +1,9 @@
 """FortuneTeller 응답 dict + 분석 서비스 결과를 묶어 FreeResultResponse 로 변환.
 
-영업비밀 차단:
-  - yongSin.reasoning 제거
-  - dayMasterStrength.score / analysis 제거
-  - gyeokGuk 세부, jiJangGan 세부, branchRelations 세부, wolRyeong, specialMarks
-    는 응답에서 제거 (프론트에 노출되지 않도록)
+영업비밀 차단 + 프론트 expected shape으로 변환:
+  - saju_view_mapper.to_view 에서 pillars/wuxing/yongSin/dayMaster를 프론트 모양으로 산출
+  - gyeokGuk, jiJangGan, branchRelations, wolRyeong, specialMarks, dayMasterStrength.score
+    /analysis, yongSin.reasoning 등 영업비밀은 출력에 포함되지 않음 (mapper가 emit하지 않음)
 """
 
 from __future__ import annotations
@@ -19,37 +18,7 @@ from app.domains.user.application.response.free_result_response import (
     SpouseAvoidView,
     SpouseMatchView,
 )
-
-_SECRET_TOP_LEVEL_KEYS: tuple[str, ...] = (
-    "gyeokGuk",
-    "jiJangGan",
-    "branchRelations",
-    "wolRyeong",
-    "specialMarks",
-)
-
-
-def _strip_business_secrets(saju_data: dict[str, Any]) -> dict[str, Any]:
-    """원본 dict 를 변경하지 않고 영업비밀 필드를 제거한 사본을 반환."""
-    sanitized = dict(saju_data)
-
-    for key in _SECRET_TOP_LEVEL_KEYS:
-        sanitized.pop(key, None)
-
-    yong_sin = sanitized.get("yongSin")
-    if isinstance(yong_sin, dict):
-        clean_yong_sin = dict(yong_sin)
-        clean_yong_sin.pop("reasoning", None)
-        sanitized["yongSin"] = clean_yong_sin
-
-    day_master_strength = sanitized.get("dayMasterStrength")
-    if isinstance(day_master_strength, dict):
-        clean_dms = dict(day_master_strength)
-        clean_dms.pop("score", None)
-        clean_dms.pop("analysis", None)
-        sanitized["dayMasterStrength"] = clean_dms
-
-    return sanitized
+from app.domains.user.application.saju_view_mapper import to_view
 
 
 def build_free_result_response(
@@ -64,7 +33,7 @@ def build_free_result_response(
 ) -> FreeResultResponse:
     return FreeResultResponse(
         sessionToken=session_token,
-        sajuData=_strip_business_secrets(saju_data),
+        sajuData=to_view(saju_data),
         charm=CharmView.model_validate(charm),
         blocking=BlockingView.model_validate(blocking),
         spouseAvoid=SpouseAvoidView.model_validate(spouse_avoid),
