@@ -4,6 +4,7 @@ from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.domains.user.adapter.inbound.api.auth import get_user_repository
 from app.domains.user.adapter.inbound.api.user_router import (
     get_free_result_usecase,
     get_submit_survey_usecase,
@@ -33,14 +34,23 @@ from app.infrastructure.external.fortuneteller.client import FortuneTellerClient
 
 app = FastAPI(title="HailMary Backend", version="0.1.0")
 
+_settings = get_settings()
+
+
+def _allowed_origins() -> list[str]:
+    if _settings.app_env == "local":
+        return ["http://localhost:3000"]
+    # 프로덕션 도메인 — settings에 추가 후 확장 (Phase 2 H1)
+    return ["http://localhost:3000"]
+
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=_allowed_origins(),
+    allow_credentials=False,
+    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type"],
 )
-
-_settings = get_settings()
 
 
 # ── DB 세션 ──────────────────────────────────────────────────────────────────
@@ -54,6 +64,14 @@ async def _get_session() -> AsyncGenerator[AsyncSession, None]:
 
 def _get_ft_adapter() -> FortuneTellerAdapter:
     return FortuneTellerAdapter(FortuneTellerClient(base_url=_settings.fortuneteller_url))
+
+
+# ── 인증 의존성용 UserRepository 팩토리 ───────────────────────────────────────
+
+def _make_user_repository(
+    session: AsyncSession = Depends(_get_session),
+) -> UserRepository:
+    return UserRepository(session)
 
 
 # ── User Domain UseCase 팩토리 ────────────────────────────────────────────────
@@ -79,7 +97,6 @@ def _make_submit_survey_usecase(
     session: AsyncSession = Depends(_get_session),
 ) -> SubmitSurveyUseCase:
     return SubmitSurveyUseCase(
-        user_repo=UserRepository(session),
         survey_repo=SurveyRepository(session),
         saju_result_repo=SajuResultRepository(session),
     )
@@ -90,7 +107,6 @@ def _make_get_free_result_usecase(
 ) -> GetFreeResultUseCase:
     return GetFreeResultUseCase(
         saju_result_repo=SajuResultRepository(session),
-        user_repo=UserRepository(session),
         charm_service=CharmService(),
         blocking_service=BlockingService(),
         spouse_avoid_service=SpouseAvoidService(),
@@ -101,6 +117,7 @@ def _make_get_free_result_usecase(
 
 # ── 의존성 오버라이드 ──────────────────────────────────────────────────────────
 
+app.dependency_overrides[get_user_repository] = _make_user_repository
 app.dependency_overrides[get_submit_user_info_usecase] = _make_submit_user_info_usecase
 app.dependency_overrides[get_submit_survey_usecase] = _make_submit_survey_usecase
 app.dependency_overrides[get_free_result_usecase] = _make_get_free_result_usecase

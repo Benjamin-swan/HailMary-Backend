@@ -20,3 +20,8 @@ class UserRepository:
         result = await self._session.execute(select(UserORM).where(UserORM.id == user_id))
         orm = result.scalar_one_or_none()
         return UserMapper.to_entity(orm) if orm else None
+
+    async def find_by_session_token(self, token: str) -> User | None:
+        result = await self._session.execute(select(UserORM).where(UserORM.session_token == token))
+        orm = result.scalar_one_or_none()
+        return UserMapper.to_entity(orm) if orm else None

@@ -20,3 +20,4 @@ class UserORM(Base):
     birth_time: Mapped[time | None] = mapped_column(Time, nullable=True)
     birth_time_unknown: Mapped[bool] = mapped_column(Boolean, default=False)
     name: Mapped[str] = mapped_column(String(100), nullable=False)
+    session_token: Mapped[str] = mapped_column(String(64), nullable=False, unique=True, index=True)

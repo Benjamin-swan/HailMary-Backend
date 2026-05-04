@@ -1,3 +1,5 @@
+import secrets
+
 from app.domains.user.application.request.submit_user_info_request import SubmitUserInfoRequest
 from app.domains.user.application.response.free_result_response import FreeResultResponse
 from app.domains.user.application.saju_response_builder import build_free_result_response
@@ -45,7 +47,13 @@ class SubmitUserInfoUseCase:
             birth_time=request.birth_time(),
             birth_time_unknown=request.birth_time() is None,
         )
-        user = User(birth_info=birth_info, gender=request.gender, name=request.name)
+        session_token = secrets.token_urlsafe(32)
+        user = User(
+            birth_info=birth_info,
+            gender=request.gender,
+            name=request.name,
+            session_token=session_token,
+        )
         saved_user = await self._user_repo.save(user)
         assert saved_user.id is not None
 
@@ -65,7 +73,7 @@ class SubmitUserInfoUseCase:
         analysis_input.setdefault("gender", saved_user.gender.value)
 
         return build_free_result_response(
-            saju_request_id=saved_user.id,
+            session_token=saved_user.session_token,
             saju_data=ft_response,
             charm=self._charm.calculate(analysis_input),
             blocking=self._blocking.calculate(analysis_input, time_unknown),

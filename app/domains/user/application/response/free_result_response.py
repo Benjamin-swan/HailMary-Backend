@@ -87,7 +87,7 @@ class FreeResultResponse(BaseModel):
 
     model_config = _camel_config()
 
-    sajuRequestId: int
+    sessionToken: str
     sajuData: dict[str, Any]
     charm: CharmView
     blocking: BlockingView

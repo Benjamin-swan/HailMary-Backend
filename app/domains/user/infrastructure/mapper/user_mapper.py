@@ -14,6 +14,7 @@ class UserMapper:
             birth_time=entity.birth_info.birth_time,
             birth_time_unknown=entity.birth_info.birth_time_unknown,
             name=entity.name,
+            session_token=entity.session_token,
         )
 
     @staticmethod
@@ -29,4 +30,5 @@ class UserMapper:
             birth_info=birth_info,
             gender=orm.gender,
             name=orm.name,
+            session_token=orm.session_token,
         )

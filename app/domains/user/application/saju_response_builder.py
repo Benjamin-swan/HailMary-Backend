@@ -54,7 +54,7 @@ def _strip_business_secrets(saju_data: dict[str, Any]) -> dict[str, Any]:
 
 def build_free_result_response(
     *,
-    saju_request_id: int,
+    session_token: str,
     saju_data: dict[str, Any],
     charm: dict[str, Any],
     blocking: dict[str, Any],
@@ -63,7 +63,7 @@ def build_free_result_response(
     monthly_romance_flow: dict[str, Any],
 ) -> FreeResultResponse:
     return FreeResultResponse(
-        sajuRequestId=saju_request_id,
+        sessionToken=session_token,
         sajuData=_strip_business_secrets(saju_data),
         charm=CharmView.model_validate(charm),
         blocking=BlockingView.model_validate(blocking),

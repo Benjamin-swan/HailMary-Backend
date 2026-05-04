@@ -12,6 +12,7 @@ class User:
     birth_info: BirthInfo
     gender: Gender
     name: str
+    session_token: str
     id: int | None = None
     created_at: datetime | None = None
 
