@@ -6,9 +6,9 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     database_url: str
     fortuneteller_url: str
-    payapp_base_url: str
-    payapp_api_key: str
-    claude_api_key: str
+    payapp_base_url: str | None = None
+    payapp_api_key: str | None = None
+    claude_api_key: str | None = None
     claude_model: str = "claude-sonnet-4-6"
     app_env: str = "local"
     debug: bool = False
