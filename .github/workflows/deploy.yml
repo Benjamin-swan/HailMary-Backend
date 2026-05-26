@@ -1,9 +1,9 @@
 name: Deploy Backend to EC2
 
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
+# NOTE: 자동 push 트리거 제거 — prod 배포는 항상 수동(workflow_dispatch)으로만.
+# staging은 main push 시 자동 배포되어 검증 → 검증 끝나면 GitHub UI에서 prod 워크플로 수동 실행.
 
 concurrency:
   group: backend-deploy
@@ -45,6 +45,14 @@ jobs:
           MYSQL_USER=${{ secrets.MYSQL_USER }}
           FORTUNETELLER_URL=${{ secrets.FORTUNETELLER_URL }}
           JWT_SECRET=${{ secrets.JWT_SECRET }}
+          PAYAPP_USERID=${{ secrets.PAYAPP_USERID }}
+          PAYAPP_LINKKEY=${{ secrets.PAYAPP_LINKKEY }}
+          PAYAPP_LINKVAL=${{ secrets.PAYAPP_LINKVAL }}
+          PAYAPP_FEEDBACK_URL=${{ secrets.PAYAPP_FEEDBACK_URL }}
+          PAYAPP_RETURN_URL=${{ secrets.PAYAPP_RETURN_URL }}
+          FRONTEND_BASE_URL=${{ secrets.FRONTEND_BASE_URL }}
+          AMPLITUDE_API_KEY=${{ secrets.AMPLITUDE_API_KEY }}
+          AMPLITUDE_BASE_URL=${{ secrets.AMPLITUDE_BASE_URL }}
           EOF
 
       - name: Install dependencies (uv sync)

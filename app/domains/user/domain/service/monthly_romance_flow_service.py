@@ -194,15 +194,34 @@ class MonthlyRomanceFlowService:
 
     내부적으로 12개월을 산출한 뒤 무료 응답 형태(visibleMonths 2개 + lockedSlots
     메타)로 잘라 반환한다.
+
+    유료 P-8 (12개월 운명선)에서는 `compute_full_months()`로 12 raw months를 받아
+    직접 합성한다.
     """
 
     def __init__(self, clock: _Clock | None = None) -> None:
         self._clock = clock or _SystemClock()
 
-    def calculate(self, saju: dict[str, Any]) -> dict[str, Any]:
-        now = self._clock.now()
-        start_year = now.year
-        start_month = now.month
+    def compute_full_months(
+        self,
+        saju: dict[str, Any],
+        start_year: int | None = None,
+        start_month: int | None = None,
+    ) -> list[dict[str, Any]]:
+        """12 raw months 반환. P-8 합성용.
+
+        Args:
+            saju: 사주 raw dict
+            start_year, start_month: 시작 시점. 둘 다 None이면 now 사용.
+
+        Returns:
+            [{year, month, stem, branch, romanceScore, isPeak}, ...] × 12.
+            isPeak는 12개월 중 score 최대 1개에만 True.
+        """
+        if start_year is None or start_month is None:
+            now = self._clock.now()
+            start_year = now.year
+            start_month = now.month
 
         months: list[dict[str, Any]] = []
         for i in range(12):
@@ -211,12 +230,10 @@ class MonthlyRomanceFlowService:
             if m > 12:
                 m -= 12
                 y += 1
-
             year_stem = _get_year_stem(y)
             month_branch = MONTH_TO_BRANCH[m]
             month_stem = _get_month_stem(year_stem, month_branch)
             romance_score = _calc_month_score(saju, month_stem, month_branch)
-
             months.append({
                 "year": y, "month": m, "stem": month_stem,
                 "branch": month_branch, "romanceScore": romance_score,
@@ -228,6 +245,23 @@ class MonthlyRomanceFlowService:
             if months[i]["romanceScore"] > months[peak_index]["romanceScore"]:
                 peak_index = i
         months[peak_index]["isPeak"] = True
+        return months
+
+    def calculate(self, saju: dict[str, Any]) -> dict[str, Any]:
+        months = self.compute_full_months(saju)
+
+        # 무료 화면 PEAK은 locked 영역(months[2:])에서만 선정.
+        # 디자인 약속: visible 2개 = 무료 공개, 첫 locked = PEAK = 결제 유도 미끼.
+        # 진짜 12개월 최대값이 이번달/다음달에 떨어지면 결제 유도가 무력화되고
+        # UI 일관성도 깨짐(PEAK 위치가 1·2번째 행으로 흔들림). 따라서 visible은
+        # 항상 isPeak=False 강제, PEAK은 locked 영역의 score 최대값으로 위장.
+        # 진짜 PEAK은 P-8 (유료 12개월 운명선)에서 compute_full_months() 결과로 노출.
+        locked_months = months[2:]
+        locked_peak_local = max(
+            range(len(locked_months)),
+            key=lambda i: locked_months[i]["romanceScore"],
+        )
+        peak_index = 2 + locked_peak_local  # months 기준 절대 인덱스
 
         first = months[0]
         second = months[1]
@@ -236,16 +270,18 @@ class MonthlyRomanceFlowService:
             "monthLabel": f"{first['month']}월",
             "percentage": first["romanceScore"],
             "hearts": _pct_to_hearts(first["romanceScore"]),
-            "isPeak": first["isPeak"],
+            "isPeak": False,
         }
         v1 = {
             "monthLabel": f"{second['month']}월",
             "percentage": second["romanceScore"],
             "hearts": _pct_to_hearts(second["romanceScore"]),
-            "isPeak": second["isPeak"],
+            "isPeak": False,
         }
 
-        peak_offset = 0 if peak_index in (0, 1) else peak_index - 1
+        # locked 영역 내 인덱스를 visible 다음 오프셋으로 변환.
+        # peak_index=2 → 첫 locked → offset=1 (= 3번째 행).
+        peak_offset = peak_index - 1
 
         return {
             "visibleMonths": [v0, v1],

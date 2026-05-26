@@ -1,0 +1,878 @@
+"""유료 결과지 응답 DTO.
+
+12 페이지 (P-0 ~ P-11)별 명시 타입 정의. 프론트 `paidReport.ts`와 1:1 매칭.
+P-0~P-5만 백엔드 templates 작성 완료 → 명시 타입 채움.
+P-6~P-11은 templates 작성 후 점진 확장 (현재 응답에 없음 → 프론트 MOCK fallback).
+"""
+
+from datetime import datetime
+from typing import Literal
+
+from pydantic import BaseModel, ConfigDict
+
+# ═════════════════════════════════════════════════════════════════
+# Nested 공용 타입
+# ═════════════════════════════════════════════════════════════════
+
+OhangKey = Literal["mok", "hwa", "to", "geum", "su"]
+
+
+class SajuPillarsP0(BaseModel):
+    """P-0 사주 원국 8자 (천간/지지 한자)."""
+    model_config = ConfigDict(populate_by_name=True)
+
+    si_g: str
+    si_j: str
+    il_g: str
+    il_j: str
+    wl_g: str
+    wl_j: str
+    yr_g: str
+    yr_j: str
+
+
+class OhangStrength(BaseModel):
+    """P-0 오행 분포 (각 0~100)."""
+    model_config = ConfigDict(populate_by_name=True)
+
+    mok: int
+    hwa: int
+    to: int
+    geum: int
+    su: int
+
+
+class IlganCardP0(BaseModel):
+    """P-0 일간 카드 (value_object/ilgan_cards.py IlganCard와 매칭)."""
+    model_config = ConfigDict(populate_by_name=True)
+
+    name_kor: str
+    name_han: str
+    subtitle: str
+    essence: str
+    in_love: list[str]
+    caution: str
+
+
+# ═════════════════════════════════════════════════════════════════
+# P-0 序 시작에 앞서
+# ═════════════════════════════════════════════════════════════════
+
+
+class PaidChapterP0(BaseModel):
+    """P-0 — saju_pillars + ohang + ilgan_card + ai_intro."""
+    model_config = ConfigDict(populate_by_name=True)
+
+    saju_pillars: SajuPillarsP0
+    ohang_strength: OhangStrength
+    ohang_excess: OhangKey
+    ohang_lack: OhangKey
+    ilgan: str
+    ilgan_card: IlganCardP0
+    ai_intro: str
+
+
+# ═════════════════════════════════════════════════════════════════
+# P-0 도윤 패널 (별도 chapters 키 `p0_doyoon`)
+# ═════════════════════════════════════════════════════════════════
+
+
+class DoyoonIlganCardP0(BaseModel):
+    """도윤 P-0 0-3 일간 카드 — 3 섹션 (데이터 특성·연애 변수·충돌)."""
+    model_config = ConfigDict(populate_by_name=True)
+
+    name_kor: str
+    name_han: str
+    subtitle: str
+    data_traits: list[str]      # 3
+    love_variables: list[str]   # 3
+    main_conflict: str
+
+
+class PaidChapterP0Doyoon(BaseModel):
+    """P-0 도윤 패널 — saju_pillars + ohang + user_name(호명) + 도윤 ilgan_card + ai_intro."""
+    model_config = ConfigDict(populate_by_name=True)
+
+    saju_pillars: SajuPillarsP0          # 연우와 공유 스키마
+    ohang_strength: OhangStrength        # 연우와 공유
+    ohang_excess: OhangKey
+    ohang_lack: OhangKey
+    ilgan: str
+    user_name: str                       # 호명용
+    ilgan_card: DoyoonIlganCardP0
+    ai_intro: str                        # 4단락 합성
+
+
+# ═════════════════════════════════════════════════════════════════
+# P-1 도윤 패널 (별도 chapters 키 `p1_doyoon`)
+# ═════════════════════════════════════════════════════════════════
+
+
+class EmotionPointDoyoon(BaseModel):
+    """P-1 1-3 감정 곡선 4 데이터 포인트."""
+    model_config = ConfigDict(populate_by_name=True)
+
+    label: str       # "초반" / "중반" / "위기" / "회복"
+    pct: int         # 0~100
+    is_crisis: bool  # 위기 강조 표시
+
+
+class PaidChapterP1Doyoon(BaseModel):
+    """P-1 도윤 패널 — 1-1 연애 유형 + 1-2 트리거 flow + 1-3 감정 곡선.
+
+    HTML 도윤_final.html line 1974~2096 매핑.
+    """
+    model_config = ConfigDict(populate_by_name=True)
+
+    user_name: str
+    ilgan: str                           # 한자 표기 "임수(壬水)"
+    ilju: str                            # 한자 표기 "임술(壬戌)"
+    # 1-1
+    love_type: str
+    pct_value: int
+    distribution_pct: float              # 12.4
+    ai_opening: str                      # 4단락 350~400자
+    # 1-2
+    trigger_1: str
+    trigger_2: str
+    trigger_3: str
+    trigger_flow_pcts: tuple[int, int, int]   # (30, 62, 88) 고정
+    ai_trigger: str                      # 2단락 200~250자
+    # 1-3
+    emotion_curve: list[EmotionPointDoyoon]   # 4
+    crisis_multiplier: str               # "1.8배"
+    ai_emotion: str                      # 3단락 250~300자
+    bubble_quote: str                    # 1-3 끝 한도윤 멘트 (고정)
+
+
+# ═════════════════════════════════════════════════════════════════
+# P-1 一 너라는 사람 (1/2)
+# ═════════════════════════════════════════════════════════════════
+
+
+class CandleRow(BaseModel):
+    """P-1 감정 폭발 패턴 — 단계별 촛불 row."""
+    model_config = ConfigDict(populate_by_name=True)
+
+    label: str  # "초반" / "중반" / "후반"
+    flames: list[Literal["weak", "medium", "strong"]]
+    desc: str
+    is_peak: bool
+
+
+class PaidChapterP1(BaseModel):
+    """P-1 — 60갑자 + 트리거 3 + 감정 패턴."""
+    model_config = ConfigDict(populate_by_name=True)
+
+    ilgan: str  # "임수(壬水)"
+    ilju: str   # "임술(壬戌)"
+    love_type: str
+    trigger_1: str
+    trigger_2: str
+    trigger_3: str
+    trigger_desc_1: str
+    trigger_desc_2: str
+    trigger_desc_3: str
+    candle_rows: list[CandleRow]
+    emotion_bubble: str
+    ai_opening: str
+    ai_trigger: str
+    ai_emotion: str
+
+
+# ═════════════════════════════════════════════════════════════════
+# P-2 一 너라는 사람 (2/2)
+# ═════════════════════════════════════════════════════════════════
+
+
+class RecoveryTimelineRow(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
+    time: str   # "직후" / "3개월 후" / "6개월 후"
+    title: str
+    desc: str
+
+
+class RecoveryAccel(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
+    value: str
+    sub: str
+
+
+class PaidChapterP2(BaseModel):
+    """P-2 — 1-4 상처 + 1-5 회복."""
+    model_config = ConfigDict(populate_by_name=True)
+
+    # 1-4 상처받는 순간
+    scenario_1_when: str
+    scenario_1_desc: str
+    scenario_2_when: str
+    scenario_2_desc: str
+    ai_hurt: str
+    hurt_bubble: str
+    # 1-5 이별 후 회복
+    recovery_timeline: list[RecoveryTimelineRow]
+    recovery_accel: RecoveryAccel
+    ai_recovery: str
+
+
+class HurtTypeDoyoon(BaseModel):
+    """P-2 약점 카드 — 원본 .card-warn 매핑."""
+    model_config = ConfigDict(populate_by_name=True)
+
+    keyword: str
+    risk_pct: str       # "78%"
+    desc: str
+
+
+class RecoveryMeterDoyoon(BaseModel):
+    """P-2 회복 진행바 — 원본 .meter 매핑. 4단계 고정."""
+    model_config = ConfigDict(populate_by_name=True)
+
+    label: str          # "직후" / "1개월" / "3개월" / "6개월"
+    pct: int            # 0~100 회복률
+
+
+class PaidChapterP2Doyoon(BaseModel):
+    """P-2 도윤 패널 — 약점 트리거 + 회복 곡선. 원본 도윤_final.html 구조 정합."""
+    model_config = ConfigDict(populate_by_name=True)
+
+    user_name: str
+    # 1-4 약점 트리거
+    hurt_type_1: HurtTypeDoyoon
+    hurt_type_2: HurtTypeDoyoon
+    ai_hurt: str
+    # 1-5 회복 곡선
+    meters: list[RecoveryMeterDoyoon]     # 4
+    recovery_lag_multiplier: str          # "1.4배"
+    ai_recovery: str
+    sd_avatar_asset: str                  # "dy_03" 등
+    recovery_bubble: str                  # 한도윤 SD 옆 멘트
+
+
+# ═════════════════════════════════════════════════════════════════
+# P-3 二 연애를 막는 것 (1/2)
+# ═════════════════════════════════════════════════════════════════
+
+
+class ReverseCard(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
+    value: str
+    sub: str
+
+
+class PaidChapterP3(BaseModel):
+    """P-3 — 2-1 명줄 + 2-2 반복 + 2-2-1 역이용."""
+    model_config = ConfigDict(populate_by_name=True)
+
+    ohang_excess: str  # "수(水)" 한자 포함
+    blockade_card_sub: str
+    ai_blockade: str
+    pattern_body: str
+    ai_pattern: str
+    reverse_card_1: ReverseCard
+    reverse_card_2: ReverseCard
+
+
+# ═════════════════════════════════════════════════════════════════
+# P-3 도윤 패널 — 二 연애를 막는 것 (1/2)
+# ═════════════════════════════════════════════════════════════════
+
+
+class BlockadeOhangP3Doyoon(BaseModel):
+    """2-1 구조적 원인 — 큰 card-warn 1."""
+    model_config = ConfigDict(populate_by_name=True)
+
+    ohang_excess: str          # "수"
+    ohang_excess_hanja: str    # "水"
+    blockade_pct: str          # "상위 15%"
+    blockade_multiplier: str   # "1.7배"
+
+
+class PatternEntryDoyoon(BaseModel):
+    """2-2 반복 패턴 card-warn 1개."""
+    model_config = ConfigDict(populate_by_name=True)
+
+    keyword: str
+    pct: str
+    desc: str
+
+
+class ControlStrategyDoyoon(BaseModel):
+    """2-2-1 변수 통제 card-good 1개."""
+    model_config = ConfigDict(populate_by_name=True)
+
+    keyword: str
+    desc: str
+    effect_pct: str
+
+
+class PaidChapterP3Doyoon(BaseModel):
+    """P-3 도윤 패널 — 구조적 원인 + 반복 패턴 + 변수 통제."""
+    model_config = ConfigDict(populate_by_name=True)
+
+    user_name: str
+    # 2-1 구조적 원인
+    blockade: BlockadeOhangP3Doyoon
+    ai_blockade: str
+    blockade_bubble: str
+    # 2-2 반복 패턴
+    patterns: list[PatternEntryDoyoon]    # 3
+    ai_pattern: str
+    pattern_bubble: str
+    # 2-2-1 변수 통제
+    strategies: list[ControlStrategyDoyoon]   # 2
+    strategy_bubble: str
+    sd_avatar_asset: str                  # "dy_10" 고정
+
+
+# ═════════════════════════════════════════════════════════════════
+# P-4 二 연애를 막는 것 (2/2)
+# ═════════════════════════════════════════════════════════════════
+
+
+class InfoRow(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
+    key: str
+    val: str
+
+
+class IllusionSignal(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
+    value: str
+    sub: str
+
+
+class IllusionGoodCard(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
+    value: str
+    sub: str
+
+
+class PaidChapterP4(BaseModel):
+    """P-4 — 2-3 악연 + 2-4 착각 인연 식별."""
+    model_config = ConfigDict(populate_by_name=True)
+
+    # 2-3
+    akyon_slot_id: str  # "m-water-yang"
+    akyon_keyword_tags: list[str]
+    akyon_info_rows: list[InfoRow]
+    ai_akyon: str
+    # 2-4
+    illusion_stitle: str
+    illusion_signals: list[IllusionSignal]
+    illusion_good_card: IllusionGoodCard
+    ai_illusion: str
+
+
+# ═════════════════════════════════════════════════════════════════
+# P-4 도윤 패널 — 二 연애를 막는 것 (2/2)
+# ═════════════════════════════════════════════════════════════════
+
+
+class AkyonInfoRowDoyoon(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+    key: str
+    val: str
+
+
+class IllusionSignDoyoon(BaseModel):
+    """2-4 오인 신호 card-warn 1개."""
+    model_config = ConfigDict(populate_by_name=True)
+    keyword: str
+    pct: str
+    desc: str
+
+
+class PaidChapterP4Doyoon(BaseModel):
+    """P-4 도윤 패널 — 비호환 유형 + 착각 인연."""
+    model_config = ConfigDict(populate_by_name=True)
+
+    user_name: str
+    # 2-3 비호환
+    akyon_slot_id: str
+    keyword_tags: list[str]              # 5
+    info_rows: list[AkyonInfoRowDoyoon]  # 10
+    ai_akyon: str
+    sd_avatar_asset: str                  # "dy_08"
+    akyon_bubble: str
+    # 2-4 착각 인연
+    illusion_signs: list[IllusionSignDoyoon]   # 3
+    ai_illusion: str
+    illusion_bubble: str
+    # 결정 분기점 (모든 일간 공통)
+    decisive_gradient_label: str
+    real_growth_pct: str
+    fake_drop_pct: str
+    accuracy_multiplier: str
+
+
+# ═════════════════════════════════════════════════════════════════
+# P-5 三 매력 분석
+# ═════════════════════════════════════════════════════════════════
+
+
+class CharmSalView(BaseModel):
+    """P-5 매력살 카드 (보유한 것만)."""
+    model_config = ConfigDict(populate_by_name=True)
+
+    charm_key: str
+    name_kor: str
+    name_han: str
+    trait: str
+
+
+class StageCard(BaseModel):
+    """P-5 3-2 이성이 끌리는 메커니즘 4 단계 카드."""
+    model_config = ConfigDict(populate_by_name=True)
+
+    label: str
+    value: str
+    sub: str
+
+
+class PointCard(BaseModel):
+    """P-5 3-3 감각적 매력 포인트 3 카드 (눈빛/목소리/분위기)."""
+    model_config = ConfigDict(populate_by_name=True)
+
+    label: str
+    strength: Literal["weak", "medium", "strong"]
+    flame_label: str
+    sub: str
+
+
+# ═════════════════════════════════════════════════════════════════
+# P-5 도윤 패널 — 三 매력 분석
+# ═════════════════════════════════════════════════════════════════
+
+
+class RadarAxisDoyoon(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+    name: str
+    value: int
+
+
+class ConversionStepDoyoon(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+    label: str
+    pct: int
+
+
+class AppealMeterDoyoon(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+    name: str
+    value: int
+
+
+class PaidChapterP5Doyoon(BaseModel):
+    """P-5 도윤 패널 — 매력 지수 + 전환율 + 호감 유발."""
+    model_config = ConfigDict(populate_by_name=True)
+
+    user_name: str
+    # 3-1
+    charm_pct: str                              # "상위 N%"
+    radar: list[RadarAxisDoyoon]                # 6
+    strength_axis_1: str
+    strength_axis_2: str
+    strength_multiplier: str
+    ai_charm_index: str
+    sd_avatar_asset: str
+    charm_bubble: str
+    # 3-2
+    conversion_steps: list[ConversionStepDoyoon]  # 4
+    ai_conversion: str
+    # 3-3
+    appeal_meters: list[AppealMeterDoyoon]      # 4
+    ai_appeal: str
+
+
+class PaidChapterP5(BaseModel):
+    """P-5 — 매력 지수 + 매력살 카드 + 메커니즘 + 포인트."""
+    model_config = ConfigDict(populate_by_name=True)
+
+    charm_score: int
+    charm_percentile: int  # 상위 N% (낮을수록 상위)
+    charm_sals: list[CharmSalView]
+    stage_cards: list[StageCard]
+    point_cards: list[PointCard]
+    ai_charm: str
+    ai_mechanism: str
+    ai_sense: str
+
+
+# ═════════════════════════════════════════════════════════════════
+# P-6 四 붉은 실이 이어진 사람 (1/2)
+# ═════════════════════════════════════════════════════════════════
+
+
+class InnerCard(BaseModel):
+    """P-6 4-2 속마음 투시 카드 (실 상태 + 행동→심리 2)."""
+    model_config = ConfigDict(populate_by_name=True)
+
+    label: str
+    value: str
+    sub: str
+
+
+# ═════════════════════════════════════════════════════════════════
+# P-6 도윤 패널 — 四 운명의 짝 (1/2)
+# ═════════════════════════════════════════════════════════════════
+
+
+class InyonInfoRowDoyoon(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+    key: str
+    val: str
+
+
+class BehaviorCardDoyoon(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+    label: str
+    keyword: str
+    desc: str
+
+
+class PaidChapterP6Doyoon(BaseModel):
+    """P-6 도윤 패널 — 인연 프로파일 + 만남 + 행동 패턴."""
+    model_config = ConfigDict(populate_by_name=True)
+
+    user_name: str
+    # 4-1 인연 프로파일
+    match_slot_id: str
+    pct_value: str                              # "상위 N%"
+    keyword_tags: list[str]                     # 5
+    info_rows: list[InyonInfoRowDoyoon]         # 9
+    compatibility_pct: str                      # "82%"
+    ai_profile: str
+    ai_meeting: str
+    profile_bubble: str
+    # 4-2 행동 패턴
+    interest_score: int
+    expression_score: int
+    durability_score: int
+    behavior_cards: list[BehaviorCardDoyoon]    # 2
+    ai_pattern: str
+    sd_avatar_asset: str                        # "dy_07"
+
+
+class PaidChapterP6(BaseModel):
+    """P-6 — 4-1 인연 외형/매칭/첫 만남 + 4-2 속마음 투시."""
+    model_config = ConfigDict(populate_by_name=True)
+
+    # 4-1 붉은 실이 이어진 사람
+    match_slot_id: str  # "m-water-yang" 등 20 슬롯 (neutral은 caller가 None fallback)
+    keyword_tags: list[str]   # 일간별 5
+    info_rows: list[InfoRow]  # 일간별 8 (P-4 InfoRow 재사용)
+    ai_looks: str             # 외형 묘사 (도입 + 슬롯 외형)
+    ai_match: str             # 오행 매칭 + 일간 안정 짝
+    ai_first_meeting: str     # 첫 만남 시나리오 (3 단락)
+    bubble: str               # 강연우 멘트 (고정)
+    # 4-2 속마음 투시
+    inner_cards: list[InnerCard]  # 3 (실 상태 + 행동→심리 2개)
+    ai_inner: str                 # 일간별 3 단락
+
+
+# ═════════════════════════════════════════════════════════════════
+# P-7 四 결말 예측 시나리오 (2/2)
+# ═════════════════════════════════════════════════════════════════
+
+
+class EndingCard(BaseModel):
+    """P-7 4-3 결말 카드 (warn/good/amber 3종)."""
+    model_config = ConfigDict(populate_by_name=True)
+
+    label: str   # "지금 이대로" / "네가 먼저" / "상대가 먼저"
+    value: str   # 한 줄 헤드 (일간별)
+    sub: str     # 해설 (일간별)
+    tone: Literal["warn", "good", "amber"]
+
+
+# ═════════════════════════════════════════════════════════════════
+# P-7 도윤 패널 — 四 운명의 짝 · 결말 (2/2)
+# ═════════════════════════════════════════════════════════════════
+
+
+class ScenarioCardDoyoon(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+    prob_label: str
+    prob_tone: Literal["low", "high", "best"]
+    title: str
+    desc: str
+
+
+class PaidChapterP7Doyoon(BaseModel):
+    """P-7 도윤 패널 — 결말 시나리오."""
+    model_config = ConfigDict(populate_by_name=True)
+
+    user_name: str
+    scenarios: list[ScenarioCardDoyoon]   # 3
+    ai_ending: str
+    sd_avatar_asset: str                   # "dy_05"
+    ending_bubble: str
+
+
+class PaidChapterP7(BaseModel):
+    """P-7 — 4-3 결말 예측 시나리오 (세 갈래 + AI 권유)."""
+    model_config = ConfigDict(populate_by_name=True)
+
+    ending_card_1: EndingCard  # warn
+    ending_card_2: EndingCard  # good
+    ending_card_3: EndingCard  # amber
+    ai_ending: str             # 일간별 4 단락
+    notice: str                # 🔮 안내문 (고정)
+    bubble: str                # 강연우 멘트 (고정)
+
+
+# ═════════════════════════════════════════════════════════════════
+# P-8 五 12개월 운명선
+# ═════════════════════════════════════════════════════════════════
+
+
+class MonthRow(BaseModel):
+    """P-8 5-1 타임라인 월별 row."""
+    model_config = ConfigDict(populate_by_name=True)
+
+    label: str   # "5월 (이번달)" / "6월" / "'27. 1월"
+    hearts: int  # 1~5
+    knot: Literal["loose", "tight", "glowing"]
+    state: str   # 시작/진입/상승/피크/심화/안정/정체/재상승/2차 피크/신뢰/충전/1년차 마무리
+    desc: str
+    is_peak: bool = False
+
+
+# ═════════════════════════════════════════════════════════════════
+# P-8 도윤 패널 — 五 인연이 오는 시간
+# ═════════════════════════════════════════════════════════════════
+
+
+class MonthRowDoyoon(BaseModel):
+    """도윤 P-8 월 1개. 연우는 knot 사용, 도윤은 pct (% 표시)."""
+    model_config = ConfigDict(populate_by_name=True)
+    label: str
+    hearts: int           # 1~5
+    pct: int              # romanceScore
+    state: str
+    desc: str
+    is_peak: bool = False
+
+
+class PaidChapterP8Doyoon(BaseModel):
+    """P-8 도윤 패널 — 12개월 접촉 확률 타임라인."""
+    model_config = ConfigDict(populate_by_name=True)
+
+    user_name: str
+    months: list[MonthRowDoyoon]   # 12
+    ai_intro: str
+    sd_avatar_asset: str           # "dy_04"
+    bubble: str
+
+
+class PaidChapterP8(BaseModel):
+    """P-8 — 5-1 12개월 운명선."""
+    model_config = ConfigDict(populate_by_name=True)
+
+    months: list[MonthRow]   # 12
+    ai_intro: str            # 3 단락 (도입 + 피크 월 2개 + 일간 흐름)
+    bubble: str              # 강연우 멘트 (고정)
+
+
+# ═════════════════════════════════════════════════════════════════
+# P-9 六 실천 가이드 (6-1 오행 보완만 backend 합성, 6-2는 frontend MOCK)
+# ═════════════════════════════════════════════════════════════════
+
+
+class OhangMethodCard(BaseModel):
+    """P-9 6-1 보완 방법 카드 (색·공간·행동)."""
+    model_config = ConfigDict(populate_by_name=True)
+
+    label: str
+    value: str
+    sub: str
+
+
+class CharmPracticeCard(BaseModel):
+    """P-9 6-2 매력살 실천 카드 (감각·태도·언어)."""
+    model_config = ConfigDict(populate_by_name=True)
+
+    label: str
+    value: str
+    sub: str
+
+
+CharmStageLiteral = Literal["微", "弱", "中", "強", "極"]
+
+
+# ═════════════════════════════════════════════════════════════════
+# P-9 도윤 패널 — 六 연애 변수 최적화 가이드
+# ═════════════════════════════════════════════════════════════════
+
+
+class OhangMethodCardDoyoon(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+    label: str
+    keyword: str
+    desc: str
+
+
+class RiskCardDoyoon(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+    label: str
+    tone: Literal["warn", "amber"]
+    keyword: str
+    desc: str
+
+
+class PaidChapterP9Doyoon(BaseModel):
+    """P-9 도윤 패널 — 오행 보완 + 리스크 제거 + 매력 최적화."""
+    model_config = ConfigDict(populate_by_name=True)
+
+    user_name: str
+    # 6-1
+    ohang_lack: str                                 # "수(水)" 한자 포함
+    ohang_methods: list[OhangMethodCardDoyoon]      # 3
+    ohang_boost_pct: str                            # "23%"
+    ai_ohang: str
+    # 6-2
+    risk_cards: list[RiskCardDoyoon]                # 3
+    ai_risk: str
+    # 6-3
+    current_score: int
+    target_score: int
+    ai_optimize: str
+    sd_avatar_asset: str                            # "dy_06"
+    optimize_bubble: str
+
+
+class PaidChapterP9(BaseModel):
+    """P-9 — 6-1 오행 보완 + 6-2 매력살 활용."""
+    model_config = ConfigDict(populate_by_name=True)
+
+    # 6-1
+    ohang_lack: str   # "토(土)" 한자 포함
+    ohang_method_cards: list[OhangMethodCard]  # 3 (색/공간/행동)
+    ai_ohang: str     # 3 단락 (오행 헤더 + 방법 본문 + 일간 결)
+    # 6-2
+    primary_charm_key: str            # "do_hwa_sal" / "am_rok" 등
+    primary_charm_label: str          # "도화살(桃花煞)"
+    charm_count: int                  # 보유 매력살 수 (0~6)
+    charm_current: CharmStageLiteral  # 5단계 한자
+    charm_target: CharmStageLiteral
+    charm_practice_cards: list[CharmPracticeCard]  # 3 (감각/태도/언어)
+    charm_practice_body: str          # 카드 3 요약 + 단계 변화 한 줄
+    ai_charm: str                     # 3 단락 (보유 인식 + 헤더 / 본문 / 일간 결)
+
+
+class PaidChapterP10(BaseModel):
+    """P-10 (CH-7) 편지 — 박스 1·2·3 통합."""
+    model_config = ConfigDict(populate_by_name=True)
+
+    ilju_with_hanja: str              # "병인(丙寅)"
+    box1_body: str                    # 박스 1 (도입 멘트 + step1 부분집합 본문)
+    box2_body: str                    # 박스 2 (4단락 합성)
+    quote_text: str                   # step3 raw 또는 "..."
+    quote_label: str                  # "— 네가 적은 너의 고민" / "— 적지 못한 너의 고민"
+    box3_body: str                    # AI 답장 또는 폴백
+    emphasis: str                     # 박스 3 강조구 (일간 10셀)
+    tail: str                         # 박스 3 꼬리 (고정)
+    uses_ai: bool                     # AI 호출 여부 (감사 로그용)
+    # 박스 1/2 사용자 선택 라벨 (도윤 패널에서 chip으로 표시. 연우는 None)
+    step1_labels: list[str] | None = None
+    step2_labels: list[str] | None = None
+
+
+# ═════════════════════════════════════════════════════════════════
+# P-11 도윤 패널 — 終 에필로그 (고정 + user_name 치환)
+# ═════════════════════════════════════════════════════════════════
+
+
+class PaidChapterP11Doyoon(BaseModel):
+    """P-11 에필로그 — 클로징 bubble (user_name 치환된 텍스트).
+
+    원본 도윤_final.html data-page-idx=11 고정 멘트.
+    프론트는 closing_bubble을 그대로 렌더 (자체 마스킹 X).
+    """
+    model_config = ConfigDict(populate_by_name=True)
+
+    closing_bubble: str             # 한도윤 마지막 4줄 (user_name 치환 완료)
+    seal_text: str                  # "緣 · 당신의 인연은 여기에"
+
+
+# ═════════════════════════════════════════════════════════════════
+# Chapters wrapper + Top-level response
+# ═════════════════════════════════════════════════════════════════
+
+
+class PaidChaptersResponse(BaseModel):
+    """12 페이지 결과. 작성 완료된 P-0~P-5만 명시.
+
+    P-6~P-11은 templates 작성 후 점진 확장. 현재는 응답에 없음 (None).
+    프론트는 chapter가 undefined일 때 MOCK fallback으로 렌더.
+    """
+    model_config = ConfigDict(populate_by_name=True)
+
+    p0: PaidChapterP0 | None = None
+    p0_doyoon: PaidChapterP0Doyoon | None = None
+    p1: PaidChapterP1 | None = None
+    p1_doyoon: PaidChapterP1Doyoon | None = None
+    p2: PaidChapterP2 | None = None
+    p2_doyoon: PaidChapterP2Doyoon | None = None
+    p3: PaidChapterP3 | None = None
+    p3_doyoon: PaidChapterP3Doyoon | None = None
+    p4: PaidChapterP4 | None = None
+    p4_doyoon: PaidChapterP4Doyoon | None = None
+    p5_doyoon: PaidChapterP5Doyoon | None = None
+    p5: PaidChapterP5 | None = None
+    p6: PaidChapterP6 | None = None
+    p6_doyoon: PaidChapterP6Doyoon | None = None
+    p7: PaidChapterP7 | None = None
+    p7_doyoon: PaidChapterP7Doyoon | None = None
+    p8_doyoon: PaidChapterP8Doyoon | None = None
+    p9_doyoon: PaidChapterP9Doyoon | None = None
+    p8: PaidChapterP8 | None = None
+    p9: PaidChapterP9 | None = None
+    p10: PaidChapterP10 | None = None
+    p11_doyoon: PaidChapterP11Doyoon | None = None
+    # P-11 후속
+
+
+class PaidReportStatusResponse(BaseModel):
+    """`GET /api/saju/paid/{order_id}/status` 응답."""
+    model_config = ConfigDict(populate_by_name=True)
+
+    status: str  # "pending" | "ready" | "expired"
+
+
+class PaidUserPropertiesResponse(BaseModel):
+    """Amplitude `identify()` 전용 PII 가공 user property.
+
+    원본 이름·이메일·생년월일·태어난 시각은 절대 포함하지 않는다.
+    프론트 `usePaidUserPropertiesSync`가 p0 진입 시 1회 set.
+    """
+    model_config = ConfigDict(populate_by_name=True)
+
+    user_id: str
+    user_nickname: str | None = None
+    user_name_initial: str
+    user_email_domain: str
+    user_email_hash: str
+    birth_year: int
+    age_group: str
+    birth_branch: str | None = None
+    gender: str
+
+
+class PaidReportResponse(BaseModel):
+    """`GET /api/saju/paid/{order_id}` 응답 — 12 페이지 결과."""
+    model_config = ConfigDict(populate_by_name=True)
+
+    order_id: str
+    status: str
+    chapters: PaidChaptersResponse  # ← dict[str, str]에서 명시 타입으로 변경
+    expires_at: datetime
+    character: Literal["yeonwoo", "doyoon"]  # Payment.character.value
+    user: PaidUserPropertiesResponse | None = None
