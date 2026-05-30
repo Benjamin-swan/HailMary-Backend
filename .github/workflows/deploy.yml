@@ -53,6 +53,8 @@ jobs:
           FRONTEND_BASE_URL=${{ secrets.FRONTEND_BASE_URL }}
           AMPLITUDE_API_KEY=${{ secrets.AMPLITUDE_API_KEY }}
           AMPLITUDE_BASE_URL=${{ secrets.AMPLITUDE_BASE_URL }}
+          REDIS_URL=${{ secrets.REDIS_URL }}
+          CACHE_ENABLED=true
           EOF
 
       - name: Install dependencies (uv sync)
