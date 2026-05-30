@@ -181,6 +181,7 @@ from app.domains.user.domain.service.saju_data_extractor import SajuDataExtracto
 from app.domains.user.domain.service.spouse_avoid_service import SpouseAvoidService
 from app.domains.user.domain.service.spouse_match_service import SpouseMatchService
 from app.domains.user.infrastructure.fortuneteller_adapter import FortuneTellerAdapter
+from app.infrastructure.cache.redis_client import RedisCache
 from app.infrastructure.config.settings import get_settings
 from app.infrastructure.database.session import AsyncSessionLocal
 from app.infrastructure.external.amplitude.client import AmplitudeClient
@@ -221,6 +222,17 @@ async def _get_session() -> AsyncGenerator[AsyncSession, None]:
 
 def _get_ft_adapter() -> FortuneTellerAdapter:
     return FortuneTellerAdapter(FortuneTellerClient(base_url=_settings.fortuneteller_url))
+
+
+# ── Redis 캐시 (HM-BE-67, 깨비 일일사주) ─────────────────────────────────────
+# 싱글톤 인스턴스. cache_enabled=False면 None 반환 → UseCase가 캐시 우회.
+_redis_cache_instance: RedisCache | None = (
+    RedisCache(_settings.redis_url) if _settings.cache_enabled else None
+)
+
+
+def _get_redis_cache() -> RedisCache | None:
+    return _redis_cache_instance
 
 
 # ── 인증 의존성용 UserRepository 팩토리 ───────────────────────────────────────
@@ -281,6 +293,9 @@ def _make_get_daily_fortune_usecase(
     return GetDailyFortuneUseCase(
         fortuneteller=ft,
         template_repo=DailyTemplateRepository(session),
+        cache=_get_redis_cache(),
+        pillars_ttl_seconds=_settings.kkebi_pillars_ttl_seconds,
+        result_ttl_seconds=_settings.kkebi_result_ttl_seconds,
     )
 
 

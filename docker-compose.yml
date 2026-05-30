@@ -34,6 +34,38 @@ services:
       - mysql_test_data:/var/lib/mysql
     command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --default-authentication-plugin=mysql_native_password
 
+  # 깨비 일일사주 캐시 (HM-BE-67). AOF persistence + maxmemory 256MB + allkeys-lru.
+  # 127.0.0.1 바인딩 (EC2 보안그룹 변경 불필요). 다중 인스턴스 확장 시 ElastiCache로 마이그.
+  redis:
+    image: redis:7-alpine
+    container_name: hailmary-redis
+    command: >
+      redis-server
+      --appendonly yes
+      --appendfsync everysec
+      --maxmemory 256mb
+      --maxmemory-policy allkeys-lru
+    ports:
+      - "127.0.0.1:6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+
+  # 테스트 전용 Redis. 영속화 끔(격리). fakeredis 대신 실제 redis로 통합 테스트 시.
+  # 포트 6381 (운영 6379, mysql-test 3308과 충돌 회피).
+  redis-test:
+    image: redis:7-alpine
+    container_name: hailmary-redis-test
+    command: >
+      redis-server
+      --save ""
+      --appendonly no
+      --maxmemory 64mb
+      --maxmemory-policy allkeys-lru
+    ports:
+      - "127.0.0.1:6381:6379"
+
 volumes:
   mysql_data:
   mysql_test_data:
+  redis_data:
