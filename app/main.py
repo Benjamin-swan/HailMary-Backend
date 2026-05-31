@@ -104,6 +104,18 @@ from app.domains.ai.application.usecase.get_paid_report_usecase import (
 from app.domains.ai.application.usecase.send_result_link_email_usecase import (
     SendResultLinkEmailUseCase,
 )
+from app.domains.kkebi.adapter.inbound.api.kkebi_router import (
+    get_daily_fortune_usecase,
+)
+from app.domains.kkebi.adapter.inbound.api.kkebi_router import (
+    router as kkebi_router,
+)
+from app.domains.kkebi.adapter.outbound.persistence.daily_template_repository import (
+    DailyTemplateRepository,
+)
+from app.domains.kkebi.application.usecase.get_daily_fortune_usecase import (
+    GetDailyFortuneUseCase,
+)
 from app.domains.payment.adapter.inbound.api.payment_router import (
     dev_router as payment_dev_router,
 )
@@ -169,6 +181,7 @@ from app.domains.user.domain.service.saju_data_extractor import SajuDataExtracto
 from app.domains.user.domain.service.spouse_avoid_service import SpouseAvoidService
 from app.domains.user.domain.service.spouse_match_service import SpouseMatchService
 from app.domains.user.infrastructure.fortuneteller_adapter import FortuneTellerAdapter
+from app.infrastructure.cache.redis_client import RedisCache
 from app.infrastructure.config.settings import get_settings
 from app.infrastructure.database.session import AsyncSessionLocal
 from app.infrastructure.external.amplitude.client import AmplitudeClient
@@ -209,6 +222,17 @@ async def _get_session() -> AsyncGenerator[AsyncSession, None]:
 
 def _get_ft_adapter() -> FortuneTellerAdapter:
     return FortuneTellerAdapter(FortuneTellerClient(base_url=_settings.fortuneteller_url))
+
+
+# ── Redis 캐시 (HM-BE-67, 깨비 일일사주) ─────────────────────────────────────
+# 싱글톤 인스턴스. cache_enabled=False면 None 반환 → UseCase가 캐시 우회.
+_redis_cache_instance: RedisCache | None = (
+    RedisCache(_settings.redis_url) if _settings.cache_enabled else None
+)
+
+
+def _get_redis_cache() -> RedisCache | None:
+    return _redis_cache_instance
 
 
 # ── 인증 의존성용 UserRepository 팩토리 ───────────────────────────────────────
@@ -257,6 +281,21 @@ def _make_get_free_result_usecase(
         spouse_avoid_service=SpouseAvoidService(),
         spouse_match_service=SpouseMatchService(),
         monthly_romance_flow_service=MonthlyRomanceFlowService(),
+    )
+
+
+# ── 깨비 일일사주(kkebi) UseCase 팩토리 ───────────────────────────────────────
+
+def _make_get_daily_fortune_usecase(
+    session: AsyncSession = Depends(_get_session),
+    ft: FortuneTellerAdapter = Depends(_get_ft_adapter),
+) -> GetDailyFortuneUseCase:
+    return GetDailyFortuneUseCase(
+        fortuneteller=ft,
+        template_repo=DailyTemplateRepository(session),
+        cache=_get_redis_cache(),
+        pillars_ttl_seconds=_settings.kkebi_pillars_ttl_seconds,
+        result_ttl_seconds=_settings.kkebi_result_ttl_seconds,
     )
 
 
@@ -539,6 +578,7 @@ app.dependency_overrides[get_user_repository] = _make_user_repository
 app.dependency_overrides[get_submit_user_info_usecase] = _make_submit_user_info_usecase
 app.dependency_overrides[get_submit_survey_usecase] = _make_submit_survey_usecase
 app.dependency_overrides[get_free_result_usecase] = _make_get_free_result_usecase
+app.dependency_overrides[get_daily_fortune_usecase] = _make_get_daily_fortune_usecase
 app.dependency_overrides[get_request_payment_usecase] = _make_request_payment_usecase
 app.dependency_overrides[get_handle_feedback_usecase] = _make_handle_feedback_usecase
 app.dependency_overrides[get_payment_status_usecase] = _make_payment_status_usecase
@@ -550,6 +590,7 @@ app.dependency_overrides[get_paid_report_usecase] = _make_get_paid_report_usecas
 app.include_router(user_router)
 app.include_router(payment_router)
 app.include_router(paid_report_router)
+app.include_router(kkebi_router)
 app.include_router(paid_report_share_router)
 
 # ⚠️ 결제 패스 endpoint — prod 환경에서는 등록 안 함. staging/local/test 에서만 노출.

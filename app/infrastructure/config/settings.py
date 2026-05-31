@@ -44,6 +44,11 @@ class Settings(BaseSettings):
     qa_username: str | None = None
     qa_password: str | None = None
     qa_access_token: str | None = None
+    # Redis 캐시 (HM-BE-67, 깨비 일일사주). cache_enabled=False면 캐시 미사용.
+    redis_url: str = "redis://127.0.0.1:6379/0"
+    cache_enabled: bool = True
+    kkebi_pillars_ttl_seconds: int = 60 * 60 * 24 * 30  # 30일 (일주는 평생 불변, 안전상 만료)
+    kkebi_result_ttl_seconds: int = 60 * 60 * 25         # 25시간 (KST 자정 + 1h 여유)
 
     model_config = SettingsConfigDict(
         env_file=_ENV_FILE, env_file_encoding="utf-8", extra="ignore"

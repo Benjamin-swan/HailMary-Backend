@@ -62,6 +62,8 @@ jobs:
           QA_USERNAME=${{ secrets.QA_USERNAME }}
           QA_PASSWORD=${{ secrets.QA_PASSWORD }}
           QA_ACCESS_TOKEN=${{ secrets.QA_ACCESS_TOKEN }}
+          REDIS_URL=${{ secrets.STAGING_REDIS_URL }}
+          CACHE_ENABLED=true
           EOF
 
       - name: Install dependencies (uv sync)
@@ -75,6 +77,16 @@ jobs:
           . "$APP_DIR/.env.staging"
           set +a
           $UV_BIN run alembic upgrade head
+
+      # HM-BE-67 후속: alembic 006이 빈 테이블만 만들어 70 row 시드 누락.
+      # cache JSON 70개를 daily_templates 테이블에 upsert. idempotent라 매 배포 안전.
+      - name: Seed 70 daily templates (idempotent upsert)
+        working-directory: ${{ env.APP_DIR }}
+        run: |
+          set -a
+          . "$APP_DIR/.env.staging"
+          set +a
+          $UV_BIN run python -X utf8 -m scripts.kkebi_gen.load_to_db
 
       - name: Restart staging backend service
         run: sudo /usr/bin/systemctl restart hailmary-backend-staging.service
