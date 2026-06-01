@@ -64,8 +64,10 @@ def test_each_ohang_excess_text_contains_hanja(ohang: str) -> None:
 @pytest.mark.parametrize("ohang", sorted(EXPECTED_OHANG))
 def test_each_ohang_lack_text_mentions_emptiness(ohang: str) -> None:
     text = OHANG_LACK_PARA_4[ohang]
+    # 부족 오행 문단은 "비어 있어서"로 결핍을 명시한다(전 오행 공통 SSOT).
+    # 마무리 문구는 2차 QA에서 오행별로 다양화됨(금·수는 "흘러내리는" 외 표현 사용)
+    # → 결핍 서술 핵심만 검증.
     assert "비어 있어서" in text
-    assert "흘러내리는" in text
 
 
 # 합성 함수 검증
