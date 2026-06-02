@@ -5,6 +5,7 @@
 
 import { parseISO, format, addMinutes, isValid, differenceInYears } from 'date-fns';
 import { toDate, fromZonedTime } from 'date-fns-tz';
+import { getLongitudeOffsetMinutesForSaju } from '../data/longitude_table.js';
 
 /**
  * 한국 시간대
@@ -30,19 +31,21 @@ export function parseBirthDateTimeKorea(birthDate: string, birthTime: string): D
 export const TRUE_SOLAR_TIME_ADJUSTMENT = -30;
 
 /**
- * 출생 벽시계 시각(썸머타임 반영) — 한국 표준시 기준 (2026-05-14 결정).
+ * 출생 벽시계 시각(썸머타임 반영)에 동경 135° 대비 출생지 경도 보정을 더한 시각(UTC).
  *
- * 진태양시 경도 보정(동경 135° 대비 -32분 등)은 학문적 정통이지만 한국 주류 만세력
- * 사이트(천을궁, 만세력닷컴 등) 다수가 표준시 기준이라 사용자 직관과 어긋남.
- * 특히 자정 직후 출생자가 전날 일주로 떨어지는 케이스가 비즈니스 클레임으로 직결.
- * 대중성·시장 표준 우선해서 경도 보정 폐기. birthCity 인자는 호환성 위해 유지.
+ * **진태양시(眞太陽時) 기준 — 2026-06-02 결정으로 복원.** 사주 학문 정통 + 포스텔러·점신
+ * 등 메이저 만세력과 정합. 2026-05-14 표준시 전환(HM-BE-28, commit bbf13d0)을 되돌린 것.
+ * birthCity 미입력 시 서울(약 −32분) 기준. (백엔드는 현재 birthCity 미전송 → 전원 서울 기준.)
+ * 영향: 자정 직후(00:00~00:59) 출생자 일주가 전날로 떨어질 수 있음(원 학파 거동, 의도됨).
  */
 export function getAdjustedBirthInstantForSaju(
   solarDate: string,
   birthTime: string,
-  _birthCity?: string
+  birthCity?: string
 ): Date {
-  return parseBirthDateTimeKorea(solarDate, birthTime);
+  const wall = parseBirthDateTimeKorea(solarDate, birthTime);
+  const offsetMin = getLongitudeOffsetMinutesForSaju(birthCity);
+  return addMinutes(wall, offsetMin);
 }
 
 /**
