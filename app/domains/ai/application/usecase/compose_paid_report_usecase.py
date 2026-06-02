@@ -30,6 +30,7 @@ from app.domains.ai.application.response.paid_report_response import (
     InfoRow,
     InnerCard,
     MonthRow,
+    OhangJudgment,
     OhangKey,
     OhangMethodCard,
     OhangStrength,
@@ -195,6 +196,11 @@ def _ilju_with_hanja(ilju: str) -> str:
 def _ohang_code(hangul: str) -> OhangKey:
     """오행 한글 한 글자 → 응답 코드. 비정상 입력은 'su' 기본값."""
     return _OHANG_HANGUL_TO_CODE.get(hangul, "su")
+
+
+def _ohang_judgments_code(judgments: dict[str, str]) -> dict[OhangKey, OhangJudgment]:
+    """한글키 강약 판정({"목":"발달",...}) → OhangKey 키 판정. 막대 라벨 응답용."""
+    return {_ohang_code(k): cast(OhangJudgment, v) for k, v in judgments.items()}
 
 
 class ComposePaidReportUseCase:
@@ -387,6 +393,7 @@ class ComposePaidReportUseCase:
             ohang_strength=strength,
             ohang_excess=_ohang_code(ohang_excess),
             ohang_lack=_ohang_code(ohang_lack),
+            ohang_judgments=_ohang_judgments_code(vars_["OHANG_JUDGMENTS"]),
             ilgan=ilgan,
             ilgan_card=ilgan_card,
             ai_intro=compose_p0_intro(
@@ -437,6 +444,7 @@ class ComposePaidReportUseCase:
             ohang_strength=strength,
             ohang_excess=_ohang_code(ohang_excess),
             ohang_lack=_ohang_code(ohang_lack),
+            ohang_judgments=_ohang_judgments_code(vars_["OHANG_JUDGMENTS"]),
             ilgan=ilgan,
             user_name=user_name,
             ilgan_card=ilgan_card,

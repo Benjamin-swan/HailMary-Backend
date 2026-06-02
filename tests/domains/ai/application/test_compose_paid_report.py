@@ -51,6 +51,10 @@ def test_compose_returns_p0_to_p9() -> None:
     )
     assert res.p0.ilgan_card.name_han == "壬水"
     assert res.p0.ai_intro  # non-empty 5문단
+    # 0-2 오행의 흐름: 막대 라벨은 per-element 판정(무료와 동일 임계값).
+    assert res.p0.ohang_judgments["su"] == "과다"   # 62.5% → 과다
+    assert res.p0.ohang_judgments["hwa"] == "결핍"  # 0% → 결핍
+    assert set(res.p0.ohang_judgments) == {"mok", "hwa", "to", "geum", "su"}
 
     # P-1
     assert res.p1 is not None

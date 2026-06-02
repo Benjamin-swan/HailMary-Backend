@@ -16,6 +16,9 @@ from pydantic import BaseModel, ConfigDict
 
 OhangKey = Literal["mok", "hwa", "to", "geum", "su"]
 
+# P-0 "0-2 오행의 흐름" 막대 라벨. 무료 결과(_build_wuxing)와 동일 4단계.
+OhangJudgment = Literal["결핍", "적정", "발달", "과다"]
+
 
 class SajuPillarsP0(BaseModel):
     """P-0 사주 원국 8자 (천간/지지 한자)."""
@@ -67,6 +70,7 @@ class PaidChapterP0(BaseModel):
     ohang_strength: OhangStrength
     ohang_excess: OhangKey
     ohang_lack: OhangKey
+    ohang_judgments: dict[OhangKey, OhangJudgment]  # 오행별 강약(막대 라벨용)
     ilgan: str
     ilgan_card: IlganCardP0
     ai_intro: str
@@ -97,6 +101,7 @@ class PaidChapterP0Doyoon(BaseModel):
     ohang_strength: OhangStrength        # 연우와 공유
     ohang_excess: OhangKey
     ohang_lack: OhangKey
+    ohang_judgments: dict[OhangKey, OhangJudgment]  # 연우와 공유 (막대 라벨용)
     ilgan: str
     user_name: str                       # 호명용
     ilgan_card: DoyoonIlganCardP0
