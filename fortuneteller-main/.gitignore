@@ -2,6 +2,9 @@
 node_modules/
 yarn.lock
 pnpm-lock.yaml
+# 루트 .gitignore가 package-lock.json을 무시하지만, FortuneTeller CI(deploy-fortuneteller)는
+# `npm ci`로 락파일이 반드시 추적돼야 동작한다 → 이 디렉터리에 한해 재포함.
+!package-lock.json
 
 # 빌드 출력
 dist/
