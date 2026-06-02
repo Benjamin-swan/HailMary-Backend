@@ -12,6 +12,7 @@ import {
   getCurrentSolarTermPrecise,
   getSolarTermsForYear,
 } from '../src/data/solar_terms.js';
+import { calculateSaju } from '../src/lib/saju.js';
 
 describe('절기 데이터 커버리지 검증', () => {
   test('getSolarTermsForYear가 1900-2200 전체 범위를 커버해야 함', () => {
@@ -162,8 +163,6 @@ describe('연주 입춘 경계 검증', () => {
  * 연주 테스트용 헬퍼 (calculateSaju 래핑)
  */
 function calculateSajuForYearTest(date: string, time: string) {
-  // dynamic import 대신 직접 가져오기
-  const { calculateSaju } = require('../src/lib/saju.js');
   const result = calculateSaju(date, time, 'solar', false, 'male');
   return {
     yearStem: result.year.stem,
