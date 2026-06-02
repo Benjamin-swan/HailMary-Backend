@@ -408,12 +408,8 @@ def _build_paid_report_pipeline(
             access_key_id=_settings.aws_access_key_id,
             secret_access_key=_settings.aws_secret_access_key,
         )
-        # 결과지 링크 base URL — 운영/테스트 분기
-        base_url = (
-            "http://localhost:3000"
-            if _settings.app_env in ("local", "test")
-            else "https://dohwaseonsaju.com"
-        )
+        # 결과지 링크 base URL — 환경 설정값 사용 (local=localhost, staging/prod=FRONTEND_BASE_URL)
+        base_url = _settings.frontend_base_url
         email_sender = SendResultLinkEmailUseCase(
             ses_client=ses_client,
             base_url=base_url,
@@ -524,11 +520,7 @@ def _make_update_email_usecase(
             access_key_id=_settings.aws_access_key_id,
             secret_access_key=_settings.aws_secret_access_key,
         )
-        base_url = (
-            "http://localhost:3000"
-            if _settings.app_env in ("local", "test")
-            else "https://dohwaseonsaju.com"
-        )
+        base_url = _settings.frontend_base_url
         email_resend_impl = SendResultLinkEmailUseCase(
             ses_client=ses_client, base_url=base_url
         )
