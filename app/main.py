@@ -116,6 +116,13 @@ from app.domains.kkebi.adapter.outbound.persistence.daily_template_repository im
 from app.domains.kkebi.application.usecase.get_daily_fortune_usecase import (
     GetDailyFortuneUseCase,
 )
+from app.domains.payment.adapter.inbound.api.coupon_router import (
+    get_redeem_coupon_usecase,
+    get_validate_coupon_usecase,
+)
+from app.domains.payment.adapter.inbound.api.coupon_router import (
+    router as coupon_router,
+)
 from app.domains.payment.adapter.inbound.api.payment_router import (
     dev_router as payment_dev_router,
 )
@@ -134,6 +141,9 @@ from app.domains.payment.adapter.outbound.external.amplitude_adapter import (
     AmplitudeAnalyticsAdapter,
 )
 from app.domains.payment.adapter.outbound.external.payapp_client import PayAppClient
+from app.domains.payment.adapter.outbound.persistence.coupon_repository import (
+    CouponRepository,
+)
 from app.domains.payment.adapter.outbound.persistence.payment_repository import (
     PaymentRepository,
 )
@@ -151,11 +161,17 @@ from app.domains.payment.application.usecase.get_payment_status_usecase import (
 from app.domains.payment.application.usecase.handle_payapp_feedback_usecase import (
     HandlePayAppFeedbackUseCase,
 )
+from app.domains.payment.application.usecase.redeem_coupon_usecase import (
+    RedeemCouponUseCase,
+)
 from app.domains.payment.application.usecase.request_payment_usecase import (
     RequestPaymentUseCase,
 )
 from app.domains.payment.application.usecase.update_email_and_resend_usecase import (
     UpdateEmailAndResendUseCase,
+)
+from app.domains.payment.application.usecase.validate_coupon_usecase import (
+    ValidateCouponUseCase,
 )
 from app.domains.user.adapter.inbound.api.auth import get_user_repository
 from app.domains.user.adapter.inbound.api.user_router import (
@@ -552,6 +568,30 @@ def _make_dev_bypass_usecase(
     )
 
 
+# ── 무료 쿠폰 UseCase 팩토리 (prod 노출 — 코드가 가드) ───────────────────────
+
+def _make_redeem_coupon_usecase(
+    session: AsyncSession = Depends(_get_session),
+) -> RedeemCouponUseCase:
+    user_repo = UserRepository(session)
+    creator, resolver, _user_lookup, user_demographics, analytics = _build_paid_report_pipeline(session)
+    return RedeemCouponUseCase(
+        coupon_repo=CouponRepository(session),
+        repo=PaymentRepository(session),
+        user_lookup=UserLookupAdapter(user_repo=user_repo),
+        paid_report_creator=creator,
+        saju_hash_resolver=resolver,
+        analytics=analytics,
+        user_demographics=user_demographics,
+    )
+
+
+def _make_validate_coupon_usecase(
+    session: AsyncSession = Depends(_get_session),
+) -> ValidateCouponUseCase:
+    return ValidateCouponUseCase(coupon_repo=CouponRepository(session))
+
+
 # ── AI Domain UseCase 팩토리 ──────────────────────────────────────────────────
 
 def _make_get_paid_report_usecase(
@@ -576,6 +616,8 @@ app.dependency_overrides[get_handle_feedback_usecase] = _make_handle_feedback_us
 app.dependency_overrides[get_payment_status_usecase] = _make_payment_status_usecase
 app.dependency_overrides[get_update_email_usecase] = _make_update_email_usecase
 app.dependency_overrides[get_dev_bypass_usecase] = _make_dev_bypass_usecase
+app.dependency_overrides[get_redeem_coupon_usecase] = _make_redeem_coupon_usecase
+app.dependency_overrides[get_validate_coupon_usecase] = _make_validate_coupon_usecase
 app.dependency_overrides[get_frontend_base_url] = lambda: _settings.frontend_base_url
 app.dependency_overrides[get_paid_report_usecase] = _make_get_paid_report_usecase
 
@@ -584,6 +626,9 @@ app.include_router(payment_router)
 app.include_router(paid_report_router)
 app.include_router(kkebi_router)
 app.include_router(paid_report_share_router)
+# 무료 쿠폰 — dev bypass 와 달리 환경 가드 없이 항상 등록(prod 포함).
+# 유효 쿠폰 코드 자체가 가드 역할 → _DEV_BYPASS_ENVS 분기에 넣지 말 것.
+app.include_router(coupon_router)
 
 # ⚠️ 결제 패스 endpoint — prod 환경에서는 등록 안 함. staging/local/test 에서만 노출.
 # 워크플로마다 APP_ENV 값 다를 수 있음 (prod 워크플로는 "production") — 명시 화이트리스트로 비교.
