@@ -16,6 +16,9 @@ import asyncio
 import sys
 from datetime import UTC, datetime
 
+# 전체 ORM 등록 — coupons.used_by_user_id FK 의 대상 users 테이블이 메타데이터에
+# 있어야 flush 가 가능(standalone 스크립트는 main.py 처럼 base 를 거치지 않으므로 명시 import).
+import app.infrastructure.database.base  # noqa: E402,F401
 from app.domains.payment.adapter.outbound.persistence.coupon_repository import (
     CouponRepository,
 )
