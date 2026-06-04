@@ -9,7 +9,9 @@ from __future__ import annotations
 
 import asyncio
 import logging
+from collections.abc import Callable, Coroutine
 from datetime import UTC, datetime
+from typing import Any
 
 from app.domains.payment.application.payment_ports import (
     PaidReportCreatorPort,
@@ -29,6 +31,16 @@ from app.domains.payment.domain.value_object.payment_status import (
 
 logger = logging.getLogger(__name__)
 
+# 백그라운드 합성 task 참조 보관 — Python 3.12+ fire-and-forget task는 참조를 안 잡으면
+# GC 되어 실행 자체가 안 됨(메모리: asyncio task GC 가드). done 시 set에서 제거.
+_BG_COMPOSE_TASKS: set[asyncio.Task[None]] = set()
+
+
+def _spawn_background(coro: Coroutine[Any, Any, None]) -> None:
+    task = asyncio.create_task(coro)
+    _BG_COMPOSE_TASKS.add(task)
+    task.add_done_callback(_BG_COMPOSE_TASKS.discard)
+
 
 async def grant_paid_report(
     *,
@@ -44,8 +56,15 @@ async def grant_paid_report(
     analytics: AnalyticsPort | None,
     user_demographics: UserDemographicsPort | None,
     log_tag: str,
+    background_composer: Callable[..., Coroutine[Any, Any, None]] | None = None,
 ) -> Payment:
-    """DONE 결제를 생성하고 유료 결과지 합성을 트리거한다. 저장된 Payment 반환."""
+    """DONE 결제를 생성하고 유료 결과지 합성을 트리거한다. 저장된 Payment 반환.
+
+    합성 모드:
+    - `background_composer` 주어지면 → 결제 생성 후 합성을 **백그라운드 task**로 스폰하고
+      즉시 반환(쿠폰 redeem — 도윤 AI 합성 대기를 응답에서 떼어내 결과 로딩 화면이 흡수).
+    - None 이면 → 기존대로 `paid_report_creator.execute` 를 **inline await**(dev bypass).
+    """
     now = datetime.now(UTC)
     payment = Payment.from_approval(
         payment_key=payment_key,
@@ -66,8 +85,20 @@ async def grant_paid_report(
         saved.amount,
     )
 
-    # PaidReport 합성 트리거 (실 결제 플로와 동일). 실패해도 결제는 유지(graceful).
-    if paid_report_creator is not None:
+    # PaidReport 합성 트리거. 실패해도 결제는 유지(graceful).
+    if background_composer is not None:
+        # 백그라운드 합성 — 응답을 막지 않음. 합성은 자기 DB 세션을 여는 composer 안에서 수행.
+        _spawn_background(
+            background_composer(
+                order_id=saved.order_id,
+                user_id=saved.user_id,
+                customer_email=saved.customer_email,
+                expires_at=saved.expires_at,
+                character=saved.character.value,
+            )
+        )
+    elif paid_report_creator is not None:
+        # inline 합성 (dev bypass) — 실 결제 플로와 동일하게 응답 전 await.
         saju_hash: str | None = None
         if saju_hash_resolver is not None:
             saju_hash = await saju_hash_resolver.resolve(saved.user_id)

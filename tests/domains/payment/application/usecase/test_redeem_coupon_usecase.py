@@ -1,18 +1,19 @@
 """RedeemCouponUseCase 핵심 분기 단위 테스트.
 
 대상:
-    1. happy path — amount=0 Payment(DONE) 생성 + 합성 트리거 + 쿠폰 REDEEMED 기록
-    2. 무효 코드 — 거부, save/합성 0회
-    3. 이미 소진된 코드 — 거부
-    4. 원자성/중복 제출 — 두 번째는 거부, 발급 1회만
-    5. 세션 만료 — ValueError, 소진 시도 자체 없음
-    6. 합성 실패 graceful — orderId 정상 + 쿠폰 소진 유지
+    1. happy path — amount=0 Payment(DONE) 생성 + 쿠폰 REDEEMED + 합성 백그라운드 스폰
+    2. 합성 비대기 — redeem 은 합성 완료를 기다리지 않고 즉시 반환(이 기능의 핵심 보증)
+    3. 무효 코드 — 거부, save/합성 스폰 0회
+    4. 이미 소진된 코드 — 거부
+    5. 원자성/중복 제출 — 두 번째는 거부, 발급 1회만
+    6. 세션 만료 — ValueError, 소진·합성 시도 자체 없음
     7. 코드 정규화 — 소문자/공백 입력도 매칭
 
 Mock 전략: unittest.mock 대신 Port 직접 구현 fake.
 """
 
 import asyncio
+from collections.abc import Coroutine
 from datetime import UTC, datetime
 from typing import Any
 
@@ -125,16 +126,24 @@ class FakeUserLookup:
         return self._mapping.get(token)
 
 
-class FakePaidReportCreator:
-    def __init__(self, *, raise_on_call: bool = False) -> None:
-        self.calls: list[dict[str, Any]] = []
-        self._raise = raise_on_call
+class FakeBackgroundComposer:
+    """백그라운드 합성 callable fake.
 
-    async def execute(self, **kwargs: Any) -> object:
+    호출(스폰) 시점에 calls 기록, 실제 코루틴 실행(이벤트 루프 tick 후) 시 ran=True.
+    → "스폰됐지만 아직 실행 안 됨"으로 redeem 이 합성을 await 하지 않음을 검증.
+    """
+
+    def __init__(self) -> None:
+        self.calls: list[dict[str, Any]] = []
+        self.ran = False
+
+    def __call__(self, **kwargs: Any) -> Coroutine[Any, Any, None]:
         self.calls.append(kwargs)
-        if self._raise:
-            raise RuntimeError("compose failed")
-        return None
+
+        async def _run() -> None:
+            self.ran = True
+
+        return _run()
 
 
 class FakeAnalytics(AnalyticsPort):
@@ -157,15 +166,14 @@ def _usecase(
     coupon_repo: FakeCouponRepository,
     repo: FakePaymentRepository,
     user_lookup: FakeUserLookup | None = None,
-    paid_report_creator: FakePaidReportCreator | None = None,
+    background_composer: FakeBackgroundComposer | None = None,
     analytics: FakeAnalytics | None = None,
 ) -> RedeemCouponUseCase:
     return RedeemCouponUseCase(
         coupon_repo=coupon_repo,
         repo=repo,
         user_lookup=user_lookup or FakeUserLookup(),
-        paid_report_creator=paid_report_creator,
-        saju_hash_resolver=None,
+        background_composer=background_composer,
         analytics=analytics,
         user_demographics=None,
     )
@@ -174,12 +182,12 @@ def _usecase(
 # ── Tests ─────────────────────────────────────────────────────────────────────
 
 
-async def test_happy_path_creates_free_payment_and_triggers_compose() -> None:
+async def test_happy_path_creates_free_payment_and_spawns_compose() -> None:
     coupon = _active_coupon()
     coupon_repo = FakeCouponRepository([coupon])
     repo = FakePaymentRepository()
-    creator = FakePaidReportCreator()
-    usecase = _usecase(coupon_repo=coupon_repo, repo=repo, paid_report_creator=creator)
+    composer = FakeBackgroundComposer()
+    usecase = _usecase(coupon_repo=coupon_repo, repo=repo, background_composer=composer)
 
     order_id = await usecase.execute(
         session_token="VALID-TOKEN",
@@ -193,17 +201,26 @@ async def test_happy_path_creates_free_payment_and_triggers_compose() -> None:
     saved = repo.save_calls[0]
     assert saved.amount == 0, "무료 쿠폰은 PayApp 우회 — amount 0"
     assert saved.status == PaymentStatus.DONE
-    assert len(creator.calls) == 1, "결제 후 합성 1회 트리거"
     assert coupon.status == CouponStatus.REDEEMED
     assert coupon.used_by_user_id == 42
     assert coupon.used_order_id == order_id
+
+    # 합성은 스폰되었지만 redeem 반환 시점엔 아직 실행 전 (= await 하지 않음)
+    assert len(composer.calls) == 1, "합성 백그라운드 스폰 1회"
+    assert composer.ran is False, "redeem 은 합성 완료를 기다리지 않는다"
+    assert composer.calls[0]["order_id"] == order_id
+    assert composer.calls[0]["character"] == "yeonwoo"
+
+    # 이벤트 루프 tick → 백그라운드 task 가 실제로 합성 실행
+    await asyncio.sleep(0)
+    assert composer.ran is True
 
 
 async def test_unknown_code_rejected() -> None:
     coupon_repo = FakeCouponRepository([])  # 코드 없음
     repo = FakePaymentRepository()
-    creator = FakePaidReportCreator()
-    usecase = _usecase(coupon_repo=coupon_repo, repo=repo, paid_report_creator=creator)
+    composer = FakeBackgroundComposer()
+    usecase = _usecase(coupon_repo=coupon_repo, repo=repo, background_composer=composer)
 
     with pytest.raises(CouponNotRedeemableError):
         await usecase.execute(
@@ -214,7 +231,7 @@ async def test_unknown_code_rejected() -> None:
         )
 
     assert repo.save_calls == [], "무효 코드면 결제 생성 금지"
-    assert creator.calls == [], "무효 코드면 합성 금지"
+    assert composer.calls == [], "무효 코드면 합성 스폰 금지"
 
 
 async def test_already_redeemed_code_rejected() -> None:
@@ -265,10 +282,12 @@ async def test_expired_session_does_not_attempt_redeem() -> None:
     coupon = _active_coupon()
     coupon_repo = FakeCouponRepository([coupon])
     repo = FakePaymentRepository()
+    composer = FakeBackgroundComposer()
     usecase = _usecase(
         coupon_repo=coupon_repo,
         repo=repo,
         user_lookup=FakeUserLookup({}),  # 토큰 매핑 없음
+        background_composer=composer,
     )
 
     with pytest.raises(ValueError):
@@ -282,26 +301,7 @@ async def test_expired_session_does_not_attempt_redeem() -> None:
     assert coupon_repo.redeem_calls == [], "세션 무효면 소진 시도 자체 없음"
     assert coupon.status == CouponStatus.ACTIVE, "쿠폰 보존"
     assert repo.save_calls == []
-
-
-async def test_compose_failure_is_graceful() -> None:
-    """합성이 실패해도 orderId 정상 반환 + 쿠폰 소진 유지."""
-    coupon = _active_coupon()
-    coupon_repo = FakeCouponRepository([coupon])
-    repo = FakePaymentRepository()
-    creator = FakePaidReportCreator(raise_on_call=True)
-    usecase = _usecase(coupon_repo=coupon_repo, repo=repo, paid_report_creator=creator)
-
-    order_id = await usecase.execute(
-        session_token="VALID-TOKEN",
-        character=CharacterCode.YEONWOO,
-        customer_email="buyer@example.com",
-        code="DOHWA-ABCD-2345",
-    )
-
-    assert order_id.startswith("coupon_")
-    assert coupon.status == CouponStatus.REDEEMED
-    assert len(repo.save_calls) == 1
+    assert composer.calls == [], "세션 무효면 합성 스폰 없음"
 
 
 async def test_code_normalized_before_lookup() -> None:

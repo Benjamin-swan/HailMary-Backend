@@ -1,4 +1,7 @@
-from collections.abc import AsyncGenerator
+import logging
+from collections.abc import AsyncGenerator, Coroutine
+from datetime import datetime
+from typing import Any
 
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -207,6 +210,8 @@ from app.infrastructure.external.ses.client import SESClient
 app = FastAPI(title="HailMary Backend", version="0.1.0")
 
 _settings = get_settings()
+
+logger = logging.getLogger(__name__)
 
 
 def _allowed_origins() -> list[str]:
@@ -570,19 +575,58 @@ def _make_dev_bypass_usecase(
 
 # ── 무료 쿠폰 UseCase 팩토리 (prod 노출 — 코드가 가드) ───────────────────────
 
+def _compose_report_background(
+    *,
+    order_id: str,
+    user_id: int,
+    customer_email: str,
+    expires_at: datetime,
+    character: str,
+) -> Coroutine[Any, Any, None]:
+    """쿠폰 무료 발급 후 유료 결과지 합성을 백그라운드에서 수행.
+
+    요청 세션은 응답과 함께 닫히므로 **자기 AsyncSession 을 새로 연다**(이메일
+    fire-and-forget 과 동일 계열). 도윤의 긴 AI 합성이 redeem 응답을 막지 않게 분리.
+    """
+
+    async def _run() -> None:
+        try:
+            async with AsyncSessionLocal() as session, session.begin():
+                creator, resolver, _ul, _ud, _an = _build_paid_report_pipeline(session)
+                saju_hash = await resolver.resolve(user_id)
+                await creator.execute(
+                    order_id=order_id,
+                    saju_hash=saju_hash or order_id,
+                    user_id=user_id,
+                    customer_email=customer_email,
+                    expires_at=expires_at,
+                    character=character,
+                )
+        except Exception:
+            logger.exception("[COUPON bg compose] failed order=%s", order_id)
+
+    return _run()
+
+
 def _make_redeem_coupon_usecase(
     session: AsyncSession = Depends(_get_session),
 ) -> RedeemCouponUseCase:
     user_repo = UserRepository(session)
-    creator, resolver, _user_lookup, user_demographics, analytics = _build_paid_report_pipeline(session)
+    # 합성은 백그라운드(자기 세션)에서 — 여기선 analytics/demographics 만 요청 세션으로.
+    analytics = AmplitudeAnalyticsAdapter(
+        client=AmplitudeClient(
+            api_key=_settings.amplitude_api_key,
+            base_url=_settings.amplitude_base_url,
+        ),
+        environment=_settings.app_env,
+    )
     return RedeemCouponUseCase(
         coupon_repo=CouponRepository(session),
         repo=PaymentRepository(session),
         user_lookup=UserLookupAdapter(user_repo=user_repo),
-        paid_report_creator=creator,
-        saju_hash_resolver=resolver,
+        background_composer=_compose_report_background,
         analytics=analytics,
-        user_demographics=user_demographics,
+        user_demographics=UserDemographicsAdapter(user_repo=user_repo),
     )
 
 

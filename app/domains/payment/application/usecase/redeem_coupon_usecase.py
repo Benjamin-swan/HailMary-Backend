@@ -3,18 +3,20 @@
 유효한 1회용 코드를 원자적으로 소진하고 amount=0 결제(DONE)를 생성해
 PayApp 을 우회하면서 유료 결과지 합성을 트리거한다.
 
-dev bypass 와 동일 동작이되, 환경 가드 대신 "유효 쿠폰 코드"가 가드 역할.
+결과지 합성은 **백그라운드**(`background_composer`)로 돌려 redeem 응답을 막지 않는다 —
+도윤 결과지의 긴 AI 합성 대기를 버튼에서 떼어내 결과 로딩 화면이 흡수하게 한다.
+dev bypass 와 동일 골격이되, 환경 가드 대신 "유효 쿠폰 코드"가 가드 역할.
 """
 
 from __future__ import annotations
 
 import logging
 import uuid
+from collections.abc import Callable, Coroutine
 from datetime import UTC, datetime
+from typing import Any
 
 from app.domains.payment.application.payment_ports import (
-    PaidReportCreatorPort,
-    SajuHashResolverPort,
     UserDemographicsPort,
     UserLookupPort,
 )
@@ -47,16 +49,14 @@ class RedeemCouponUseCase:
         coupon_repo: CouponRepositoryPort,
         repo: PaymentRepositoryPort,
         user_lookup: UserLookupPort,
-        paid_report_creator: PaidReportCreatorPort | None = None,
-        saju_hash_resolver: SajuHashResolverPort | None = None,
+        background_composer: Callable[..., Coroutine[Any, Any, None]] | None = None,
         analytics: AnalyticsPort | None = None,
         user_demographics: UserDemographicsPort | None = None,
     ) -> None:
         self._coupon_repo = coupon_repo
         self._repo = repo
         self._user_lookup = user_lookup
-        self._paid_report_creator = paid_report_creator
-        self._saju_hash_resolver = saju_hash_resolver
+        self._background_composer = background_composer
         self._analytics = analytics
         self._user_demographics = user_demographics
 
@@ -104,10 +104,11 @@ class RedeemCouponUseCase:
             amount=0,  # 100% 무료 — PayApp 완전 우회
             order_id=order_id,
             payment_key=f"coupon-{order_id}",
-            paid_report_creator=self._paid_report_creator,
-            saju_hash_resolver=self._saju_hash_resolver,
+            paid_report_creator=None,
+            saju_hash_resolver=None,
             analytics=self._analytics,
             user_demographics=self._user_demographics,
             log_tag="COUPON",
+            background_composer=self._background_composer,  # 합성은 백그라운드(응답 비대기)
         )
         return saved.order_id
