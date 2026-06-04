@@ -56,6 +56,7 @@ async def grant_paid_report(
     analytics: AnalyticsPort | None,
     user_demographics: UserDemographicsPort | None,
     log_tag: str,
+    method: str | None = None,
     background_composer: Callable[..., Coroutine[Any, Any, None]] | None = None,
 ) -> Payment:
     """DONE 결제를 생성하고 유료 결과지 합성을 트리거한다. 저장된 Payment 반환.
@@ -114,30 +115,35 @@ async def grant_paid_report(
         except Exception as e:  # noqa: BLE001
             logger.warning("[%s] paid_report_creator failed: %s", log_tag, e)
 
-    # Amplitude 트래킹 (fire-and-forget)
+    # Amplitude 트래킹 — await로 확실 전송. (HMDA-42: create_task fire-and-forget 은
+    # 응답 후 GC 되어 payment_completed 가 간헐 유실됨. safe_* 래퍼가 예외를 삼키므로
+    # await 해도 응답을 막지 않는다.)
     if analytics is not None:
         gender: str | None = None
+        birth_year: int | None = None
         if user_demographics is not None:
             try:
                 gender = await user_demographics.find_gender_by_user_id(saved.user_id)
+                birth_year = await user_demographics.find_birth_year_by_user_id(
+                    saved.user_id
+                )
             except Exception as e:  # noqa: BLE001
                 logger.warning("[%s] user_demographics failed: %s", log_tag, e)
-        asyncio.create_task(
-            safe_track_payment_completed(
-                analytics=analytics,
-                user_id=saved.user_id,
-                device_id=None,
-                session_id=None,
-                order_id=saved.order_id,
-                character=saved.character.value,
-                amount=saved.amount,
-                method=None,
-                easy_pay_provider=None,
-                card_issuer_code=None,
-                bank_code=None,
-                approved_at=saved.approved_at,
-                gender=gender,
-            )
+        await safe_track_payment_completed(
+            analytics=analytics,
+            user_id=saved.user_id,
+            device_id=None,
+            session_id=None,
+            order_id=saved.order_id,
+            character=saved.character.value,
+            amount=saved.amount,
+            method=method,
+            easy_pay_provider=None,
+            card_issuer_code=None,
+            bank_code=None,
+            approved_at=saved.approved_at,
+            gender=gender,
+            birth_year=birth_year,
         )
 
     return saved

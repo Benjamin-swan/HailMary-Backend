@@ -109,6 +109,7 @@ class RedeemCouponUseCase:
             analytics=self._analytics,
             user_demographics=self._user_demographics,
             log_tag="COUPON",
+            method="coupon",  # 무료 쿠폰 결제 — 분석 구분용
             background_composer=self._background_composer,  # 합성은 백그라운드(응답 비대기)
         )
         return saved.order_id

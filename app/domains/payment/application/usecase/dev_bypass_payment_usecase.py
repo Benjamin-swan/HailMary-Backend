@@ -79,5 +79,6 @@ class DevBypassPaymentUseCase:
             analytics=self._analytics,
             user_demographics=self._user_demographics,
             log_tag="DEV BYPASS",
+            method="dev_bypass",  # 실 결제수단 없음 — 테스트 구분용 (HMDA-42)
         )
         return saved.order_id
