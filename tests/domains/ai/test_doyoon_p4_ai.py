@@ -81,7 +81,7 @@ def test_compose_akyon_unknown_slot_fallback() -> None:
     text = compose_doyoon_p4_akyon(
         user_name="홍길동", ilgan="임수", akyon_slot_id="m-unknown-yang"
     )
-    assert "64%" in text  # m-water-yang의 height_distribution_pct
+    assert "64%" not in text  # 키 분포 %는 제거 (그래프 없는 화면)
 
 
 # ── AKYON ────────────────────────────────────────────────────────
@@ -94,14 +94,14 @@ def test_akyon_facts_imsu() -> None:
     assert f["impression_first"] == "91"
     assert f["impression_6m"] == "14"
     assert f["impression_gap"] == "77"
-    assert f["height_distribution_pct"] == "64%"
+    assert "height_distribution_pct" not in f
     assert f["common_signal_pct"] == "71%"
 
 
 def _akyon_valid_text(facts: dict[str, str]) -> str:
     return (
         "데이터가 분류한 비호환 프로파일이에요. 외형부터 정리해드릴게요.\n\n"
-        f"키 분포 — 평균보다 +5cm 이상 표본이 {facts['height_distribution_pct']}. "
+        "키 — 평균보다 +5cm 이상인 편이 많아요. "
         f"체형은 마른 골격에 어깨가 좁은 편. 얼굴 데이터는 광대 도드라짐, 턱선 각짐. "
         f"동일 비호환 사례의 {facts['common_signal_pct']}를 차지하는 패턴입니다.\n\n"
         f"문제는 인상 점수 격차예요. 첫인상 {facts['impression_first']}점, "

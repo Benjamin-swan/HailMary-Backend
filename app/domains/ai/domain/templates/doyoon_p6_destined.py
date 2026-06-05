@@ -124,7 +124,6 @@ def get_doyoon_p6_profile_facts(
         "ohang_lack": ohang_lack,
         "ohang_lack_hanja": OHANG_HANJA.get(ohang_lack, ohang_lack),
         "pct_value": f"{pct_value}%",
-        "height_distribution_pct": i.height_distribution_pct,
         "profile_signal_pct": i.profile_signal_pct,
         "emotional_stability_multiplier": i.emotional_stability_multiplier,
         "stability_high_multiplier": i.stability_high_multiplier,

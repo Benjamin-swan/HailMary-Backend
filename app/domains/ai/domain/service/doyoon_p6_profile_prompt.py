@@ -21,8 +21,9 @@ _SYSTEM_PROMPT = (
     "[사실값 보존]\n"
     "- {user_name}, {ilgan_full}({ilgan_hanja})\n"
     "- 잘 맞는 상위 {pct_value}\n"
-    "- 키 {height_distribution_pct} / 첫인상 신호 {profile_signal_pct}"
+    "- 첫인상 신호 {profile_signal_pct}"
     " / 감정 기복 {emotional_stability_multiplier}\n"
+    "- 키는 cm 기준(평균 ±5cm 범위 등)으로만, % 로 쓰지 마세요 — 화면 표에 키 그래프 없음\n"
     "- 안정감 {stability_high_multiplier} / 잘 맞는 정도 {compatibility_pct}"
     " / 평균 {avg_compatibility_baseline} / 평균보다 {compatibility_lift}\n"
     "- 채워주는 오행 {ohang_lack}({ohang_lack_hanja})\n\n"
@@ -42,7 +43,6 @@ _USER_PROMPT_TPL = """\
 - ohang_lack: {ohang_lack}
 - ohang_lack_hanja: {ohang_lack_hanja}
 - pct_value: {pct_value}
-- height_distribution_pct: {height_distribution_pct}
 - profile_signal_pct: {profile_signal_pct}
 - emotional_stability_multiplier: {emotional_stability_multiplier}
 - stability_high_multiplier: {stability_high_multiplier}
@@ -59,7 +59,7 @@ _USER_PROMPT_TPL = """\
 _REQUIRED_KEYS = {
     "user_name", "ilgan_full", "ilgan_hanja",
     "ohang_lack", "ohang_lack_hanja", "pct_value",
-    "height_distribution_pct", "profile_signal_pct",
+    "profile_signal_pct",
     "emotional_stability_multiplier", "stability_high_multiplier",
     "compatibility_pct", "avg_compatibility_baseline", "compatibility_lift",
     "rule_text",

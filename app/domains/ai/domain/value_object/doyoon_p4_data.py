@@ -67,7 +67,7 @@ _FALLBACK_INFO_ROWS: tuple[
     AkyonInfoRow, AkyonInfoRow, AkyonInfoRow, AkyonInfoRow, AkyonInfoRow,
     AkyonInfoRow, AkyonInfoRow, AkyonInfoRow, AkyonInfoRow, AkyonInfoRow,
 ] = (
-    AkyonInfoRow(key="키 분포", val="평균보다 +5cm 이상 표본 64%"),
+    AkyonInfoRow(key="키 분포", val="평균보다 +5cm 이상"),
     AkyonInfoRow(key="체형", val="마른 골격 · 어깨 좁은 편"),
     AkyonInfoRow(key="얼굴상", val="광대 도드라짐 · 턱선 각짐"),
     AkyonInfoRow(key="이목구비", val="얇은 입술 · 눈꼬리 상향"),

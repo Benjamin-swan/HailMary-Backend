@@ -82,7 +82,7 @@ def test_profile_facts_imsu() -> None:
     )
     assert f["pct_value"] == "8%"
     assert f["compatibility_pct"] == "82%"
-    assert f["height_distribution_pct"] == "71%"
+    assert "height_distribution_pct" not in f
     assert f["ohang_lack_hanja"] == "火"
 
 
@@ -90,7 +90,7 @@ def _profile_valid(facts):
     return (
         f"궁합 지수 상위 {facts['pct_value']} 케이스로 측정됐어요. "
         "이 구간은 통계적으로 흔하지 않은 분포예요. 최적 인연 프로파일 데이터를 차례대로 보여드릴게요.\n\n"
-        f"외형 데이터 — 키 분포 ±5cm 범위가 {facts['height_distribution_pct']}, 균형 잡힌 체형이 다수. "
+        "외형 데이터 — 키는 평균 ±5cm 범위, 균형 잡힌 체형이 다수. "
         "얼굴은 부드러운 둥근형이 우세하고 이마가 넓은 비율이 상위. "
         f"눈매와 입꼬리 패턴은 동일 호환 사례의 {facts['profile_signal_pct']}를 차지합니다. "
         "손가락 길이와 자세 데이터도 일관된 신호로 잡혀요.\n\n"

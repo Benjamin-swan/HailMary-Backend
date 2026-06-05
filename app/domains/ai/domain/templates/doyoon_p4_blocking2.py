@@ -14,6 +14,7 @@ from app.domains.ai.domain.value_object.doyoon_p4_data import (
     FAKE_DROP_PCT,
     REAL_GROWTH_PCT,
     VALID_DOYOON_P4_ILGAN,
+    DoyoonAkyonData,
 )
 
 
@@ -24,7 +25,7 @@ def _validate(user_name: str, ilgan: str) -> None:
         raise KeyError(f"unknown ilgan: {ilgan!r}")
 
 
-def _resolve_akyon(akyon_slot_id: str):
+def _resolve_akyon(akyon_slot_id: str) -> DoyoonAkyonData:
     return DOYOON_AKYON_BY_SLOT.get(akyon_slot_id) or DOYOON_AKYON_BY_SLOT["m-water-yang"]
 
 
@@ -41,7 +42,7 @@ def compose_doyoon_p4_akyon(
 
     return (
         f"데이터로 추려본, 잘 안 맞는 유형이에요. 외형부터 보여드릴게요.\n\n"
-        f"키 분포는 평균보다 +5cm 이상인 경우가 {a.height_distribution_pct}. "
+        "키는 평균보다 +5cm 이상인 편이 많아요. "
         "체형은 마른 골격에 어깨가 좁은 편이 많아요. 얼굴은 광대가 도드라지고 턱선이 각진 편. "
         f"눈매는 끝이 올라가고 입술이 얇은 모습이 비슷한 유형의 {a.common_signal_pct}에서 함께 보여요.\n\n"
         f"문제는 외형이 아니라 인상 점수예요. 첫인상 강도 {a.impression_first}점 — 눈에 띄게 높아요. "
@@ -96,7 +97,6 @@ def get_doyoon_p4_akyon_facts(
         "user_name": user_name,
         "ilgan_full": ilgan,
         "ilgan_hanja": ILGAN_HANJA[ilgan],
-        "height_distribution_pct": a.height_distribution_pct,
         "impression_first": a.impression_first,
         "impression_6m": a.impression_6m,
         "impression_gap": a.impression_gap,

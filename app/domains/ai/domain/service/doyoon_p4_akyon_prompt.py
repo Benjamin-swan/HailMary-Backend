@@ -21,9 +21,10 @@ _SYSTEM_PROMPT = (
     "[사실값 보존 — 절대 변경 금지]\n"
     "- 사용자 이름 ({user_name})\n"
     "- 일간 ({ilgan_full})\n"
-    "- 키 분포 ({height_distribution_pct})\n"
     "- 첫인상 / 6개월 / 격차 ({impression_first} / {impression_6m} / {impression_gap})\n"
     "- 비슷한 사례 비율 ({common_signal_pct})\n\n"
+    "[키 수치 금지] 키는 % 로 쓰지 마세요. 화면 표에 키 그래프가 없어 '몇 %'는 근거 없어 보입니다. "
+    "'평균보다 +5cm 이상인 편'처럼 cm 기준 표현만 쓰세요.\n\n"
     "[구성] 4 단락, 단락 사이 빈 줄 1개, 총 320~520자\n"
     "1. 데이터 정리 완료 신호 (1문장)\n"
     "2. 외형 데이터 — 키 분포, 체형, 얼굴상, 이목구비 (2~3문장)\n"
@@ -40,7 +41,6 @@ _USER_PROMPT_TPL = """\
 [보존해야 하는 사실값 — 모두 출력에 포함]
 - user_name: {user_name}
 - ilgan_full: {ilgan_full}
-- height_distribution_pct: {height_distribution_pct}
 - impression_first: {impression_first}
 - impression_6m: {impression_6m}
 - impression_gap: {impression_gap}
@@ -59,7 +59,6 @@ _REQUIRED_KEYS = {
     "user_name",
     "ilgan_full",
     "ilgan_hanja",
-    "height_distribution_pct",
     "impression_first",
     "impression_6m",
     "impression_gap",
@@ -74,11 +73,11 @@ def build_p4_akyon_prompt(facts: dict[str, str]) -> tuple[str, str]:
     if missing:
         raise KeyError(f"missing facts keys: {sorted(missing)}")
     system = _SYSTEM_PROMPT.format(**{k: facts[k] for k in (
-        "user_name", "ilgan_full", "height_distribution_pct",
+        "user_name", "ilgan_full",
         "impression_first", "impression_6m", "impression_gap", "common_signal_pct",
     )})
     user = _USER_PROMPT_TPL.format(**{k: facts[k] for k in (
-        "user_name", "ilgan_full", "height_distribution_pct",
+        "user_name", "ilgan_full",
         "impression_first", "impression_6m", "impression_gap",
         "common_signal_pct", "rule_text",
     )})
@@ -97,7 +96,7 @@ def validate_p4_akyon(text: str, facts: dict[str, str]) -> tuple[bool, str]:
         return False, "user_name missing"
     if facts["ilgan_full"] not in text:
         return False, "ilgan_full missing"
-    for k in ("height_distribution_pct", "impression_first", "impression_6m",
+    for k in ("impression_first", "impression_6m",
               "impression_gap", "common_signal_pct"):
         if facts[k] not in text:
             return False, f"{k} missing: {facts[k]!r}"

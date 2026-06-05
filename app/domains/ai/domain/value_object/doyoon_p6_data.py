@@ -77,7 +77,7 @@ _FALLBACK_INFO_ROWS: tuple[
     InyonInfoRow, InyonInfoRow, InyonInfoRow, InyonInfoRow, InyonInfoRow,
     InyonInfoRow, InyonInfoRow, InyonInfoRow, InyonInfoRow,
 ] = (
-    InyonInfoRow(key="키 분포", val="평균 ±5cm 범위 표본 71%"),
+    InyonInfoRow(key="키 분포", val="평균 ±5cm 범위"),
     InyonInfoRow(key="체형", val="균형 잡힌 골격 · 어깨선 단단"),
     InyonInfoRow(key="얼굴상", val="선이 부드러운 둥근형 · 이마 넓음"),
     InyonInfoRow(key="이목구비", val="눈매 길고 끝 부드러움 · 입꼬리 상향"),
