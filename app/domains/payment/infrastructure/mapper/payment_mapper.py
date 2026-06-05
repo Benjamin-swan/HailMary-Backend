@@ -20,6 +20,8 @@ class PaymentMapper:
             easy_pay_provider=entity.easy_pay_provider,
             card_issuer_code=entity.card_issuer_code,
             bank_code=entity.bank_code,
+            email_confirmed_at=entity.email_confirmed_at,
+            result_email_sent_at=entity.result_email_sent_at,
         )
 
     @staticmethod
@@ -39,4 +41,6 @@ class PaymentMapper:
             easy_pay_provider=orm.easy_pay_provider,
             card_issuer_code=orm.card_issuer_code,
             bank_code=orm.bank_code,
+            email_confirmed_at=orm.email_confirmed_at,
+            result_email_sent_at=orm.result_email_sent_at,
         )

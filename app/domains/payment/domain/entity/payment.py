@@ -27,6 +27,9 @@ class Payment:
     easy_pay_provider: str | None = None
     card_issuer_code: str | None = None
     bank_code: str | None = None
+    # 결과지 메일 확정 후 발송 (2026-06-05): 확정 시각 / 발송 시각 (NULL=미발송)
+    email_confirmed_at: datetime | None = None
+    result_email_sent_at: datetime | None = None
     id: int | None = None
 
     @classmethod

@@ -1,6 +1,6 @@
-from datetime import datetime
+from datetime import UTC, datetime, timedelta
 
-from sqlalchemy import select
+from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.domains.payment.domain.entity.payment import Payment
@@ -70,3 +70,54 @@ class PaymentRepository(PaymentRepositoryPort):
         orm.customer_email = new_email
         await self._session.flush()
         return PaymentMapper.to_entity(orm)
+
+    async def confirm_email(
+        self,
+        *,
+        order_id: str,
+        email: str,
+    ) -> tuple[Payment, bool] | None:
+        result = await self._session.execute(
+            select(PaymentORM).where(PaymentORM.order_id == order_id),
+        )
+        orm = result.scalar_one_or_none()
+        if orm is None:
+            return None
+        changed = orm.customer_email != email
+        if changed:
+            orm.customer_email = email
+        orm.email_confirmed_at = datetime.now(UTC)
+        await self._session.flush()
+        return PaymentMapper.to_entity(orm), changed
+
+    async def mark_result_email_sent(self, *, order_id: str) -> None:
+        result = await self._session.execute(
+            select(PaymentORM).where(PaymentORM.order_id == order_id),
+        )
+        orm = result.scalar_one_or_none()
+        if orm is None:
+            return
+        orm.result_email_sent_at = datetime.now(UTC)
+        await self._session.flush()
+
+    async def find_email_unsent_done(
+        self,
+        *,
+        unconfirmed_grace_seconds: int,
+        limit: int = 20,
+    ) -> list[Payment]:
+        cutoff = datetime.now(UTC) - timedelta(seconds=unconfirmed_grace_seconds)
+        result = await self._session.execute(
+            select(PaymentORM)
+            .where(
+                PaymentORM.status == PaymentStatus.DONE,
+                PaymentORM.result_email_sent_at.is_(None),
+                or_(
+                    PaymentORM.email_confirmed_at.is_not(None),
+                    PaymentORM.approved_at < cutoff,
+                ),
+            )
+            .order_by(PaymentORM.approved_at)
+            .limit(limit),
+        )
+        return [PaymentMapper.to_entity(o) for o in result.scalars().all()]

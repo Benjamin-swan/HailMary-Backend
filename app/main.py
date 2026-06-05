@@ -1,3 +1,4 @@
+import asyncio
 import logging
 from collections.abc import AsyncGenerator, Coroutine
 from datetime import datetime
@@ -157,6 +158,9 @@ from app.domains.payment.adapter.outbound.user_demographics_adapter import (
 from app.domains.payment.adapter.outbound.user_lookup_adapter import UserLookupAdapter
 from app.domains.payment.application.usecase.dev_bypass_payment_usecase import (
     DevBypassPaymentUseCase,
+)
+from app.domains.payment.application.usecase.email_dispatch_sweeper import (
+    EmailDispatchSweeper,
 )
 from app.domains.payment.application.usecase.get_payment_status_usecase import (
     GetPaymentStatusUseCase,
@@ -704,3 +708,64 @@ app.add_middleware(
 @app.get("/health")
 async def health() -> dict[str, str]:
     return {"status": "ok"}
+
+
+# ── 결과지 메일 발송 스위퍼 (확정-후-발송 설계, 2026-06-05) ──────────────────
+# 발송 주체는 ① /update-email 확정 ② 본 스위퍼(확정 건 즉시 / 미확정 grace 폴백).
+# 상태가 전부 DB(email_confirmed_at/result_email_sent_at)라 재시작에도 안전.
+
+_EMAIL_SWEEPER_INTERVAL_SECONDS = 30
+_email_sweeper_task: asyncio.Task[None] | None = None
+
+
+async def _email_sweeper_tick() -> None:
+    async with AsyncSessionLocal() as session, session.begin():
+        paid_report_repo = PaidReportRepository(session)
+
+        class _ShareLookupAdapter:
+            async def find_share_code(self, order_id: str) -> str | None:
+                r = await paid_report_repo.find_by_order_id(order_id)
+                return r.share_code if r else None
+
+        if not _settings.aws_ses_sender:
+            return  # SES 미설정(로컬 등) — 발송 자체가 no-op이므로 스킵
+        ses_client = SESClient(
+            region=_settings.aws_region,
+            sender=_settings.aws_ses_sender,
+            access_key_id=_settings.aws_access_key_id,
+            secret_access_key=_settings.aws_secret_access_key,
+        )
+        sweeper = EmailDispatchSweeper(
+            payment_repo=PaymentRepository(session),
+            share_lookup=_ShareLookupAdapter(),
+            email_resend=SendResultLinkEmailUseCase(
+                ses_client=ses_client, base_url=_settings.frontend_base_url
+            ),
+        )
+        sent = await sweeper.run_once()
+        if sent:
+            logger.info("[email-sweeper] dispatched %d result link email(s)", sent)
+
+
+async def _email_sweeper_loop() -> None:
+    while True:
+        try:
+            await _email_sweeper_tick()
+        except asyncio.CancelledError:
+            raise
+        except Exception:  # noqa: BLE001 — 틱 실패가 루프를 죽이지 않게
+            logger.exception("[email-sweeper] tick failed")
+        await asyncio.sleep(_EMAIL_SWEEPER_INTERVAL_SECONDS)
+
+
+@app.on_event("startup")
+async def _start_email_sweeper() -> None:
+    # asyncio task GC 가드 — 모듈 레벨 참조로 보관 (fire-and-forget GC 함정).
+    global _email_sweeper_task
+    _email_sweeper_task = asyncio.create_task(_email_sweeper_loop())
+
+
+@app.on_event("shutdown")
+async def _stop_email_sweeper() -> None:
+    if _email_sweeper_task is not None:
+        _email_sweeper_task.cancel()

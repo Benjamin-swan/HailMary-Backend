@@ -117,6 +117,23 @@ class FakePaymentRepository(PaymentRepositoryPort):
     ) -> Payment | None:
         return self._by_order_id.get(order_id)
 
+    async def confirm_email(
+        self, *, order_id: str, email: str
+    ) -> tuple[Payment, bool] | None:
+        p = self._by_order_id.get(order_id)
+        if p is None:
+            return None
+        changed = p.customer_email != email
+        return p, changed
+
+    async def mark_result_email_sent(self, *, order_id: str) -> None:
+        return None
+
+    async def find_email_unsent_done(
+        self, *, unconfirmed_grace_seconds: int, limit: int = 20
+    ) -> list[Payment]:
+        return []
+
 
 class FakeUserLookup:
     def __init__(self, mapping: dict[str, int] | None = None) -> None:
