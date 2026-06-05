@@ -776,6 +776,7 @@ class PaidChapterP10(BaseModel):
     """P-10 (CH-7) 편지 — 박스 1·2·3 통합."""
     model_config = ConfigDict(populate_by_name=True)
 
+    user_name: str = ""               # 호명용(편지 헤더/부제). 본문과 동일 호명명 — 마스킹 X (QA F-062)
     ilju_with_hanja: str              # "병인(丙寅)"
     box1_body: str                    # 박스 1 (도입 멘트 + step1 부분집합 본문)
     box2_body: str                    # 박스 2 (4단락 합성)

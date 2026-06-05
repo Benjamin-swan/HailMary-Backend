@@ -1248,6 +1248,7 @@ class ComposePaidReportUseCase:
         step2_labels = [STEP2_LABEL.get(s, s) for s in step2] if step2 else None
 
         return PaidChapterP10(
+            user_name=user_name,
             ilju_with_hanja=ilju_with_hanja,
             box1_body=box1_body,
             box2_body=box2_body,
