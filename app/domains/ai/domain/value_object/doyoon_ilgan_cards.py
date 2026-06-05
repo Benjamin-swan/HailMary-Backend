@@ -3,11 +3,11 @@
 HTML line 1846~1887 (P-0 0-3 일간 분석 카드) 도윤 패널 양식:
 - 헤더: {USER_NAME}님의 일간 — 한글(한자)
 - 부제: 데이터형 한 줄 (예: "큰 물 / 깊은 바다 유형")
-- 데이터 특성: 3 bullet (통계 수치 — "평균 대비 N배" 형식)
+- 데이터 특성: 3 bullet (정성 표현 — "~ 높은/낮은/빠른 편" 형식. QA Z: 배수 제거)
 - 연애 특화 변수: 3 bullet (관계 outcome — "↑ / ↓ / ↑↑" 화살표 표기)
 - 주요 변수 충돌: 1줄 (어떤 매칭에서 충돌하는지)
 
-톤: 존댓말 안 들어감 (카드는 객관 데이터). 통계 어휘 + 화살표.
+톤: 존댓말 안 들어감 (카드는 객관 데이터). 정성 어휘 + 화살표 (자작 배수·조어 금지).
 LLM 호출 비용 0. 사용자 일간 정해지면 dict 조회로 즉시 반환.
 """
 
@@ -30,14 +30,14 @@ DOYOON_ILGAN_CARDS: dict[str, DoyoonIlganCard] = {
         name_han="甲木",
         subtitle="큰 나무 / 직선 추진 유형",
         data_traits=(
-            "의사결정 속도 평균 대비 1.4배",
-            "방향 전환 빈도 0.5배",
-            "신념 일관성 1.8배",
+            "의사결정 속도 빠른 편",
+            "방향 전환 적은 편",
+            "신념 일관성 뚜렷",
         ),
         love_variables=(
             "첫 접근 추진력 ↑",
             "관계 방향 통제력 ↑",
-            "의견 충돌 임계점 ↓",
+            "의견 충돌 참는 힘 ↓",
         ),
         main_conflict="우회와 타협을 요구하는 상대와 매칭 시 충돌.",
     ),
@@ -46,9 +46,9 @@ DOYOON_ILGAN_CARDS: dict[str, DoyoonIlganCard] = {
         name_han="乙木",
         subtitle="풀·덩굴 / 적응 생존 유형",
         data_traits=(
-            "적응 속도 평균 대비 1.6배",
-            "환경 의존도 1.3배",
-            "자기 표현 빈도 0.7배",
+            "적응 속도 빠른 편",
+            "환경 의존도 높은 편",
+            "자기 표현 적은 편",
         ),
         love_variables=(
             "상대 맞춤 적응력 ↑",
@@ -62,9 +62,9 @@ DOYOON_ILGAN_CARDS: dict[str, DoyoonIlganCard] = {
         name_han="丙火",
         subtitle="태양 / 광범위 발산 유형",
         data_traits=(
-            "표현 빈도 평균 대비 1.9배",
-            "에너지 노출도 1.5배",
-            "감정 회복 속도 1.3배",
+            "표현 빈도 아주 높은 편",
+            "에너지 노출도 높은 편",
+            "감정 회복 빠른 편",
         ),
         love_variables=(
             "첫인상 강도 ↑",
@@ -78,9 +78,9 @@ DOYOON_ILGAN_CARDS: dict[str, DoyoonIlganCard] = {
         name_han="丁火",
         subtitle="등불 / 한 점 집중 유형",
         data_traits=(
-            "깊이감 평균 대비 1.6배",
-            "표현 폭 0.8배",
-            "한 사람 집중도 1.7배",
+            "깊이감 깊은 편",
+            "표현 폭 좁은 편",
+            "한 사람 집중도 높은 편",
         ),
         love_variables=(
             "장기 관계 유지율 ↑",
@@ -94,9 +94,9 @@ DOYOON_ILGAN_CARDS: dict[str, DoyoonIlganCard] = {
         name_han="戊土",
         subtitle="산 / 묵직한 안정 유형",
         data_traits=(
-            "안정성 평균 대비 1.8배",
-            "변화 수용 0.6배",
-            "신뢰 누적 속도 1.5배",
+            "안정성 아주 높은 편",
+            "변화 수용 낮은 편",
+            "신뢰 누적 빠른 편",
         ),
         love_variables=(
             "관계 안정감 ↑",
@@ -110,9 +110,9 @@ DOYOON_ILGAN_CARDS: dict[str, DoyoonIlganCard] = {
         name_han="己土",
         subtitle="옥토 / 받쳐주는 유형",
         data_traits=(
-            "수용도 평균 대비 1.7배",
-            "자기 우선순위 0.6배",
-            "헌신 빈도 1.6배",
+            "수용도 높은 편",
+            "자기 우선순위 낮은 편",
+            "헌신 빈도 높은 편",
         ),
         love_variables=(
             "상대 성장 지원 ↑",
@@ -126,14 +126,14 @@ DOYOON_ILGAN_CARDS: dict[str, DoyoonIlganCard] = {
         name_han="庚金",
         subtitle="단단한 금속 / 명확 판단 유형",
         data_traits=(
-            "판단 명확성 평균 대비 1.7배",
-            "모호함 수용도 0.4배",
-            "결단 속도 1.5배",
+            "판단 명확성 높은 편",
+            "모호함 수용도 아주 낮은 편",
+            "결단 속도 빠른 편",
         ),
         love_variables=(
             "옳고 그름 정리 ↑",
             "부드러운 표현 ↓",
-            "갈등 임계점 ↓",
+            "갈등 참는 힘 ↓",
         ),
         main_conflict="감정적 모호함을 즐기는 상대와 매칭 시 충돌.",
     ),
@@ -142,9 +142,9 @@ DOYOON_ILGAN_CARDS: dict[str, DoyoonIlganCard] = {
         name_han="辛金",
         subtitle="보석 / 단정 매력 유형",
         data_traits=(
-            "매력 노출도 평균 대비 1.6배",
-            "정서 깊이 1.4배",
-            "자기 보호 강도 1.7배",
+            "매력 노출도 높은 편",
+            "정서 깊이 깊은 편",
+            "자기 보호 강도 높은 편",
         ),
         love_variables=(
             "매력 어필 ↑",
@@ -158,9 +158,9 @@ DOYOON_ILGAN_CARDS: dict[str, DoyoonIlganCard] = {
         name_han="壬水",
         subtitle="큰 물 / 깊은 바다 유형",
         data_traits=(
-            "깊이감 평균 대비 1.7배",
-            "표현 빈도 평균 대비 0.4배",
-            "감정 회복 속도 1.4배 느림",
+            "깊이감 아주 깊은 편",
+            "표현 빈도 적은 편",
+            "감정 회복 느린 편",
         ),
         love_variables=(
             "장기 관계 유지율 ↑",
@@ -174,9 +174,9 @@ DOYOON_ILGAN_CARDS: dict[str, DoyoonIlganCard] = {
         name_han="癸水",
         subtitle="실개천 / 스며듦 유형",
         data_traits=(
-            "섬세함 평균 대비 1.8배",
-            "자기 주장 0.5배",
-            "환경 적응 1.5배",
+            "섬세함 아주 높은 편",
+            "자기 주장 적은 편",
+            "환경 적응 빠른 편",
         ),
         love_variables=(
             "디테일 캐치 ↑",
