@@ -23,8 +23,8 @@ def test_doyoon_persona_shape() -> None:
     assert isinstance(DOYOON_PERSONA, CharacterPersona)
     assert DOYOON_PERSONA.name == "한도윤"
     assert DOYOON_PERSONA.role == "사주 데이터 분석가"
-    assert "표본" in DOYOON_PERSONA.signature_phrase
-    assert "분포" in DOYOON_PERSONA.signature_phrase
+    assert "흐름" in DOYOON_PERSONA.signature_phrase
+    assert "패턴" in DOYOON_PERSONA.signature_phrase
     assert "존댓말" in DOYOON_PERSONA.tone_hint
 
 
