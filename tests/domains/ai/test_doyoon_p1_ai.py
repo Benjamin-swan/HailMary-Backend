@@ -93,7 +93,7 @@ def test_opening_facts_html_dummy() -> None:
     assert f["ilju_hanja"] == "임술(壬戌)"
     assert f["pct_value"] == "8%"
     assert "distribution_pct" not in f
-    assert f["love_type"] == "생각이 깊은 신중한 사람"
+    assert f["love_type"] == "깊고 잔잔한 포용형"  # 무료 CHARM_TYPE_KO와 통일 (2026-06-05)
     assert "홍길동님" in f["rule_text"]
 
 

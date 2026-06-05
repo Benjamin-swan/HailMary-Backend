@@ -34,7 +34,7 @@ class DoyoonP1IlganData:
 
 DOYOON_P1_DATA: dict[str, DoyoonP1IlganData] = {
     "갑목": DoyoonP1IlganData(
-        love_type="직진 추진형 명확 의사결정자",
+        love_type="직진 단단형",
         pct_value=11,
         distribution_pct=10.8,
         trigger_1="공통 신념 발견",
@@ -45,7 +45,7 @@ DOYOON_P1_DATA: dict[str, DoyoonP1IlganData] = {
         self_control_pct=34,
     ),
     "을목": DoyoonP1IlganData(
-        love_type="적응 우선형 점진 진입자",
+        love_type="깊이 감김형",
         pct_value=18,
         distribution_pct=11.5,
         trigger_1="안전한 분위기 형성",
@@ -56,7 +56,7 @@ DOYOON_P1_DATA: dict[str, DoyoonP1IlganData] = {
         self_control_pct=22,
     ),
     "병화": DoyoonP1IlganData(
-        love_type="고텐션 즉시 발산자",
+        love_type="빛으로 끌어당김형",
         pct_value=9,
         distribution_pct=11.1,
         trigger_1="호응하는 리액션",
@@ -67,7 +67,7 @@ DOYOON_P1_DATA: dict[str, DoyoonP1IlganData] = {
         self_control_pct=20,
     ),
     "정화": DoyoonP1IlganData(
-        love_type="한 사람 집중형 깊이 케이스",
+        love_type="은근한 정성형",
         pct_value=7,
         distribution_pct=8.6,
         trigger_1="사적 관심사 공유",
@@ -78,7 +78,7 @@ DOYOON_P1_DATA: dict[str, DoyoonP1IlganData] = {
         self_control_pct=18,
     ),
     "무토": DoyoonP1IlganData(
-        love_type="안정 추구형 신중 진입자",
+        love_type="묵직한 안정형",
         pct_value=14,
         distribution_pct=12.0,
         trigger_1="시간 약속 지킴 반복",
@@ -89,7 +89,7 @@ DOYOON_P1_DATA: dict[str, DoyoonP1IlganData] = {
         self_control_pct=38,
     ),
     "기토": DoyoonP1IlganData(
-        love_type="받쳐주기 우선형 헌신 케이스",
+        love_type="다정한 챙김형",
         pct_value=15,
         distribution_pct=10.3,
         trigger_1="도움이 필요한 신호",
@@ -100,7 +100,7 @@ DOYOON_P1_DATA: dict[str, DoyoonP1IlganData] = {
         self_control_pct=23,
     ),
     "경금": DoyoonP1IlganData(
-        love_type="명확 판단형 직설 표현자",
+        love_type="단호한 결단형",
         pct_value=12,
         distribution_pct=9.7,
         trigger_1="명확한 선호 표명",
@@ -111,7 +111,7 @@ DOYOON_P1_DATA: dict[str, DoyoonP1IlganData] = {
         self_control_pct=32,
     ),
     "신금": DoyoonP1IlganData(
-        love_type="단정 매력 노출형 보호 케이스",
+        love_type="단정한 자존감형",
         pct_value=10,
         distribution_pct=9.4,
         trigger_1="디테일 알아채는 시선",
@@ -122,7 +122,7 @@ DOYOON_P1_DATA: dict[str, DoyoonP1IlganData] = {
         self_control_pct=26,
     ),
     "임수": DoyoonP1IlganData(
-        love_type="생각이 깊은 신중한 사람",
+        love_type="깊고 잔잔한 포용형",
         pct_value=8,
         distribution_pct=12.4,
         trigger_1="대화가 잘 통하는 느낌",
@@ -133,7 +133,7 @@ DOYOON_P1_DATA: dict[str, DoyoonP1IlganData] = {
         self_control_pct=17,
     ),
     "계수": DoyoonP1IlganData(
-        love_type="스며들기 우선형 섬세 케이스",
+        love_type="스며드는 섬세형",
         pct_value=13,
         distribution_pct=10.1,
         trigger_1="잔잔한 디테일 캐치",
