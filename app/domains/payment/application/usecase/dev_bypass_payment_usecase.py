@@ -4,23 +4,25 @@ PayApp 결제 단계를 건너뛰고 즉시 payment 레코드를 DONE 상태로 
 PaidReport 합성 트리거. QA 시 결제 단계를 매번 실행하지 않기 위함.
 
 ⚠️ `app_env == "prod"` 에서는 router에서 등록 자체를 안 함 (main.py 분기).
+
+발급/합성 공통부는 `_grant_paid_report.grant_paid_report` 와 공유한다
+(무료 쿠폰 리뎀션과 동일 동작 — env 가드 대신 코드 가드인 점만 다름).
 """
 
 from __future__ import annotations
 
-import asyncio
 import logging
 import uuid
-from datetime import UTC, datetime
 
 from app.domains.payment.application.payment_ports import (
     PaidReportCreatorPort,
     SajuHashResolverPort,
     UserDemographicsPort,
     UserLookupPort,
-    safe_track_payment_completed,
 )
-from app.domains.payment.domain.entity.payment import Payment
+from app.domains.payment.application.usecase._grant_paid_report import (
+    grant_paid_report,
+)
 from app.domains.payment.domain.port.analytics_port import AnalyticsPort
 from app.domains.payment.domain.port.payment_repository_port import (
     PaymentRepositoryPort,
@@ -28,10 +30,7 @@ from app.domains.payment.domain.port.payment_repository_port import (
 from app.domains.payment.domain.value_object.character_price import (
     get_character_price,
 )
-from app.domains.payment.domain.value_object.payment_status import (
-    CharacterCode,
-    PaymentStatus,
-)
+from app.domains.payment.domain.value_object.payment_status import CharacterCode
 
 logger = logging.getLogger(__name__)
 
@@ -67,70 +66,19 @@ class DevBypassPaymentUseCase:
             raise ValueError("세션이 만료되었거나 잘못된 토큰입니다.")
 
         order_id = f"bypass_{uuid.uuid4().hex}"
-        amount = get_character_price(character)
-        now = datetime.now(UTC)
-
-        payment = Payment.from_approval(
-            payment_key=f"dev-bypass-{order_id}",
-            order_id=order_id,
+        saved = await grant_paid_report(
+            repo=self._repo,
             user_id=user_id,
             character=character,
-            amount=amount,
-            status=PaymentStatus.DONE,
             customer_email=customer_email,
-            approved_at=now,
+            amount=get_character_price(character),
+            order_id=order_id,
+            payment_key=f"dev-bypass-{order_id}",
+            paid_report_creator=self._paid_report_creator,
+            saju_hash_resolver=self._saju_hash_resolver,
+            analytics=self._analytics,
+            user_demographics=self._user_demographics,
+            log_tag="DEV BYPASS",
+            method="dev_bypass",  # 실 결제수단 없음 — 테스트 구분용 (HMDA-42)
         )
-        saved = await self._repo.save(payment)
-        logger.warning(
-            "[DEV BYPASS] payment created order=%s user=%s amount=%s — production 모드에서는 노출되면 안 됨",
-            saved.order_id,
-            saved.user_id,
-            saved.amount,
-        )
-
-        # PaidReport 합성 트리거 (실 결제 플로와 동일)
-        if self._paid_report_creator is not None:
-            saju_hash: str | None = None
-            if self._saju_hash_resolver is not None:
-                saju_hash = await self._saju_hash_resolver.resolve(saved.user_id)
-            try:
-                await self._paid_report_creator.execute(
-                    order_id=saved.order_id,
-                    saju_hash=saju_hash or saved.order_id,
-                    user_id=saved.user_id,
-                    customer_email=saved.customer_email,
-                    expires_at=saved.expires_at,
-                    character=saved.character.value,
-                )
-            except Exception as e:  # noqa: BLE001
-                logger.warning("[DEV BYPASS] paid_report_creator failed: %s", e)
-
-        # Amplitude 트래킹 (테스트 분석용)
-        if self._analytics is not None:
-            gender: str | None = None
-            if self._user_demographics is not None:
-                try:
-                    gender = await self._user_demographics.find_gender_by_user_id(
-                        saved.user_id
-                    )
-                except Exception as e:  # noqa: BLE001
-                    logger.warning("[DEV BYPASS] user_demographics failed: %s", e)
-            asyncio.create_task(
-                safe_track_payment_completed(
-                    analytics=self._analytics,
-                    user_id=saved.user_id,
-                    device_id=None,
-                    session_id=None,
-                    order_id=saved.order_id,
-                    character=saved.character.value,
-                    amount=saved.amount,
-                    method=None,
-                    easy_pay_provider=None,
-                    card_issuer_code=None,
-                    bank_code=None,
-                    approved_at=saved.approved_at,
-                    gender=gender,
-                )
-            )
-
         return saved.order_id

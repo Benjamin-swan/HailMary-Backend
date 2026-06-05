@@ -38,6 +38,7 @@ YEONWOO_PERSONA = CharacterPersona(
 DOYOON_PERSONA = CharacterPersona(
     name="한도윤",
     role="사주 데이터 분석가",
-    signature_phrase="표본 / 분포 / 임계점 / 전환율 / 상관 / 회귀 / 점수",
-    tone_hint="존댓말, 분석적, 따뜻함은 절제 — 숫자 뒤에 한 줄",
+    # QA(박현수·허윤지): 데이터 조어(임계점/전환율 등) → 상담형 어휘로 교체.
+    signature_phrase="흐름 / 패턴 / 속도 / 신호 / 거리 / 균형",
+    tone_hint="존댓말, 차분하고 분석적이되 상담하듯 — 수치보다 풀이를 한 줄 더",
 )

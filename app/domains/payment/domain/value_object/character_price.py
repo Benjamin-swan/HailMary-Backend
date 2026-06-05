@@ -6,12 +6,12 @@ PayApp 플로에서는 FE가 가격을 보낼 필요 없음. BE가 character 만
 
 from app.domains.payment.domain.value_object.payment_status import CharacterCode
 
-# ⚠️ PayApp 마이그레이션 라이브 검증 중 — 임시로 1,000원.
-# 본 배포 전 두 값 모두 20000으로 원복 + 본 SSOT (`결제_마이그레이션/PAYAPP_MIGRATION.md`)
-# 의 Phase 10 체크리스트에 "가격 원복" 확인.
+# 론칭 할인가 — 정가 20,000원 → 판매가 4,900원 (연우·도윤 공통).
+# 정가(20,000)는 FE 표시 전용(취소선)이고, 실제 결제 금액의 단일 진실원은 이 값이다.
+# FE checkoutProducts.ts 의 priceKrw 와 반드시 동일하게 유지할 것.
 _CHARACTER_PRICES_KRW: dict[CharacterCode, int] = {
-    CharacterCode.YEONWOO: 1000,
-    CharacterCode.DOYOON: 1000,
+    CharacterCode.YEONWOO: 4900,
+    CharacterCode.DOYOON: 4900,
 }
 
 _CHARACTER_GOODS_NAMES: dict[CharacterCode, str] = {

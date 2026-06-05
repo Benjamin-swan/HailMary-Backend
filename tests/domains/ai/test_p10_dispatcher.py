@@ -39,9 +39,9 @@ def test_doyoon_dispatcher_includes_statistics_vocab() -> None:
     system, user = build_p10_system_prompt(
         persona=DOYOON_PERSONA, user_name="홍길동", **_COMMON_KWARGS
     )
-    # 도윤은 통계 어휘가 박혀있어야
-    assert "표본" in system
-    assert "분포" in system
+    # 도윤은 상담형 시그니처 어휘가 박혀있어야 (QA: 데이터 조어 → 상담형 교체)
+    assert "흐름" in system
+    assert "패턴" in system
     # 호명이 user에 들어감
     assert "홍길동" in user
 

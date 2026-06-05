@@ -32,7 +32,6 @@ from app.domains.ai.domain.value_object.character_persona import (
     DOYOON_PERSONA,
     YEONWOO_PERSONA,
 )
-from app.domains.ai.domain.value_object.report_status import ReportStatus
 
 if TYPE_CHECKING:
     from app.domains.ai.application.usecase.determine_doyoon_name_address_usecase import (
@@ -272,9 +271,11 @@ class CreatePaidReportUseCase:
 
         saved = await self._repo.save(report)
 
-        # 4. ready 상태면 이메일 발송 트리거 (fire-and-forget)
-        if saved.status == ReportStatus.READY:
-            self._trigger_email(saved, customer_email, expires_at, character)
+        # 4. (2026-06-05 확정-후-발송 재설계) 합성 완료 시 자동 발송 *제거*.
+        #    구 설계는 오타 주소(남의 주소일 수 있음)로 선발송 + 모달 수정 시 2통 문제.
+        #    발송 주체: ① FE 이메일 확인 모달 확정(/update-email)
+        #              ② EmailDispatchSweeper (확정 건 즉시 / 미확정 grace 후 폴백)
+        #    _trigger_email/_email_sender 는 다른 경로 재사용 대비 유지.
 
         return saved
 
@@ -755,7 +756,9 @@ class CreatePaidReportUseCase:
                     name, user_id, result,
                 )
                 continue
-            ai_text = str(result)
+            # 프론트 DoyoonAiBlock은 마크다운 미파싱 — AI가 붙인 ** 굵게가 그대로
+            # 노출되므로 모든 도윤 AI 슬롯에서 일괄 제거 (2026-06-05 QA).
+            ai_text = str(result).replace("**", "")
             if name == "p0_intro" and response.p0_doyoon is not None:
                 response.p0_doyoon.ai_intro = ai_text
             elif name == "p1_opening" and response.p1_doyoon is not None:

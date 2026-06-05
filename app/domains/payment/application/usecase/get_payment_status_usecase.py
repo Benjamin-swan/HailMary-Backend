@@ -22,4 +22,5 @@ class GetPaymentStatusUseCase:
             order_id=payment.order_id,
             status=payment.status.value,
             character=payment.character.value,
+            customer_email=payment.customer_email,
         )

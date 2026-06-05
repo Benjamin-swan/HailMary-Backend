@@ -29,9 +29,10 @@ def test_get_facts_html_dummy() -> None:
     assert f["ilgan_hanja"] == "壬水"
     assert f["excess_ohang_hanja"] == "水"
     assert f["lack_ohang_hanja"] == "土"
-    assert f["excess_percentile"] == "상위 15%"
-    assert f["lack_percentile"] == "하위 12%"
-    assert f["contact_rate_drop"] == "36%"
+    # 수치(백분위·접촉률) 키는 2026-06-05 폐기 — facts에 더 이상 없음
+    assert "excess_percentile" not in f
+    assert "lack_percentile" not in f
+    assert "contact_rate_drop" not in f
     # rule_text는 합성된 4단락
     assert "홍길동님" in f["rule_text"]
     assert f["rule_text"].count("\n\n") == 3
@@ -59,12 +60,11 @@ def test_build_prompt_substitutes_facts() -> None:
         user_name="홍길동", ilgan="임수", ohang_excess="수", ohang_lack="토"
     )
     system, user = build_p0_diagnosis_prompt(f)
-    # system: 페르소나 + 사실값 박힘
+    # system: 페르소나 + 사실값 박힘 (오행 한자, 수치는 폐기)
     assert "한도윤" in system
     assert "홍길동" in system
-    assert "상위 15%" in system
-    assert "하위 12%" in system
-    assert "36%" in system
+    assert "水" in system
+    assert "土" in system
     # user: 사실값 + rule_text 박힘
     assert "user_name: 홍길동" in user
     assert "ilgan_hanja: 壬水" in user
@@ -82,17 +82,17 @@ def test_build_prompt_missing_key_raises() -> None:
 
 
 def _valid_text(facts: dict[str, str]) -> str:
-    """검증 통과하는 가상 AI 출력. _MIN_LENGTH=180 이상 보장."""
+    """검증 통과하는 가상 AI 출력. _MIN_LENGTH=180 이상 보장. 수치 미포함(2026-06-05)."""
     return (
         f"{facts['user_name']}님, 입력 데이터 정리가 모두 끝났습니다. "
-        "표본 분석 준비도 같이 마쳤어요.\n\n"
-        f"일간은 {facts['ilgan_full']}({facts['ilgan_hanja']}) — 강점 분포가 측정됐어요. "
-        "데이터 표본상 안정 임계점을 넘는 변수입니다. 차단율 관련 인풋도 양호한 편이에요.\n\n"
-        f"다만 {facts['excess_ohang_hanja']} 기운이 {facts['excess_percentile']}, "
-        f"{facts['lack_ohang_hanja']} 기운이 {facts['lack_percentile']}로 측정돼요. "
-        f"동일 패턴 표본에서 접촉률이 {facts['contact_rate_drop']} 낮게 잡힙니다. "
-        "이 두 변수가 연애 영역의 핵심 입력 데이터입니다.\n\n"
-        "다음 장에서 변수별 차단율과 우선순위를 분석해드릴게요."
+        "분석 준비도 같이 마쳤어요.\n\n"
+        f"일간은 {facts['ilgan_full']}({facts['ilgan_hanja']}) — 강점 분포가 또렷하게 드러나요. "
+        "첫인상에서 속도가 붙는 흐름이 보이는 유형입니다. 초반 관계 형성에 유리한 편이에요.\n\n"
+        f"다만 {facts['excess_ohang_hanja']} 기운이 뚜렷하게 과다하고, "
+        f"{facts['lack_ohang_hanja']} 기운은 눈에 띄게 부족한 것으로 나타나요. "
+        "이 두 변수가 연애 영역에 직접 영향을 줍니다. "
+        "한쪽이 넘치고 한쪽이 받쳐주지 못하면 흐름이 흔들리는 지점이 생겨요.\n\n"
+        "다음 장에서 변수별 영향과 우선순위를 분석해드릴게요."
     )
 
 
@@ -115,25 +115,15 @@ def test_validate_fails_user_name_missing() -> None:
     assert "user_name" in reason
 
 
-def test_validate_fails_percentile_mutated() -> None:
+def test_validate_fails_ohang_hanja_mutated() -> None:
     f = get_doyoon_p0_facts(
         user_name="홍길동", ilgan="임수", ohang_excess="수", ohang_lack="토"
     )
-    # AI가 "상위 15%"를 "상위 14%"로 살짝 바꿈
-    text = _valid_text(f).replace("상위 15%", "상위 14%")
+    # AI가 부족 오행 한자 土를 누락 (土는 임수/水에 안 겹쳐 격리 검증됨)
+    text = _valid_text(f).replace("土", "흙")
     ok, reason = validate_p0_diagnosis(text, f)
     assert not ok
-    assert "excess_percentile" in reason
-
-
-def test_validate_fails_contact_rate_mutated() -> None:
-    f = get_doyoon_p0_facts(
-        user_name="홍길동", ilgan="임수", ohang_excess="수", ohang_lack="토"
-    )
-    text = _valid_text(f).replace("36%", "35%")
-    ok, reason = validate_p0_diagnosis(text, f)
-    assert not ok
-    assert "contact_rate_drop" in reason
+    assert "lack_ohang_hanja" in reason
 
 
 def test_validate_fails_length_too_short() -> None:
@@ -216,10 +206,10 @@ async def test_usecase_falls_back_on_ai_error() -> None:
     out = await usecase.execute(
         user_name="홍길동", ilgan="임수", ohang_excess="수", ohang_lack="토"
     )
-    # 룰 fallback — 4단락 + 사실값 포함
+    # 룰 fallback — 4단락 + 사실값 포함 (수치 없이 질적 표현)
     assert "홍길동님" in out
     assert "壬水" in out
-    assert "상위 15%" in out
+    assert "水가 넘치면" in out
     assert out.count("\n\n") == 3
 
 
@@ -236,5 +226,4 @@ async def test_usecase_falls_back_on_validation_fail() -> None:
     # AI 텍스트 아니고 룰 fallback (단락 구조 + 사실값 정확)
     assert out.count("\n\n") == 3
     assert "壬水" in out
-    assert "상위 15%" in out
-    assert "36%" in out
+    assert "水가 넘치면" in out

@@ -81,7 +81,7 @@ def test_compose_akyon_unknown_slot_fallback() -> None:
     text = compose_doyoon_p4_akyon(
         user_name="홍길동", ilgan="임수", akyon_slot_id="m-unknown-yang"
     )
-    assert "64%" in text  # m-water-yang의 height_distribution_pct
+    assert "64%" not in text  # 키 분포 %는 제거 (그래프 없는 화면)
 
 
 # ── AKYON ────────────────────────────────────────────────────────
@@ -94,19 +94,19 @@ def test_akyon_facts_imsu() -> None:
     assert f["impression_first"] == "91"
     assert f["impression_6m"] == "14"
     assert f["impression_gap"] == "77"
-    assert f["height_distribution_pct"] == "64%"
+    assert "height_distribution_pct" not in f
     assert f["common_signal_pct"] == "71%"
 
 
 def _akyon_valid_text(facts: dict[str, str]) -> str:
     return (
         "데이터가 분류한 비호환 프로파일이에요. 외형부터 정리해드릴게요.\n\n"
-        f"키 분포 — 평균보다 +5cm 이상 표본이 {facts['height_distribution_pct']}. "
+        "키 — 평균보다 +5cm 이상인 편이 많아요. "
         f"체형은 마른 골격에 어깨가 좁은 편. 얼굴 데이터는 광대 도드라짐, 턱선 각짐. "
         f"동일 비호환 사례의 {facts['common_signal_pct']}를 차지하는 패턴입니다.\n\n"
         f"문제는 인상 점수 격차예요. 첫인상 {facts['impression_first']}점, "
         f"6개월 호감 {facts['impression_6m']}점, 격차 {facts['impression_gap']}점. "
-        "평균 격차 32점 대비 두 배 이상입니다.\n\n"
+        "평균 격차 32점에 견주면 두드러지게 큽니다.\n\n"
         f"{facts['ilgan_full']} 일간과의 감정 주파수 불일치율이 87%로 측정돼요. "
         "초기 신호 두 개 이상 보이면 즉시 거리 조정 권장. "
         f"{facts['user_name']}님 매력을 낭비하기엔 아까운 유형입니다."
@@ -146,22 +146,23 @@ async def test_akyon_usecase_falls_back() -> None:
 
 def test_illusion_facts_imsu() -> None:
     f = get_doyoon_p4_illusion_facts(user_name="홍길동", ilgan="임수")
-    assert f["illusion_multiplier"] == "1.3배"
+    assert f["illusion_multiplier"] == "꽤 잦은 편"
+    assert "배" not in f["illusion_multiplier"]
     assert f["sign_1_keyword"] == "첫 만남 점수 90+"
     assert f["sign_1_pct"] == "78%"
     assert f["real_growth_pct"] == "+18%"
     assert f["fake_drop_pct"] == "-38%"
-    assert f["accuracy_multiplier"] == "9배"
+    assert f["accuracy_multiplier"] == "훨씬"
 
 
 def _illusion_valid_text(facts: dict[str, str]) -> str:
     return (
-        f"{facts['ilgan_full']} 일간 표본에서 착각 인연 발생률이 평균보다 "
-        f"{facts['illusion_multiplier']} 높게 측정됩니다. "
+        f"{facts['ilgan_full']} 일간 표본에서 착각 인연 발생률이 평소보다 "
+        "꽤 높게 나타납니다. "
         "초기 강한 끌림을 운명으로 오인하는 경향이 통계적으로 유의미해요.\n\n"
         f"핵심은 3개월차 기울기예요. 진짜 인연은 호감도 {facts['real_growth_pct']} 상승, "
         f"착각 인연은 {facts['fake_drop_pct']} 하락. 이 기울기가 첫 만남 점수보다 "
-        f"{facts['accuracy_multiplier']} 더 정확한 지표입니다.\n\n"
+        "훨씬 더 정확한 지표입니다.\n\n"
         f"오인 신호 — {facts['sign_1_keyword']} (발생률 {facts['sign_1_pct']}), "
         f"{facts['sign_2_keyword']} (발생률 {facts['sign_2_pct']}), "
         f"{facts['sign_3_keyword']} (발생률 {facts['sign_3_pct']}). 두 가지 이상이면 검증 진입.\n\n"

@@ -1,4 +1,8 @@
-from collections.abc import AsyncGenerator
+import asyncio
+import logging
+from collections.abc import AsyncGenerator, Coroutine
+from datetime import datetime
+from typing import Any
 
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -116,6 +120,13 @@ from app.domains.kkebi.adapter.outbound.persistence.daily_template_repository im
 from app.domains.kkebi.application.usecase.get_daily_fortune_usecase import (
     GetDailyFortuneUseCase,
 )
+from app.domains.payment.adapter.inbound.api.coupon_router import (
+    get_redeem_coupon_usecase,
+    get_validate_coupon_usecase,
+)
+from app.domains.payment.adapter.inbound.api.coupon_router import (
+    router as coupon_router,
+)
 from app.domains.payment.adapter.inbound.api.payment_router import (
     dev_router as payment_dev_router,
 )
@@ -134,6 +145,9 @@ from app.domains.payment.adapter.outbound.external.amplitude_adapter import (
     AmplitudeAnalyticsAdapter,
 )
 from app.domains.payment.adapter.outbound.external.payapp_client import PayAppClient
+from app.domains.payment.adapter.outbound.persistence.coupon_repository import (
+    CouponRepository,
+)
 from app.domains.payment.adapter.outbound.persistence.payment_repository import (
     PaymentRepository,
 )
@@ -145,17 +159,26 @@ from app.domains.payment.adapter.outbound.user_lookup_adapter import UserLookupA
 from app.domains.payment.application.usecase.dev_bypass_payment_usecase import (
     DevBypassPaymentUseCase,
 )
+from app.domains.payment.application.usecase.email_dispatch_sweeper import (
+    EmailDispatchSweeper,
+)
 from app.domains.payment.application.usecase.get_payment_status_usecase import (
     GetPaymentStatusUseCase,
 )
 from app.domains.payment.application.usecase.handle_payapp_feedback_usecase import (
     HandlePayAppFeedbackUseCase,
 )
+from app.domains.payment.application.usecase.redeem_coupon_usecase import (
+    RedeemCouponUseCase,
+)
 from app.domains.payment.application.usecase.request_payment_usecase import (
     RequestPaymentUseCase,
 )
 from app.domains.payment.application.usecase.update_email_and_resend_usecase import (
     UpdateEmailAndResendUseCase,
+)
+from app.domains.payment.application.usecase.validate_coupon_usecase import (
+    ValidateCouponUseCase,
 )
 from app.domains.user.adapter.inbound.api.auth import get_user_repository
 from app.domains.user.adapter.inbound.api.user_router import (
@@ -191,6 +214,8 @@ from app.infrastructure.external.ses.client import SESClient
 app = FastAPI(title="HailMary Backend", version="0.1.0")
 
 _settings = get_settings()
+
+logger = logging.getLogger(__name__)
 
 
 def _allowed_origins() -> list[str]:
@@ -408,12 +433,8 @@ def _build_paid_report_pipeline(
             access_key_id=_settings.aws_access_key_id,
             secret_access_key=_settings.aws_secret_access_key,
         )
-        # 결과지 링크 base URL — 운영/테스트 분기
-        base_url = (
-            "http://localhost:3000"
-            if _settings.app_env in ("local", "test")
-            else "https://dohwaseonsaju.com"
-        )
+        # 결과지 링크 base URL — 환경 설정값 사용 (local=localhost, staging/prod=FRONTEND_BASE_URL)
+        base_url = _settings.frontend_base_url
         email_sender = SendResultLinkEmailUseCase(
             ses_client=ses_client,
             base_url=base_url,
@@ -524,11 +545,7 @@ def _make_update_email_usecase(
             access_key_id=_settings.aws_access_key_id,
             secret_access_key=_settings.aws_secret_access_key,
         )
-        base_url = (
-            "http://localhost:3000"
-            if _settings.app_env in ("local", "test")
-            else "https://dohwaseonsaju.com"
-        )
+        base_url = _settings.frontend_base_url
         email_resend_impl = SendResultLinkEmailUseCase(
             ses_client=ses_client, base_url=base_url
         )
@@ -560,6 +577,69 @@ def _make_dev_bypass_usecase(
     )
 
 
+# ── 무료 쿠폰 UseCase 팩토리 (prod 노출 — 코드가 가드) ───────────────────────
+
+def _compose_report_background(
+    *,
+    order_id: str,
+    user_id: int,
+    customer_email: str,
+    expires_at: datetime,
+    character: str,
+) -> Coroutine[Any, Any, None]:
+    """쿠폰 무료 발급 후 유료 결과지 합성을 백그라운드에서 수행.
+
+    요청 세션은 응답과 함께 닫히므로 **자기 AsyncSession 을 새로 연다**(이메일
+    fire-and-forget 과 동일 계열). 도윤의 긴 AI 합성이 redeem 응답을 막지 않게 분리.
+    """
+
+    async def _run() -> None:
+        try:
+            async with AsyncSessionLocal() as session, session.begin():
+                creator, resolver, _ul, _ud, _an = _build_paid_report_pipeline(session)
+                saju_hash = await resolver.resolve(user_id)
+                await creator.execute(
+                    order_id=order_id,
+                    saju_hash=saju_hash or order_id,
+                    user_id=user_id,
+                    customer_email=customer_email,
+                    expires_at=expires_at,
+                    character=character,
+                )
+        except Exception:
+            logger.exception("[COUPON bg compose] failed order=%s", order_id)
+
+    return _run()
+
+
+def _make_redeem_coupon_usecase(
+    session: AsyncSession = Depends(_get_session),
+) -> RedeemCouponUseCase:
+    user_repo = UserRepository(session)
+    # 합성은 백그라운드(자기 세션)에서 — 여기선 analytics/demographics 만 요청 세션으로.
+    analytics = AmplitudeAnalyticsAdapter(
+        client=AmplitudeClient(
+            api_key=_settings.amplitude_api_key,
+            base_url=_settings.amplitude_base_url,
+        ),
+        environment=_settings.app_env,
+    )
+    return RedeemCouponUseCase(
+        coupon_repo=CouponRepository(session),
+        repo=PaymentRepository(session),
+        user_lookup=UserLookupAdapter(user_repo=user_repo),
+        background_composer=_compose_report_background,
+        analytics=analytics,
+        user_demographics=UserDemographicsAdapter(user_repo=user_repo),
+    )
+
+
+def _make_validate_coupon_usecase(
+    session: AsyncSession = Depends(_get_session),
+) -> ValidateCouponUseCase:
+    return ValidateCouponUseCase(coupon_repo=CouponRepository(session))
+
+
 # ── AI Domain UseCase 팩토리 ──────────────────────────────────────────────────
 
 def _make_get_paid_report_usecase(
@@ -584,6 +664,8 @@ app.dependency_overrides[get_handle_feedback_usecase] = _make_handle_feedback_us
 app.dependency_overrides[get_payment_status_usecase] = _make_payment_status_usecase
 app.dependency_overrides[get_update_email_usecase] = _make_update_email_usecase
 app.dependency_overrides[get_dev_bypass_usecase] = _make_dev_bypass_usecase
+app.dependency_overrides[get_redeem_coupon_usecase] = _make_redeem_coupon_usecase
+app.dependency_overrides[get_validate_coupon_usecase] = _make_validate_coupon_usecase
 app.dependency_overrides[get_frontend_base_url] = lambda: _settings.frontend_base_url
 app.dependency_overrides[get_paid_report_usecase] = _make_get_paid_report_usecase
 
@@ -592,6 +674,9 @@ app.include_router(payment_router)
 app.include_router(paid_report_router)
 app.include_router(kkebi_router)
 app.include_router(paid_report_share_router)
+# 무료 쿠폰 — dev bypass 와 달리 환경 가드 없이 항상 등록(prod 포함).
+# 유효 쿠폰 코드 자체가 가드 역할 → _DEV_BYPASS_ENVS 분기에 넣지 말 것.
+app.include_router(coupon_router)
 
 # ⚠️ 결제 패스 endpoint — prod 환경에서는 등록 안 함. staging/local/test 에서만 노출.
 # 워크플로마다 APP_ENV 값 다를 수 있음 (prod 워크플로는 "production") — 명시 화이트리스트로 비교.
@@ -623,3 +708,64 @@ app.add_middleware(
 @app.get("/health")
 async def health() -> dict[str, str]:
     return {"status": "ok"}
+
+
+# ── 결과지 메일 발송 스위퍼 (확정-후-발송 설계, 2026-06-05) ──────────────────
+# 발송 주체는 ① /update-email 확정 ② 본 스위퍼(확정 건 즉시 / 미확정 grace 폴백).
+# 상태가 전부 DB(email_confirmed_at/result_email_sent_at)라 재시작에도 안전.
+
+_EMAIL_SWEEPER_INTERVAL_SECONDS = 30
+_email_sweeper_task: asyncio.Task[None] | None = None
+
+
+async def _email_sweeper_tick() -> None:
+    async with AsyncSessionLocal() as session, session.begin():
+        paid_report_repo = PaidReportRepository(session)
+
+        class _ShareLookupAdapter:
+            async def find_share_code(self, order_id: str) -> str | None:
+                r = await paid_report_repo.find_by_order_id(order_id)
+                return r.share_code if r else None
+
+        if not _settings.aws_ses_sender:
+            return  # SES 미설정(로컬 등) — 발송 자체가 no-op이므로 스킵
+        ses_client = SESClient(
+            region=_settings.aws_region,
+            sender=_settings.aws_ses_sender,
+            access_key_id=_settings.aws_access_key_id,
+            secret_access_key=_settings.aws_secret_access_key,
+        )
+        sweeper = EmailDispatchSweeper(
+            payment_repo=PaymentRepository(session),
+            share_lookup=_ShareLookupAdapter(),
+            email_resend=SendResultLinkEmailUseCase(
+                ses_client=ses_client, base_url=_settings.frontend_base_url
+            ),
+        )
+        sent = await sweeper.run_once()
+        if sent:
+            logger.info("[email-sweeper] dispatched %d result link email(s)", sent)
+
+
+async def _email_sweeper_loop() -> None:
+    while True:
+        try:
+            await _email_sweeper_tick()
+        except asyncio.CancelledError:
+            raise
+        except Exception:  # noqa: BLE001 — 틱 실패가 루프를 죽이지 않게
+            logger.exception("[email-sweeper] tick failed")
+        await asyncio.sleep(_EMAIL_SWEEPER_INTERVAL_SECONDS)
+
+
+@app.on_event("startup")
+async def _start_email_sweeper() -> None:
+    # asyncio task GC 가드 — 모듈 레벨 참조로 보관 (fire-and-forget GC 함정).
+    global _email_sweeper_task
+    _email_sweeper_task = asyncio.create_task(_email_sweeper_loop())
+
+
+@app.on_event("shutdown")
+async def _stop_email_sweeper() -> None:
+    if _email_sweeper_task is not None:
+        _email_sweeper_task.cancel()

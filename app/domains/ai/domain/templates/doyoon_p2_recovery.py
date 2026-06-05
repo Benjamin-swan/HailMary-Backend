@@ -26,17 +26,19 @@ def compose_doyoon_p2_recovery(
 
     data = DOYOON_P2_DATA[ilgan]
     ilgan_hanja = ILGAN_HANJA[ilgan]
-    # 회복률 → 잔여 감정 강도 변환 (100 - pct)
-    residual = [100 - m.pct for m in data.meters]
 
+    # 단락2는 위 진행바(직후/1개월/3개월/6개월 %)와 중복되므로 수치 없이 문장으로만 (2026-06-05 결정).
     ai_recovery = (
-        f"회복 데이터도 정리해 드릴게요. {ilgan}({ilgan_hanja}) 일간 표본의 평균 회복 곡선이에요.\n\n"
-        f"직후 — 감정 강도 {residual[0]}% 유지. 1개월 차 — {residual[1]}%까지 내려와요. "
-        f"3개월 차 — {residual[2]}% 수준. 6개월 차 — {residual[3]}%까지 감소합니다.\n\n"
-        f"평균 대비 회복 지연이 {data.recovery_lag_multiplier}로 측정돼요. "
-        f"{user_name}님 케이스에서는 자연 인덱스 감소를 기다리는 게 가장 안전한 경로입니다. "
-        "강제 삭제 시도는 곡선을 오히려 늦춥니다.\n\n"
-        "회복 구간 내 새 매칭 시도는 충돌 확률이 높아져요. 기존 데이터가 정리된 후에 새 변수를 받으세요."
+        f"이별 후 마음이 어떻게 가라앉는지 정리해 드릴게요. "
+        f"{ilgan}({ilgan_hanja}) 일간을 가진 분들의 평균적인 회복 흐름이에요.\n\n"
+        "헤어진 직후엔 감정이 거의 그대로 남아 묵직하게 자리해요. "
+        "한 달이 지나면 조금씩 천천히 가라앉기 시작하고, "
+        "세 달쯤엔 한결 가벼워진 게 느껴져요. 여섯 달이 되면 대부분 옅어져 일상에 무리가 없을 만큼 정리됩니다.\n\n"
+        f"평균 회복 곡선과 견주면 {data.recovery_lag_multiplier} 흘러가는 편이에요. "
+        f"{user_name}님은 마음이 자연스럽게 가라앉기를 기다려 주는 게 가장 편안한 길입니다. "
+        "억지로 잊으려 애쓰면 오히려 더 오래 머물러요.\n\n"
+        "마음이 정리되기 전에 새 인연을 서두르면 부딪히기 쉬워요. "
+        "충분히 비워낸 다음에 새 사람을 받아들이는 게 좋아요."
     )
 
     return {
@@ -63,10 +65,6 @@ def get_doyoon_p2_recovery_facts(
         "user_name": user_name,
         "ilgan_full": ilgan,
         "ilgan_hanja": ILGAN_HANJA[ilgan],
-        "meter_pct_0": f"{data.meters[0].pct}%",
-        "meter_pct_1": f"{data.meters[1].pct}%",
-        "meter_pct_2": f"{data.meters[2].pct}%",
-        "meter_pct_3": f"{data.meters[3].pct}%",
         "recovery_lag_multiplier": data.recovery_lag_multiplier,
         "rule_text": composed["ai_recovery"],
     }

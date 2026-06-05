@@ -18,8 +18,6 @@ from app.domains.ai.domain.service.doyoon_p6_meeting_prompt import validate_p6_m
 from app.domains.ai.domain.service.doyoon_p6_pattern_prompt import validate_p6_pattern
 from app.domains.ai.domain.service.doyoon_p6_profile_prompt import validate_p6_profile
 from app.domains.ai.domain.templates.doyoon_p6_destined import (
-    compose_doyoon_p6_meeting,
-    compose_doyoon_p6_pattern,
     compose_doyoon_p6_profile,
     get_doyoon_p6_meeting_facts,
     get_doyoon_p6_pattern_facts,
@@ -71,7 +69,7 @@ def test_compose_unknown_slot_fallback() -> None:
         user_name="홍길동", ilgan="임수", match_slot_id="m-unknown-yang",
         pct_value=8, ohang_lack="화",
     )
-    assert "71%" in text  # f-water-yang fallback
+    assert "82%" in text  # f-water-yang fallback (compatibility_pct)
 
 
 # ── PROFILE ─────────────────────────────────────────────────────
@@ -84,7 +82,7 @@ def test_profile_facts_imsu() -> None:
     )
     assert f["pct_value"] == "8%"
     assert f["compatibility_pct"] == "82%"
-    assert f["height_distribution_pct"] == "71%"
+    assert "height_distribution_pct" not in f
     assert f["ohang_lack_hanja"] == "火"
 
 
@@ -92,7 +90,7 @@ def _profile_valid(facts):
     return (
         f"궁합 지수 상위 {facts['pct_value']} 케이스로 측정됐어요. "
         "이 구간은 통계적으로 흔하지 않은 분포예요. 최적 인연 프로파일 데이터를 차례대로 보여드릴게요.\n\n"
-        f"외형 데이터 — 키 분포 ±5cm 범위가 {facts['height_distribution_pct']}, 균형 잡힌 체형이 다수. "
+        "외형 데이터 — 키는 평균 ±5cm 범위, 균형 잡힌 체형이 다수. "
         "얼굴은 부드러운 둥근형이 우세하고 이마가 넓은 비율이 상위. "
         f"눈매와 입꼬리 패턴은 동일 호환 사례의 {facts['profile_signal_pct']}를 차지합니다. "
         "손가락 길이와 자세 데이터도 일관된 신호로 잡혀요.\n\n"
@@ -132,9 +130,9 @@ def test_meeting_facts_imsu() -> None:
     f = get_doyoon_p6_meeting_facts(
         user_name="홍길동", ilgan="임수", match_slot_id="f-water-yang"
     )
-    assert f["existing_path_multiplier"] == "2.3배"
-    assert f["low_impact_pct"] == "73%"
-    assert f["second_contact_multiplier"] == "2.4배"
+    assert f["existing_path_multiplier"] == "훨씬 높게"
+    assert "low_impact_pct" not in f
+    assert f["second_contact_multiplier"] == "눈에 띄게 빠르게"
 
 
 def _meeting_valid(facts):
@@ -143,7 +141,7 @@ def _meeting_valid(facts):
         f"{facts['existing_path_multiplier']} 높게 측정됩니다. "
         "새로운 환경 매칭률은 상대적으로 낮은 분포예요.\n\n"
         f"첫 접촉 패턴 — 짧고 평이한 대화로 시작. "
-        f"인상에 강하게 남지 않는 케이스가 {facts['low_impact_pct']}로 다수입니다. "
+        "인상에 강하게 남지 않는 경우가 많은 편입니다. "
         "데이터 자체가 그렇게 분포돼요.\n\n"
         f"결정적인 건 두 번째 접촉이에요. 호감 전환율이 첫 번째 대비 {facts['second_contact_multiplier']}로 급상승. "
         f"{facts['user_name']}님, 첫 만남에서 두 번째 약속을 자연스럽게 잡아두시는 게 효율적이에요."
@@ -164,8 +162,8 @@ async def test_meeting_usecase_falls_back() -> None:
     out = await GenerateP6MeetingUseCase(ai_client=fake).execute(
         user_name="홍길동", ilgan="임수", match_slot_id="f-water-yang"
     )
-    assert "2.3배" in out
-    assert "2.4배" in out
+    assert "두 번째 마주침" in out
+    assert "홍길동님" in out
 
 
 # ── PATTERN ─────────────────────────────────────────────────────
@@ -176,7 +174,7 @@ def test_pattern_facts_imsu() -> None:
     assert f["hesitation_pct"] == "78%"
     assert f["cut_intent_pct"] == "12%"
     assert f["resolution_pct"] == "87%"
-    assert f["initiative_multiplier"] == "1.4배"
+    assert f["initiative_multiplier"] == "한결 잘 맞게"
 
 
 def _pattern_valid(facts):
@@ -204,5 +202,5 @@ async def test_pattern_usecase_falls_back() -> None:
     out = await GenerateP6PatternUseCase(ai_client=fake).execute(
         user_name="홍길동", ilgan="임수"
     )
-    assert "78%" in out
-    assert "1.4배" in out
+    assert "마음 상태" in out
+    assert "홍길동님" in out

@@ -76,8 +76,8 @@ def test_charm_index_facts_imsu() -> None:
     assert f["charm_pct"] == "8%"
     assert f["strength_axis_1"] == "존재감"
     assert f["strength_axis_2"] == "깊이감"
-    assert f["strength_multiplier"] == "1.7배"
-    assert f["conscious_gap_multiplier"] == "2.4배"
+    assert f["strength_multiplier"] == "두드러지게"
+    assert f["conscious_gap_multiplier"] == "한결 더"
 
 
 def _ci_valid(facts):
@@ -85,9 +85,9 @@ def _ci_valid(facts):
         f"상위 {facts['charm_pct']} 케이스로 측정됐어요. 일반적인 분포에서 벗어난 수치입니다. "
         "동일 일간 표본 안에서도 흔치 않은 구간이에요.\n\n"
         f"6축 중 강점이 둘이에요. {facts['strength_axis_1']}과 {facts['strength_axis_2']} — "
-        f"평균 대비 {facts['strength_multiplier']}로 나오네요. 나머지 축들은 평균~약상위 구간입니다. "
+        f"평균보다 {facts['strength_multiplier']} 살아 있어요. 나머지 축들은 평균~약상위 구간입니다. "
         "약점이 있는 게 아니라 강점이 분명한 구조예요. 분포 특성상 두 축 모두 이만큼 나오기 쉽지 않습니다.\n\n"
-        f"다만 {facts['user_name']}님은 의식적 발현과 무의식 발현 차이가 {facts['conscious_gap_multiplier']}예요. "
+        f"다만 {facts['user_name']}님은 의식적 발현과 무의식 발현 차이가 {facts['conscious_gap_multiplier']} 벌어져요. "
         "잠재력 활용도가 낮은 상태입니다. 조금만 의식하셔도 측정값이 더 올라갈 여지가 큽니다."
     )
 
@@ -105,7 +105,8 @@ async def test_charm_index_usecase_falls_back() -> None:
         user_name="홍길동", ilgan="임수", charm_pct=8
     )
     assert "8%" in out
-    assert "1.7배" in out
+    assert "존재감" in out
+    assert "깊이감" in out
 
 
 # ── conversion ──
@@ -115,16 +116,16 @@ def test_conversion_facts_imsu() -> None:
     f = get_doyoon_p5_conversion_facts(user_name="홍길동", ilgan="임수")
     assert f["step_1_pct"] == "30%"
     assert f["step_4_pct"] == "88%"
-    assert f["second_meeting_multiplier"] == "1.4배"
-    assert f["final_gap_pct"] == "38%p"
+    assert f["second_meeting_multiplier"] == "부쩍"
+    assert "final_gap_pct" not in f
 
 
 def _cv_valid(facts):
     return (
         f"첫 인상 {facts['step_1_pct']}에서 시작해서 끌림 {facts['step_4_pct']}까지 도달하는 4단계 전환율입니다. "
         f"중간 단계 {facts['step_2_pct']}와 {facts['step_3_pct']}로 올라가요.\n\n"
-        f"두 번째 만남에서 평균의 {facts['second_meeting_multiplier']}로 효율이 뛰어요. "
-        f"첫 만남 종료 vs 두 번째 진행 케이스의 호감도 격차가 {facts['final_gap_pct']} 벌어집니다.\n\n"
+        f"두 번째 만남에서 호감이 {facts['second_meeting_multiplier']} 깊어지는 흐름이 또렷해요. "
+        "첫 만남 종료 vs 두 번째 진행 케이스의 호감도 격차가 눈에 띄게 벌어집니다.\n\n"
         f"{facts['user_name']}님 전략은 두 번째 약속 사전 확보예요."
     )
 
@@ -141,8 +142,8 @@ async def test_conversion_usecase_falls_back() -> None:
     out = await GenerateP5ConversionUseCase(ai_client=fake).execute(
         user_name="홍길동", ilgan="임수"
     )
-    assert "1.4배" in out
-    assert "38%p" in out
+    assert "홍길동님" in out
+    assert "두 번째 만남" in out
 
 
 # ── appeal ──
@@ -153,7 +154,8 @@ def test_appeal_facts_imsu() -> None:
     assert f["meter_1_name"] == "존재감"
     assert f["meter_1_value"] == "92"
     assert f["weakness_axis_1"] == "표현 일관성"
-    assert f["appeal_boost_pct"] == "26%"
+    # 호감 상승 폭 % 키는 2026-06-05 폐기 (그래프 근거 없는 유령 수치) — facts에 없음
+    assert "appeal_boost_pct" not in f
 
 
 def _ap_valid(facts):
@@ -166,7 +168,7 @@ def _ap_valid(facts):
         f"{facts['meter_4_name']} {facts['meter_4_value']}. "
         f"{facts['weakness_axis_1']}과 {facts['weakness_axis_2']}가 약점 변수입니다. "
         "이 두 축이 통제 가능한 영역이라 가장 효율적인 개선 포인트예요.\n\n"
-        f"{facts['user_name']}님 케이스에서 두 변수만 올리면 호감 유발 효율이 {facts['appeal_boost_pct']} 상승해요. "
+        f"{facts['user_name']}님 케이스에서 두 변수만 올리면 호감이 한결 또렷하게 전해져요. "
         "강점 보완보다 약점 보완이 효율 높은 영역입니다. 우선순위 정해서 진입하세요."
     )
 
@@ -184,4 +186,4 @@ async def test_appeal_usecase_falls_back() -> None:
         user_name="홍길동", ilgan="임수"
     )
     assert "표현 일관성" in out
-    assert "26%" in out
+    assert "반응 속도" in out

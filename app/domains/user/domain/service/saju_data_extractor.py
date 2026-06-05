@@ -46,8 +46,10 @@ class SajuDataExtractor:
             WL_G/WL_J: 월주 천간/지지 한자
             YR_G/YR_J: 년주 천간/지지 한자
             OHANG_MOK/HWA/TO/GEUM/SU: 오행 비율 정수(0~100, 합 100)
-            OHANG_EXCESS: 비율 max인 오행 한글 1글자
-            OHANG_LACK: 비율 min인 오행 한글 1글자
+            OHANG_EXCESS: 비율 max인 오행 한글 1글자 (서사 포커스용 — 지배적 1개)
+            OHANG_LACK: 비율 min인 오행 한글 1글자 (서사 포커스용 — 지배적 1개)
+            OHANG_JUDGMENTS: 오행별 강약 판정 dict (한글키 → 결핍/적정/발달/과다)
+                             — P-0 "0-2 오행의 흐름" 막대 표시용. 무료 결과와 동일 임계값.
             ILGAN: 일간 한글 풀네임 (10종 중 하나, 예: "임수")
             ILJU: 일주 한글 (천간+지지, 예: "임술")
 
@@ -63,6 +65,7 @@ class SajuDataExtractor:
         wuxing_count = _safe_dict(saju_raw.get("wuxingCount"))
         ratios = _ohang_ratios_percent(wuxing_count)
         excess, lack = _ohang_excess_lack(ratios)
+        judgments = classify_ohang_strength(wuxing_count)
 
         day_stem = str(day.get("stem", ""))
         day_branch = str(day.get("branch", ""))
@@ -85,6 +88,7 @@ class SajuDataExtractor:
             "OHANG_SU": ratios["수"],
             "OHANG_EXCESS": excess,
             "OHANG_LACK": lack,
+            "OHANG_JUDGMENTS": judgments,
             "ILGAN": ilgan,
             "ILJU": ilju,
         }
@@ -121,12 +125,45 @@ def _ohang_ratios_percent(wuxing_count: dict[str, Any]) -> dict[str, int]:
 
 
 def _ohang_excess_lack(ratios: dict[str, int]) -> tuple[str, str]:
-    """비율 max/min 오행 한글 1글자. 모두 0이면 빈 문자열."""
+    """비율 max/min 오행 한글 1글자. 모두 0이면 빈 문자열.
+
+    NOTE: 단일 지배 오행(서사 포커스)용. P-0 ai_intro / P-3(과다) / P-9(부족)
+    템플릿이 '1개'를 전제로 쓰므로 의도적으로 단일값을 유지한다.
+    오행 강약 '표시'(막대 라벨)는 classify_ohang_strength()를 써야 한다.
+    """
     if all(v == 0 for v in ratios.values()):
         return "", ""
     excess = max(_OHANG_KEYS, key=lambda k: ratios[k])
     lack = min(_OHANG_KEYS, key=lambda k: ratios[k])
     return excess, lack
+
+
+def classify_ohang_strength(wuxing_count: dict[str, Any]) -> dict[str, str]:
+    """오행별 강약 판정(한글키 → 결핍/적정/발달/과다).
+
+    임계값: <5 결핍 · <20 적정 · <32 발달 · ≥32 과다.
+    비율 = count/total*100 (소수 1자리 반올림 후 판정).
+
+    무료 결과 페이지와 동일 기준이어야 사용자 교차검증에서 어긋나지 않는다.
+    **SSOT 동기화 대상**: app/domains/user/application/saju_view_mapper.py
+    의 `_build_wuxing()` judge()와 임계값·라운딩이 반드시 일치해야 한다
+    (둘 다 수정 시 tests/domains/user/test_ohang_judgments.py 동일성 테스트로 보증).
+
+    카운트 합이 0이면 모든 오행을 "결핍"으로 둔다.
+    """
+    counts = {key: _to_int(wuxing_count.get(key, 0)) for key in _OHANG_KEYS}
+    total = sum(counts.values()) or 1
+
+    def judge(ratio: float) -> str:
+        if ratio < 5:
+            return "결핍"
+        if ratio < 20:
+            return "적정"
+        if ratio < 32:
+            return "발달"
+        return "과다"
+
+    return {key: judge(round(counts[key] / total * 100, 1)) for key in _OHANG_KEYS}
 
 
 def _to_int(value: Any) -> int:

@@ -5,7 +5,12 @@
  * 허용 오차: +-5분 이내 (Jean Meeus 알고리즘 정밀도)
  */
 
-import { getSolarTermsForYear } from '../src/data/solar_terms.js';
+import {
+  getSolarTermsForYear,
+  getPreviousSolarTerm,
+  getNextSolarTerm,
+} from '../src/data/solar_terms.js';
+import { convertCalendar } from '../src/lib/calendar.js';
 import type { SolarTerm } from '../src/types/index.js';
 
 /**
@@ -144,8 +149,6 @@ describe('대운 계산용 절기 함수 검증', () => {
   // solar_terms.ts에서 1900-2200 전 범위를 커버해야 함
 
   test('getPreviousSolarTerm이 1900-2200 전 범위에서 null 없이 동작해야 함', () => {
-    const { getPreviousSolarTerm } = require('../src/data/solar_terms.js');
-
     const date1985 = new Date(1985, 5, 15); // 1985-06-15
     const result = getPreviousSolarTerm(date1985);
 
@@ -154,8 +157,6 @@ describe('대운 계산용 절기 함수 검증', () => {
   });
 
   test('getNextSolarTerm이 1900-2200 전 범위에서 null 없이 동작해야 함', () => {
-    const { getNextSolarTerm } = require('../src/data/solar_terms.js');
-
     const date1985 = new Date(1985, 5, 15);
     const result = getNextSolarTerm(date1985);
 
@@ -165,8 +166,6 @@ describe('대운 계산용 절기 함수 검증', () => {
 
 describe('음력 변환 isLeapMonth 전달 검증', () => {
   test('convertCalendar에 isLeapMonth가 전달되어야 함', () => {
-    const { convertCalendar } = require('../src/lib/calendar.js');
-
     // 윤달이 있는 경우와 없는 경우의 결과가 달라야 함
     // 2023년 음력 2월은 윤달이 있음
     // isLeapMonth=true일 때와 false일 때 결과가 달라야 함

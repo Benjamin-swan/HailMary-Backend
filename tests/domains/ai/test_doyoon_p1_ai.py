@@ -92,8 +92,8 @@ def test_opening_facts_html_dummy() -> None:
     assert f["ilgan_hanja"] == "壬水"
     assert f["ilju_hanja"] == "임술(壬戌)"
     assert f["pct_value"] == "8%"
-    assert f["distribution_pct"] == "12.4%"
-    assert f["love_type"] == "정보 처리형 신중 진입자"
+    assert "distribution_pct" not in f
+    assert f["love_type"] == "깊고 잔잔한 포용형"  # 무료 CHARM_TYPE_KO와 통일 (2026-06-05)
     assert "홍길동님" in f["rule_text"]
 
 
@@ -110,7 +110,7 @@ def test_opening_prompt_substitutes_facts() -> None:
     assert "한도윤" in system
     assert "홍길동" in system
     assert "8%" in system
-    assert "12.4%" in system
+    assert "12.4%" not in system
     assert "user_name: 홍길동" in user
     assert "壬水" in user
     assert "임술(壬戌)" in user
@@ -121,11 +121,11 @@ def _opening_valid_text(facts: dict[str, str]) -> str:
     return (
         f"솔직히 말씀드릴게요. {facts['user_name']}님은 상위 {facts['pct_value']} 케이스로 분류돼요. "
         "동일 일간 안에서 이렇게 분명한 패턴은 흔치 않거든요.\n\n"
-        f"{facts['ilgan_full']}({facts['ilgan_hanja']}) 일간 분포가 {facts['distribution_pct']}인데, "
-        f"그 안에서 '{facts['love_type']}'로 분류되는 케이스는 더 좁아요. "
+        f"{facts['ilgan_full']}({facts['ilgan_hanja']}) 일간 중에서도 "
+        f"'{facts['love_type']}'로 분류되는 케이스는 더 좁아요. "
         f"{facts['ilju_hanja']} 일주까지 결합하면 세분화가 한 단계 더 들어갑니다.\n\n"
         "특징은 처리량은 많은데 외부로 출력되는 비율이 평균보다 낮은 구조입니다. "
-        "그래서 주변에서 읽어내는 데 시간이 더 걸려요.\n\n"
+        "그래서 주변에서 그 결을 알아채고 읽어내는 데 시간이 조금 더 걸리는 편이에요.\n\n"
         "딱 하나 바꿔보세요. 표현 빈도를 주 1회만 의식적으로 늘려보시면, 읽는 방식이 달라질 거예요."
     )
 
@@ -179,31 +179,31 @@ async def test_opening_usecase_falls_back_on_ai_error() -> None:
 
 def test_trigger_facts_html_dummy() -> None:
     f = get_doyoon_p1_trigger_facts(user_name="홍길동", ilgan="임수")
-    assert f["trigger_completion_pct"] == "88%"
+    assert "trigger_completion_pct" not in f
     assert f["peak_window_days"] == "30일"
-    assert f["self_control_pct"] == "17%"
-    assert f["trigger_1"] == "공유된 지적 발견"
-    assert f["trigger_2"] == "답 빠른 메시지 응답"
+    assert "self_control_pct" not in f
+    assert f["trigger_1"] == "대화가 잘 통하는 느낌"
+    assert f["trigger_2"] == "답장이 빨리 오가는 흐름"
     assert "홍길동님" in f["rule_text"]
 
 
 def test_trigger_prompt_substitutes_facts() -> None:
     f = get_doyoon_p1_trigger_facts(user_name="홍길동", ilgan="임수")
     system, user = build_p1_trigger_prompt(f)
-    assert "88%" in system
+    assert "88%" not in system
     assert "30일" in system
-    assert "17%" in system
-    assert "공유된 지적 발견" in user
+    assert "17%" not in system
+    assert "대화가 잘 통하는 느낌" in user
 
 
 def _trigger_valid_text(facts: dict[str, str]) -> str:
     return (
-        f"흥미로운 케이스입니다. 트리거 셋이 순서대로 발화하면 임계점 도달이 {facts['trigger_completion_pct']}로 잡혀요. "
-        "거의 자동에 가까운 수준이에요.\n\n"
+        "흥미로운 케이스입니다. 트리거 셋이 순서대로 발화하면 그 흐름이 거의 그대로 이어져요. "
+        "사실상 방향이 잡혔다고 봐도 될 만큼 분명한 편이에요.\n\n"
         f"특히 {facts['peak_window_days']} 안에 '{facts['trigger_1']}'과 '{facts['trigger_2']}'가 같이 잡히면, "
-        f"{facts['user_name']}님이 스스로 멈추기가 어려워집니다. "
-        f"{facts['ilgan_full']} 일간의 이 구간 자기조절 성공률이 {facts['self_control_pct']}거든요. "
-        "알고 들어가는 게 안전합니다."
+        f"{facts['ilgan_full']} 일간인 {facts['user_name']}님은 스스로 멈추기가 어려워집니다. "
+        "한 번 달아오른 마음은 좀처럼 브레이크가 걸리지 않거든요. "
+        "겹치기 시작하는 시점을 알고 들어가는 게 안전합니다."
     )
 
 
@@ -213,12 +213,12 @@ def test_trigger_validate_passes() -> None:
     assert ok, f"unexpected fail: {reason}"
 
 
-def test_trigger_validate_fails_88_mutated() -> None:
+def test_trigger_validate_fails_peak_window_removed() -> None:
     f = get_doyoon_p1_trigger_facts(user_name="홍길동", ilgan="임수")
-    text = _trigger_valid_text(f).replace("88%", "87%")
+    text = _trigger_valid_text(f).replace("30일", "초반")
     ok, reason = validate_p1_trigger(text, f)
     assert not ok
-    assert "trigger_completion_pct" in reason
+    assert "peak_window_days" in reason
 
 
 @pytest.mark.asyncio
@@ -238,10 +238,10 @@ async def test_trigger_usecase_falls_back_on_validation_fail() -> None:
     out = await GenerateP1TriggerUseCase(ai_client=fake).execute(
         user_name="홍길동", ilgan="임수"
     )
-    # 룰 fallback (사실값 모두 포함)
-    assert "88%" in out
+    # 룰 fallback (사실값 포함, 수치 % 미언급)
     assert "30일" in out
-    assert "17%" in out
+    assert "88%" not in out
+    assert "17%" not in out
 
 
 # ─────────────────────────────────────────────────────────────────
@@ -253,27 +253,28 @@ def test_emotion_facts_html_dummy() -> None:
     f = get_doyoon_p1_emotion_facts(user_name="홍길동", ilgan="임수")
     assert f["crisis_pct"] == "95%"
     assert f["recovery_pct"] == "60%"
-    assert f["crisis_multiplier"] == "1.8배"
-    assert f["expression_effect_pct"] == "32%"
+    assert f["crisis_multiplier"] == "평소보다 훨씬 크게"
+    # 단락3 조언 효과 수치는 2026-06-05 폐기 — facts에 없음
+    assert "expression_effect_pct" not in f
 
 
 def test_emotion_prompt_substitutes_facts() -> None:
     f = get_doyoon_p1_emotion_facts(user_name="홍길동", ilgan="임수")
     system, user = build_p1_emotion_prompt(f)
     assert "95%" in system
-    assert "1.8배" in system
-    assert "32%" in system
+    assert "평소보다 훨씬 크게" in system
+    assert "60%" in system
 
 
 def _emotion_valid_text(facts: dict[str, str]) -> str:
     return (
         f"그래프를 보시면, 위기 구간에서 진폭이 {facts['crisis_pct']}까지 튀어요. "
-        f"평균의 {facts['crisis_multiplier']} 수준입니다. "
+        f"{facts['crisis_multiplier']} 흔들리는 패턴입니다. "
         f"회복 구간도 {facts['recovery_pct']}대에 한참 머무는 패턴이에요.\n\n"
         f"{facts['ilgan_full']} 일간이 원래 그런 구조입니다. 초반엔 차분해 보이다가 어느 순간 한꺼번에 쏟아져요. "
         "회복 구간도 평균보다 깊고 길게 잡힙니다.\n\n"
-        f"미리 조금씩 꺼내두면 폭발 강도가 줄어요. 작은 표현을 의식적으로 노출하시면 "
-        f"위기 구간 강도가 평균 {facts['expression_effect_pct']} 떨어집니다. "
+        "미리 조금씩 꺼내두면 폭발 강도가 줄어요. 작은 표현을 의식적으로 자주 노출하시면 "
+        "위기 구간의 진폭도 한결 가라앉습니다. "
         "어렵게 생각 마시고 자주 표현하시면 됩니다."
     )
 
@@ -284,12 +285,13 @@ def test_emotion_validate_passes() -> None:
     assert ok, f"unexpected fail: {reason}"
 
 
-def test_emotion_validate_fails_multiplier_mutated() -> None:
+def test_emotion_validate_fails_crisis_pct_mutated() -> None:
+    # 배수 게이트는 제거됨 — 수치 게이트(crisis_pct)는 유지되는지 확인
     f = get_doyoon_p1_emotion_facts(user_name="홍길동", ilgan="임수")
-    text = _emotion_valid_text(f).replace("1.8배", "1.7배")
+    text = _emotion_valid_text(f).replace(f["crisis_pct"], "10%")
     ok, reason = validate_p1_emotion(text, f)
     assert not ok
-    assert "crisis_multiplier" in reason
+    assert "crisis_pct" in reason
 
 
 @pytest.mark.asyncio
@@ -309,7 +311,7 @@ async def test_emotion_usecase_falls_back_on_ai_error() -> None:
     out = await GenerateP1EmotionUseCase(ai_client=fake).execute(
         user_name="홍길동", ilgan="임수"
     )
-    # 룰 fallback
+    # 룰 fallback (단락1 % 유지, 단락3 조언 수치 없음)
     assert "95%" in out
-    assert "1.8배" in out
-    assert "32%" in out
+    assert "평소보다 훨씬 크게" in out
+    assert "32%" not in out

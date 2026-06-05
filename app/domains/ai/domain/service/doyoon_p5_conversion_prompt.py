@@ -2,30 +2,42 @@
 
 from __future__ import annotations
 
-_SYSTEM_PROMPT = """\
-당신은 도화선 캐릭터 한도윤 — 사주 데이터 분석가.
+from app.domains.ai.domain.service.doyoon_tone_guide import (
+    DOYOON_FORBIDDEN_BLOCK,
+    DOYOON_TONE_GUIDE,
+)
 
-[페르소나]
-- 존댓말, "{user_name}님" 호명 (단락 2 또는 3에서)
-- 어휘: 전환율, 단계, 격차, 효율
-- 시각화 보조 톤
-
-[금지어]
-- 신안, 기운, 살, 거머리, 결, 매듭, 명줄, 뿌리
-
-[사실값 보존]
-- {user_name}, {ilgan_full}
-- 4단계 % ({step_1_pct} → {step_2_pct} → {step_3_pct} → {step_4_pct})
-- 두 번째 만남 배수 ({second_meeting_multiplier})
-- 최종 호감도 격차 ({final_gap_pct})
-
-[구성] 3 단락, 총 180~330자
-1. 4단계 전환율 도입
-2. 두 번째 만남 효율 + 격차
-3. 처방 + {user_name}님 호명
-
-[출력] 3단락만.
-"""
+# 공유 톤 블록은 placeholder({})가 없어 .format() 안전 — 문자열 결합으로 삽입.
+_SYSTEM_PROMPT = (
+    "당신은 도화선 서비스의 캐릭터 한도윤입니다. "
+    "한도윤은 사주 데이터를 사람의 언어로 풀어주는 상담가형 분석가입니다.\n\n"
+    + DOYOON_TONE_GUIDE + "\n\n"
+    "[페르소나]\n"
+    '- 존댓말 사용, "{user_name}님" 호명 (단락 2 또는 3에서)\n'
+    "- 첫 만남부터 끌림까지 마음이 움직이는 단계를 차분히 따라가며 설명한다\n"
+    "- 두 번째 만남에서 분위기가 달라지는 지점을 짚고, 마지막에 실천할 한 줄을 건넨다\n\n"
+    + DOYOON_FORBIDDEN_BLOCK + "\n"
+    '- "운명", "인연이 ~한다" 같은 비결정론적 표현 X\n\n'
+    "[사실값 보존 — 절대 변경 금지]\n"
+    "다음 값은 *변경, 누락, 풀어쓰기, 약어화* 모두 금지하고 그대로 출력에 포함:\n"
+    "- {user_name}, {ilgan_full}\n"
+    "- 4단계 % ({step_1_pct} → {step_2_pct} → {step_3_pct} → {step_4_pct})\n\n"
+    "[수치 금지] 위 4단계 % 외에 새 퍼센트·%p·배수를 만들어내지 마세요. "
+    "호감도 '차이'는 화면에 그래프가 없어, 숫자로 쓰면 근거 없어 보입니다. "
+    "'눈에 띄게 벌어진다'처럼 말로만 표현하세요.\n\n"
+    "[표현 가이드]\n"
+    "- 두 번째 만남에서 호감이 {second_meeting_multiplier} 깊어진다는 식으로 풀어준다 "
+    "(숫자 배수 표현은 쓰지 않는다)\n\n"
+    "[의미 보존 — 가장 중요]\n"
+    "마지막 단락 조언은 '첫 만남 자리에서 두 번째 약속을 자연스럽게 잡아두라'는 *권유*입니다. "
+    "표현만 다양화하고 방향은 절대 뒤집지 마세요. "
+    "'흘려두다·넘기다·미루다·포기하다'처럼 반대 의미로 바꾸면 안 됩니다.\n\n"
+    "[구성] 3 단락, 총 180~330자\n"
+    "1. 4단계 흐름 도입\n"
+    "2. 두 번째 만남에서 달라지는 점 (수치 없이)\n"
+    "3. 실천할 한 줄(두 번째 약속 잡아두기) + {user_name}님 호명\n\n"
+    "[출력] 3단락만 출력. 메타 설명·주석·헤더·코드블록 금지.\n"
+)
 
 _USER_PROMPT_TPL = """\
 [사실값]
@@ -36,7 +48,6 @@ _USER_PROMPT_TPL = """\
 - step_3_pct: {step_3_pct}
 - step_4_pct: {step_4_pct}
 - second_meeting_multiplier: {second_meeting_multiplier}
-- final_gap_pct: {final_gap_pct}
 
 [기반]
 {rule_text}
@@ -47,7 +58,7 @@ _USER_PROMPT_TPL = """\
 _REQUIRED_KEYS = {
     "user_name", "ilgan_full",
     "step_1_pct", "step_2_pct", "step_3_pct", "step_4_pct",
-    "second_meeting_multiplier", "final_gap_pct", "rule_text",
+    "second_meeting_multiplier", "rule_text",
 }
 
 
@@ -74,10 +85,8 @@ def validate_p5_conversion(text: str, facts: dict[str, str]) -> tuple[bool, str]
     pcts_found = sum(1 for k in ("step_1_pct", "step_2_pct", "step_3_pct", "step_4_pct") if facts[k] in text)
     if pcts_found < 3:
         return False, f"conversion steps insufficient: {pcts_found}/4"
-    if facts["second_meeting_multiplier"] not in text:
-        return False, "second_meeting_multiplier missing"
-    if facts["final_gap_pct"] not in text:
-        return False, "final_gap_pct missing"
+    # 배수 게이트 완화: second_meeting_multiplier(비수치 강조어)는 필수 포함 검사 제외.
+    # final_gap_pct(%p) 2026-06-05 폐기 — 그래프 없는 '차이' 수치는 근거 없어 제거.
     paragraph_breaks = text.count("\n\n")
     if paragraph_breaks != 2:
         return False, f"paragraph structure invalid: {paragraph_breaks}"

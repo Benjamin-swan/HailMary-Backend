@@ -16,6 +16,9 @@ from pydantic import BaseModel, ConfigDict
 
 OhangKey = Literal["mok", "hwa", "to", "geum", "su"]
 
+# P-0 "0-2 오행의 흐름" 막대 라벨. 무료 결과(_build_wuxing)와 동일 4단계.
+OhangJudgment = Literal["결핍", "적정", "발달", "과다"]
+
 
 class SajuPillarsP0(BaseModel):
     """P-0 사주 원국 8자 (천간/지지 한자)."""
@@ -67,6 +70,7 @@ class PaidChapterP0(BaseModel):
     ohang_strength: OhangStrength
     ohang_excess: OhangKey
     ohang_lack: OhangKey
+    ohang_judgments: dict[OhangKey, OhangJudgment]  # 오행별 강약(막대 라벨용)
     ilgan: str
     ilgan_card: IlganCardP0
     ai_intro: str
@@ -97,6 +101,7 @@ class PaidChapterP0Doyoon(BaseModel):
     ohang_strength: OhangStrength        # 연우와 공유
     ohang_excess: OhangKey
     ohang_lack: OhangKey
+    ohang_judgments: dict[OhangKey, OhangJudgment]  # 연우와 공유 (막대 라벨용)
     ilgan: str
     user_name: str                       # 호명용
     ilgan_card: DoyoonIlganCardP0
@@ -771,6 +776,7 @@ class PaidChapterP10(BaseModel):
     """P-10 (CH-7) 편지 — 박스 1·2·3 통합."""
     model_config = ConfigDict(populate_by_name=True)
 
+    user_name: str = ""               # 호명용(편지 헤더/부제). 본문과 동일 호명명 — 마스킹 X (QA F-062)
     ilju_with_hanja: str              # "병인(丙寅)"
     box1_body: str                    # 박스 1 (도입 멘트 + step1 부분집합 본문)
     box2_body: str                    # 박스 2 (4단락 합성)

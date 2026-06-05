@@ -58,6 +58,6 @@ class GenerateP10LetterUseCase:
         return await self._ai_client.generate_chapter(
             system_prompt=system_prompt,
             user_prompt=user_prompt,
-            max_tokens=600,
+            max_tokens=1024,  # 600→1024: P-10 편지 mid-sentence 절단 방지 (QA F-064)
             temperature=0.85,
         )

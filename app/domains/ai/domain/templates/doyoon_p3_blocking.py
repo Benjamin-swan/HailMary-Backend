@@ -35,13 +35,13 @@ def compose_doyoon_p3_blockade(
     b = BLOCKADE_BY_OHANG[ohang_excess]
 
     return (
-        f"데이터부터 보여드릴게요. {user_name}님의 사주 구조에서 {ohang_excess}({b.ohang_hanja}) "
-        f"기운이 평균 대비 {b.blockade_multiplier}로 측정돼요. 단순한 강조 수준이 아니라 구조적으로 과다인 상태예요.\n\n"
-        f"이게 새 인연 진입을 차단해요. 같은 기운이 이미 가득 차 있으면 비슷한 결의 사람이 들어올 자리가 없어지거든요. "
-        f"동일 일간 표본에서 {ohang_excess}({b.ohang_hanja}) 과다 케이스의 신규 인연 접촉률이 "
-        f"평균 대비 {b.blockage_rate_drop} 낮아요. 우연이 아니에요.\n\n"
-        f"해법은 단순해요. 비우는 거예요. 사람이든 미련이든 답 안 오는 연락이든 — 하나만 정리해도 "
-        f"새 인연 진입률이 {b.recovery_after_clearing_pct} 회복돼요. 기존 변수를 줄이는 게 신규 변수를 추가하는 것보다 효율적이에요."
+        f"먼저 흐름부터 짚어드릴게요. {user_name}님의 사주를 보면 {ohang_excess}({b.ohang_hanja}) "
+        f"기운이 {b.blockade_multiplier} 강하게 나타나요. 잠깐 강한 정도가 아니라 깊게 쌓여 있는 상태예요.\n\n"
+        f"이게 새 인연이 들어올 자리를 좁혀요. 같은 기운이 이미 가득 차 있으면 비슷한 결의 사람이 들어설 틈이 줄어들거든요. "
+        f"같은 일간을 가진 분들 중에서도 {ohang_excess}({b.ohang_hanja})가 강한 경우엔 새 인연이 닿는 흐름이 "
+        f"눈에 띄게 더디게 나타나요. 우연이 아니에요.\n\n"
+        f"방법은 의외로 단순해요. 비우는 거예요. 사람이든 미련이든 답 안 오는 연락이든 — 하나만 정리해도 "
+        f"새 인연이 들어올 자리가 다시 열려요. 새로 더하기보다 묵은 걸 덜어내는 쪽이 훨씬 가벼워지는 길이에요."
     )
 
 
@@ -56,12 +56,13 @@ def compose_doyoon_p3_pattern(
     p1, p2, p3 = d.patterns
 
     return (
-        f"{user_name}님의 반복 실수 패턴을 3단계로 나눠봤어요.\n\n"
-        f"1단계 — {p1.keyword} (발생률 {p1.pct}). {p1.desc}\n\n"
-        f"2단계 — {p2.keyword} (발생률 {p2.pct}). {p2.desc}\n\n"
-        f"3단계 — {p3.keyword} (발생률 {p3.pct}). {p3.desc} "
-        f"{ilgan} 일간 특유의 패턴이에요. 다음 관계에서 1단계 속도만 평균선까지 늦추셔도 "
-        f"전체 안정성이 {d.stability_boost_pct} 올라가요."
+        f"{user_name}님이 연애에서 되풀이하는 흐름을 3단계로 나눠봤어요.\n\n"
+        f"1단계 — {p1.keyword} (자주 나타남 {p1.pct}). {p1.desc}\n\n"
+        f"2단계 — {p2.keyword} (자주 나타남 {p2.pct}). {p2.desc}\n\n"
+        f"3단계 — {p3.keyword} (자주 나타남 {p3.pct}). {p3.desc} "
+        f"{ilgan} 일간이 흔히 보이는 흐름이에요. 다음 관계에서 1단계 속도만 조금 늦춰도 "
+        "관계가 한결 더 안정적으로 자리잡을 수 있어요. 마음을 숨기라는 게 아니라, "
+        "한 박자 여유를 두는 것만으로 흐름이 꽤 달라진다는 뜻이에요."
     )
 
 
@@ -87,8 +88,6 @@ def get_doyoon_p3_blockade_facts(
         "ohang_excess_hanja": b.ohang_hanja,
         "blockade_pct": b.blockade_pct,
         "blockade_multiplier": b.blockade_multiplier,
-        "blockage_rate_drop": b.blockage_rate_drop,
-        "recovery_after_clearing_pct": b.recovery_after_clearing_pct,
         "rule_text": rule_text,
     }
 
@@ -110,6 +109,5 @@ def get_doyoon_p3_pattern_facts(
         "pattern_2_pct": d.patterns[1].pct,
         "pattern_3_keyword": d.patterns[2].keyword,
         "pattern_3_pct": d.patterns[2].pct,
-        "stability_boost_pct": d.stability_boost_pct,
         "rule_text": rule_text,
     }

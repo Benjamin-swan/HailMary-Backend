@@ -37,5 +37,18 @@ class PaymentORM(Base):
         nullable=True,
     )
     easy_pay_provider: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    # ⚠️ method/card_issuer_code/bank_code: Toss 시절 컬럼. 현재 PayApp 플로에선 *미저장*(항상 NULL).
+    #   PayApp webhook의 card_name(카드사명)/vbank(은행명)은 Amplitude 이벤트로만 전송됨
+    #   (handle_payapp_feedback_usecase). 즉 이 varchar(8) 칸엔 값이 들어오지 않아 길이/1406 위험 없음.
+    #   → 컬럼 확장 불필요. 추후 실제 DB 저장을 배선할 때 비로소 길이(한글 이름 8자 초과) 재검토.
     card_issuer_code: Mapped[str | None] = mapped_column(String(8), nullable=True)
     bank_code: Mapped[str | None] = mapped_column(String(8), nullable=True)
+    # 2026-06-05 결과지 메일 확정 후 발송 설계:
+    # email_confirmed_at — FE 이메일 확인 모달 확정 시각 (확정 즉시 발송 트리거)
+    # result_email_sent_at — 결과지 링크 메일 발송 시각 (NULL=미발송, 스위퍼가 폴백 발송)
+    email_confirmed_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    result_email_sent_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )

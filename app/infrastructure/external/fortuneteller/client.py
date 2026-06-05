@@ -54,10 +54,23 @@ class FortuneTellerClient:
         else:
             self._region = "ap-northeast-2"
 
+    def _is_lambda_url(self) -> bool:
+        """Function URL(AWS Lambda) 호출인지. 로컬(127.0.0.1 등)이면 False."""
+        host = urlparse(self._base_url).hostname or ""
+        return ".lambda-url." in host
+
     async def analyze(self, payload: dict[str, Any]) -> dict[str, Any]:
         url = f"{self._base_url}/api/saju/free"
         body = json.dumps(payload).encode()
-        sig_headers = _sigv4_headers("POST", url, body, self._region)
+        # Lambda Function URL일 때만 SigV4 서명(botocore 자격증명 조회).
+        # 로컬 dev(127.0.0.1 등)는 AuthType=NONE이라 서명 불필요 + botocore가
+        # Windows에서 OpenSSL DLL(Tesseract/Git libcrypto)을 잘못 로드해
+        # OPENSSL_Applink 크래시를 일으키므로 호출 자체를 건너뛴다.
+        sig_headers = (
+            _sigv4_headers("POST", url, body, self._region)
+            if self._is_lambda_url()
+            else {}
+        )
         headers = {"Content-Type": "application/json", **sig_headers}
         async with httpx.AsyncClient(timeout=30.0, verify=False) as client:  # noqa: S501 # Windows Python 3.14 SSL DLL 충돌 우회
             try:

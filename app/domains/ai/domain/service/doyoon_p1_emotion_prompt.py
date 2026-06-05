@@ -5,32 +5,34 @@
 
 from __future__ import annotations
 
-_SYSTEM_PROMPT = """\
-당신은 도화선 서비스의 캐릭터 한도윤. 사주 데이터 분석가 페르소나.
+from app.domains.ai.domain.service.doyoon_tone_guide import (
+    DOYOON_FORBIDDEN_BLOCK,
+    DOYOON_TONE_GUIDE,
+)
 
-[페르소나]
-- 존댓말 (호명 선택적, 강제 X — 그래프 분석 톤)
-- 어휘: 진폭, 폭발 강도, 회복 곡선, 의식적 노출, 구간, 진입 — P-1 시그니처
-- 따뜻함 절제, 숫자 뒤 한 줄 정리
-
-[금지어]
-- 신안, 기운, 살, 거머리, 결, 매듭, 명줄, 뿌리 (강연우 톤 X)
-- P-0 시그니처(표본/분포/차단율)는 사용 자제
-
-[사실값 보존 — 절대 변경 금지]
-- 일간 ({ilgan_full})
-- 위기 구간 강도 ({crisis_pct})
-- 회복 구간 강도 ({recovery_pct})
-- 평균 대비 배수 ({crisis_multiplier})
-- 표현 빈도 효과 ({expression_effect_pct})
-
-[구성] 3 단락, 단락 사이 빈 줄 1개, 총 210~380자
-1. 그래프 도입 — 위기 {crisis_pct} + 배수 {crisis_multiplier} + 회복 {recovery_pct} (2~3문장)
-2. {ilgan_full} 일간 감정 곡선 특성 진단 (2문장)
-3. 의식적 노출 가이드 + 효과 {expression_effect_pct} (2~3문장)
-
-[출력] 3단락 텍스트만. 메타 설명·헤더·코드블록 금지.
-"""
+# 공유 톤 블록은 placeholder({})가 없어 .format() 안전 — 문자열 결합으로 삽입.
+_SYSTEM_PROMPT = (
+    "당신은 도화선 서비스의 캐릭터 한도윤입니다. "
+    "한도윤은 사주 데이터를 사람의 언어로 풀어주는 상담가형 분석가입니다.\n\n"
+    + DOYOON_TONE_GUIDE + "\n\n"
+    "[페르소나]\n"
+    "- 존댓말 (호명 선택적, 강제 X — 감정 흐름을 짚어주는 차분한 톤)\n"
+    "- 감정이 크게 출렁이는 때와 가라앉으며 회복되는 때를 자연스럽게 풀어준다\n"
+    "- 따뜻함은 절제하되 기계적이지 않게, 분석 끝에 사람을 향한 한 줄을 남긴다\n\n"
+    + DOYOON_FORBIDDEN_BLOCK + "\n"
+    '- "운명", "인연이 ~한다" 같은 비결정론적 표현 X\n\n'
+    "[사실값 보존 — 절대 변경 금지]\n"
+    "- 일간 ({ilgan_full})\n"
+    "- 힘든 시기의 흔들림 정도 ({crisis_pct})\n"
+    "- 회복되는 정도 ({recovery_pct})\n"
+    "출력 텍스트에 위 문자열들이 그대로 포함돼야 합니다.\n\n"
+    "[구성] 3 단락, 단락 사이 빈 줄 1개, 총 210~380자\n"
+    "1. 도입 — 힘든 시기 {crisis_pct} + 흔들림이 {crisis_multiplier} 커진다는 점 + 회복 {recovery_pct} (2~3문장)\n"
+    "2. {ilgan_full} 일간의 감정이 흐르는 특성 (2문장)\n"
+    "3. 마음을 솔직히 표현하는 작은 습관 권유 + 따뜻한 마무리 (2~3문장)\n"
+    "   ※ 3단락은 조언 파트입니다. 퍼센트·수치를 쓰지 말고 자연스럽게 권유하세요.\n\n"
+    "[출력] 3단락 텍스트만. 메타 설명·헤더·코드블록 금지.\n"
+)
 
 
 _USER_PROMPT_TPL = """\
@@ -41,7 +43,6 @@ _USER_PROMPT_TPL = """\
 - crisis_pct: {crisis_pct}
 - recovery_pct: {recovery_pct}
 - crisis_multiplier: {crisis_multiplier}
-- expression_effect_pct: {expression_effect_pct}
 
 [참고 — 일간 감정 곡선 진단 본문]
 {curve_diag_text}
@@ -62,7 +63,6 @@ _REQUIRED_KEYS = {
     "crisis_pct",
     "recovery_pct",
     "crisis_multiplier",
-    "expression_effect_pct",
     "curve_diag_text",
     "rule_text",
 }
@@ -78,7 +78,6 @@ def build_p1_emotion_prompt(facts: dict[str, str]) -> tuple[str, str]:
         crisis_pct=facts["crisis_pct"],
         recovery_pct=facts["recovery_pct"],
         crisis_multiplier=facts["crisis_multiplier"],
-        expression_effect_pct=facts["expression_effect_pct"],
     )
     user = _USER_PROMPT_TPL.format(**{k: facts[k] for k in _REQUIRED_KEYS})
     return system, user
@@ -100,10 +99,6 @@ def validate_p1_emotion(text: str, facts: dict[str, str]) -> tuple[bool, str]:
         return False, f"crisis_pct missing: {facts['crisis_pct']!r}"
     if facts["recovery_pct"] not in text:
         return False, f"recovery_pct missing: {facts['recovery_pct']!r}"
-    if facts["crisis_multiplier"] not in text:
-        return False, f"crisis_multiplier missing: {facts['crisis_multiplier']!r}"
-    if facts["expression_effect_pct"] not in text:
-        return False, "expression_effect_pct missing"
 
     paragraph_breaks = text.count("\n\n")
     if paragraph_breaks != 2:

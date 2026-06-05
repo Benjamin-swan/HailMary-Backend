@@ -30,6 +30,7 @@ from app.domains.ai.application.response.paid_report_response import (
     InfoRow,
     InnerCard,
     MonthRow,
+    OhangJudgment,
     OhangKey,
     OhangMethodCard,
     OhangStrength,
@@ -195,6 +196,11 @@ def _ilju_with_hanja(ilju: str) -> str:
 def _ohang_code(hangul: str) -> OhangKey:
     """오행 한글 한 글자 → 응답 코드. 비정상 입력은 'su' 기본값."""
     return _OHANG_HANGUL_TO_CODE.get(hangul, "su")
+
+
+def _ohang_judgments_code(judgments: dict[str, str]) -> dict[OhangKey, OhangJudgment]:
+    """한글키 강약 판정({"목":"발달",...}) → OhangKey 키 판정. 막대 라벨 응답용."""
+    return {_ohang_code(k): cast(OhangJudgment, v) for k, v in judgments.items()}
 
 
 class ComposePaidReportUseCase:
@@ -387,6 +393,7 @@ class ComposePaidReportUseCase:
             ohang_strength=strength,
             ohang_excess=_ohang_code(ohang_excess),
             ohang_lack=_ohang_code(ohang_lack),
+            ohang_judgments=_ohang_judgments_code(vars_["OHANG_JUDGMENTS"]),
             ilgan=ilgan,
             ilgan_card=ilgan_card,
             ai_intro=compose_p0_intro(
@@ -437,6 +444,7 @@ class ComposePaidReportUseCase:
             ohang_strength=strength,
             ohang_excess=_ohang_code(ohang_excess),
             ohang_lack=_ohang_code(ohang_lack),
+            ohang_judgments=_ohang_judgments_code(vars_["OHANG_JUDGMENTS"]),
             ilgan=ilgan,
             user_name=user_name,
             ilgan_card=ilgan_card,
@@ -499,10 +507,10 @@ class ComposePaidReportUseCase:
         if not user_name:
             user_name = "당신"
         closing_bubble = (
-            f"다 읽으셨나요? 데이터가 할 수 있는 말은 여기까지입니다.\n"
-            f"이제부터는 {user_name}님의 선택이라는 변수가 결과값을 결정하겠죠.\n"
-            f"데이터상으로 {user_name}님의 조합은 오차 범위를 감안해도 기대값이 굉장히 높게 측정됩니다.\n"
-            f"스스로를 의심하지 마세요. {user_name}님은 이미 가장 완벽한 답안지를 갖고 계시니까요."
+            f"다 읽으셨나요? 제가 정리해 드릴 수 있는 이야기는 여기까지예요.\n"
+            f"여기서부터는 {user_name}님이 어떤 선택을 하시느냐에 달려 있습니다.\n"
+            f"제가 본 {user_name}님의 흐름은, 잘 풀릴 가능성이 충분히 보이는 쪽이에요.\n"
+            f"스스로를 의심하지 마세요. {user_name}님은 이미 좋은 답을 안에 갖고 계시니까요."
         )
         return PaidChapterP11Doyoon(
             closing_bubble=closing_bubble,
@@ -1240,6 +1248,7 @@ class ComposePaidReportUseCase:
         step2_labels = [STEP2_LABEL.get(s, s) for s in step2] if step2 else None
 
         return PaidChapterP10(
+            user_name=user_name,
             ilju_with_hanja=ilju_with_hanja,
             box1_body=box1_body,
             box2_body=box2_body,

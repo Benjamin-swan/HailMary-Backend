@@ -32,12 +32,12 @@ class DoyoonP5IlganData:
     radar: tuple[RadarAxis, RadarAxis, RadarAxis, RadarAxis, RadarAxis, RadarAxis]
     strength_axis_1: str           # "존재감"
     strength_axis_2: str           # "깊이감"
-    strength_multiplier: str       # "1.7배"
-    conscious_gap_multiplier: str  # "2.4배"
+    strength_multiplier: str       # 비수치 강조 표현 (예: "두드러지게")
+    conscious_gap_multiplier: str  # 비수치 강조 표현 (예: "한결 더")
     charm_bubble: str
     sd_charm_asset: str            # "dy_06"
     # 3-2 전환율 (모든 일간 공통 30/55/72/88)
-    second_meeting_multiplier: str # "1.4배"
+    second_meeting_multiplier: str # 비수치 강조 표현 (예: "부쩍")
     final_gap_pct: str             # "38%p"
     # 3-3 호감 유발 4 변수
     appeal_meters: tuple[AppealMeter, AppealMeter, AppealMeter, AppealMeter]
@@ -68,11 +68,11 @@ DOYOON_P5_DATA: dict[str, DoyoonP5IlganData] = {
         ),
         strength_axis_1="존재감",
         strength_axis_2="깊이감",
-        strength_multiplier="1.7배",
-        conscious_gap_multiplier="2.4배",
+        strength_multiplier="두드러지게",
+        conscious_gap_multiplier="한결 더",
         charm_bubble="이거 그냥 놔두기엔 좀 아깝지 않아요?",
         sd_charm_asset="dy_06",
-        second_meeting_multiplier="1.4배",
+        second_meeting_multiplier="부쩍",
         final_gap_pct="38%p",
         appeal_meters=(
             AppealMeter(name="존재감", value=92),
@@ -96,11 +96,11 @@ DOYOON_P5_DATA: dict[str, DoyoonP5IlganData] = {
         ),
         strength_axis_1="존재감",
         strength_axis_2="눈빛",
-        strength_multiplier="1.6배",
-        conscious_gap_multiplier="2.0배",
-        charm_bubble="단호한 결단력이 매력의 핵심 변수예요.",
+        strength_multiplier="또렷하게",
+        conscious_gap_multiplier="평소보다 크게",
+        charm_bubble="단단한 결단력이 당신 매력의 중심이에요.",
         sd_charm_asset="dy_06",
-        second_meeting_multiplier="1.3배",
+        second_meeting_multiplier="한층",
         final_gap_pct="34%p",
         appeal_meters=(
             AppealMeter(name="존재감", value=88),
@@ -124,11 +124,11 @@ DOYOON_P5_DATA: dict[str, DoyoonP5IlganData] = {
         ),
         strength_axis_1="분위기",
         strength_axis_2="매력살",
-        strength_multiplier="1.5배",
-        conscious_gap_multiplier="1.9배",
-        charm_bubble="적응형 매력이라 상대 환경에 맞춰 곡선이 다양해요.",
+        strength_multiplier="은은하게",
+        conscious_gap_multiplier="훨씬",
+        charm_bubble="상대와 분위기에 맞춰 자연스럽게 스며드는 매력이에요.",
         sd_charm_asset="dy_06",
-        second_meeting_multiplier="1.3배",
+        second_meeting_multiplier="한층",
         final_gap_pct="32%p",
         appeal_meters=(
             AppealMeter(name="분위기", value=86),
@@ -152,11 +152,11 @@ DOYOON_P5_DATA: dict[str, DoyoonP5IlganData] = {
         ),
         strength_axis_1="존재감",
         strength_axis_2="눈빛",
-        strength_multiplier="1.8배",
-        conscious_gap_multiplier="1.7배",
-        charm_bubble="발산 매력이 평균 대비 압도적으로 큰 케이스예요.",
+        strength_multiplier="유난히",
+        conscious_gap_multiplier="한결 더",
+        charm_bubble="환하게 뿜어내는 매력이 유난히 큰 분이에요.",
         sd_charm_asset="dy_06",
-        second_meeting_multiplier="1.2배",
+        second_meeting_multiplier="조금 더",
         final_gap_pct="30%p",
         appeal_meters=(
             AppealMeter(name="존재감", value=94),
@@ -180,11 +180,11 @@ DOYOON_P5_DATA: dict[str, DoyoonP5IlganData] = {
         ),
         strength_axis_1="깊이감",
         strength_axis_2="분위기",
-        strength_multiplier="1.7배",
-        conscious_gap_multiplier="2.3배",
-        charm_bubble="잔잔한 깊이감이 핵심 변수예요. 발산보다 누적.",
+        strength_multiplier="두드러지게",
+        conscious_gap_multiplier="훨씬",
+        charm_bubble="잔잔한 깊이감이 핵심이에요. 한눈에보다 천천히 스며들죠.",
         sd_charm_asset="dy_06",
-        second_meeting_multiplier="1.5배",
+        second_meeting_multiplier="부쩍",
         final_gap_pct="42%p",
         appeal_meters=(
             AppealMeter(name="깊이감", value=92),
@@ -208,11 +208,11 @@ DOYOON_P5_DATA: dict[str, DoyoonP5IlganData] = {
         ),
         strength_axis_1="존재감",
         strength_axis_2="깊이감",
-        strength_multiplier="1.6배",
-        conscious_gap_multiplier="1.8배",
-        charm_bubble="안정형 매력 — 시간이 갈수록 강도가 오르는 케이스예요.",
+        strength_multiplier="또렷하게",
+        conscious_gap_multiplier="평소보다 크게",
+        charm_bubble="든든한 매력이라, 시간이 갈수록 더 깊어지는 분이에요.",
         sd_charm_asset="dy_06",
-        second_meeting_multiplier="1.5배",
+        second_meeting_multiplier="부쩍",
         final_gap_pct="40%p",
         appeal_meters=(
             AppealMeter(name="존재감", value=86),
@@ -236,11 +236,11 @@ DOYOON_P5_DATA: dict[str, DoyoonP5IlganData] = {
         ),
         strength_axis_1="분위기",
         strength_axis_2="깊이감",
-        strength_multiplier="1.6배",
-        conscious_gap_multiplier="2.0배",
-        charm_bubble="포근한 분위기가 핵심 변수예요. 헌신형 매력.",
+        strength_multiplier="은은하게",
+        conscious_gap_multiplier="훨씬",
+        charm_bubble="포근한 분위기가 핵심이에요. 곁을 따뜻하게 채워주는 매력.",
         sd_charm_asset="dy_06",
-        second_meeting_multiplier="1.4배",
+        second_meeting_multiplier="한층",
         final_gap_pct="36%p",
         appeal_meters=(
             AppealMeter(name="분위기", value=88),
@@ -264,11 +264,11 @@ DOYOON_P5_DATA: dict[str, DoyoonP5IlganData] = {
         ),
         strength_axis_1="존재감",
         strength_axis_2="눈빛",
-        strength_multiplier="1.7배",
-        conscious_gap_multiplier="1.9배",
-        charm_bubble="명확한 눈빛이 매력 변수의 정점이에요.",
+        strength_multiplier="유난히",
+        conscious_gap_multiplier="한결 더",
+        charm_bubble="또렷한 눈빛이 당신 매력의 정점이에요.",
         sd_charm_asset="dy_06",
-        second_meeting_multiplier="1.3배",
+        second_meeting_multiplier="한층",
         final_gap_pct="33%p",
         appeal_meters=(
             AppealMeter(name="존재감", value=90),
@@ -292,11 +292,11 @@ DOYOON_P5_DATA: dict[str, DoyoonP5IlganData] = {
         ),
         strength_axis_1="매력살",
         strength_axis_2="분위기",
-        strength_multiplier="1.6배",
-        conscious_gap_multiplier="2.1배",
-        charm_bubble="단정 매력이 측정값 최상위 케이스예요.",
+        strength_multiplier="또렷하게",
+        conscious_gap_multiplier="훨씬",
+        charm_bubble="단정한 매력이 누구보다 또렷하게 드러나는 분이에요.",
         sd_charm_asset="dy_06",
-        second_meeting_multiplier="1.4배",
+        second_meeting_multiplier="부쩍",
         final_gap_pct="36%p",
         appeal_meters=(
             AppealMeter(name="매력살", value=88),
@@ -320,11 +320,11 @@ DOYOON_P5_DATA: dict[str, DoyoonP5IlganData] = {
         ),
         strength_axis_1="깊이감",
         strength_axis_2="분위기",
-        strength_multiplier="1.8배",
-        conscious_gap_multiplier="2.5배",
-        charm_bubble="섬세 잠재 매력 — 의식화 시 변동성이 가장 큰 케이스예요.",
+        strength_multiplier="유난히",
+        conscious_gap_multiplier="평소보다 크게",
+        charm_bubble="섬세한 매력이 숨어 있어, 마음먹고 드러낼 때 가장 크게 빛나요.",
         sd_charm_asset="dy_06",
-        second_meeting_multiplier="1.6배",
+        second_meeting_multiplier="부쩍",
         final_gap_pct="44%p",
         appeal_meters=(
             AppealMeter(name="깊이감", value=90),

@@ -56,7 +56,9 @@ def test_all_5_ohang_blockade() -> None:
     for oh in VALID_DOYOON_P3_OHANG:
         b = BLOCKADE_BY_OHANG[oh]
         assert b.ohang_hanja
-        assert b.blockade_multiplier.endswith("배")
+        # 배수 비수치 전환: "N배" 형태가 아닌 강도 표현 문자열이어야 함.
+        assert b.blockade_multiplier
+        assert "배" not in b.blockade_multiplier
 
 
 def test_all_10_ilgan_p3_data() -> None:
@@ -91,21 +93,21 @@ def test_blockade_facts_imsu_su() -> None:
     f = get_doyoon_p3_blockade_facts(user_name="홍길동", ilgan="임수", ohang_excess="수")
     assert f["ohang_excess_hanja"] == "水"
     assert f["blockade_pct"] == "상위 15%"
-    assert f["blockade_multiplier"] == "1.7배"
-    assert f["blockage_rate_drop"] == "36%"
-    assert f["recovery_after_clearing_pct"] == "24%"
+    assert f["blockade_multiplier"] == "평소보다 크게"
+    assert "blockage_rate_drop" not in f
+    assert "recovery_after_clearing_pct" not in f
 
 
 def _blockade_valid_text(facts: dict[str, str]) -> str:
     return (
         f"데이터부터 정리할게요. {facts['user_name']}님의 사주 구조에서 "
-        f"{facts['ohang_excess']}({facts['ohang_excess_hanja']}) 기운이 평균 대비 "
-        f"{facts['blockade_multiplier']}로 측정됩니다. 단순 강조 수준이 아니라 구조적으로 과다인 상태예요.\n\n"
+        f"{facts['ohang_excess']}({facts['ohang_excess_hanja']}) 기운이 "
+        f"{facts['blockade_multiplier']} 강하게 측정됩니다. 단순 강조 수준이 아니라 구조적으로 과다인 상태예요.\n\n"
         f"이게 새 인연 진입을 차단해요. 같은 결의 사람이 들어올 자리가 부족합니다. "
-        f"동일 일간 표본에서 이 케이스의 신규 접촉률이 평균 대비 {facts['blockage_rate_drop']} 낮게 잡혀요. "
+        "동일 일간 표본에서 이 케이스의 신규 접촉률이 눈에 띄게 더디게 잡혀요. "
         "구조적 변수 누적이 원인이라 우연이 아니에요.\n\n"
-        f"비우는 게 해법이에요. 사람이든 미련이든 답 안 오는 연락이든 하나만 정리해도 "
-        f"진입률이 {facts['recovery_after_clearing_pct']} 회복돼요. "
+        "비우는 게 해법이에요. 사람이든 미련이든 답 안 오는 연락이든 하나만 정리해도 "
+        "새 인연이 들어올 자리가 다시 열려요. "
         "기존 변수 감소가 신규 변수 추가보다 효율적인 영역입니다."
     )
 
@@ -116,12 +118,12 @@ def test_blockade_validate_passes() -> None:
     assert ok, f"unexpected fail: {reason}"
 
 
-def test_blockade_validate_fails_multiplier_mutated() -> None:
+def test_blockade_validate_gate_relaxed_for_multiplier() -> None:
+    """배수 게이트 완화: blockade_multiplier(비수치 표현)가 빠져도 검증 통과해야 함."""
     f = get_doyoon_p3_blockade_facts(user_name="홍길동", ilgan="임수", ohang_excess="수")
-    text = _blockade_valid_text(f).replace("1.7배", "1.6배")
+    text = _blockade_valid_text(f).replace(f["blockade_multiplier"], "꽤")
     ok, reason = validate_p3_blockade(text, f)
-    assert not ok
-    assert "blockade_multiplier" in reason
+    assert ok, f"unexpected fail: {reason}"
 
 
 @pytest.mark.asyncio
@@ -130,8 +132,8 @@ async def test_blockade_usecase_falls_back() -> None:
     out = await GenerateP3BlockadeUseCase(ai_client=fake).execute(
         user_name="홍길동", ilgan="임수", ohang_excess="수"
     )
-    assert "1.7배" in out
-    assert "36%" in out
+    assert "평소보다 크게" in out
+    assert "36%" not in out
 
 
 # ── PATTERN ──────────────────────────────────────────────────────
@@ -139,11 +141,12 @@ async def test_blockade_usecase_falls_back() -> None:
 
 def test_pattern_facts_imsu() -> None:
     f = get_doyoon_p3_pattern_facts(user_name="홍길동", ilgan="임수")
-    assert f["pattern_1_keyword"] == "초기 과진입"
+    assert f["pattern_1_keyword"] == "처음부터 너무 깊이"
     assert f["pattern_1_pct"] == "81%"
-    assert f["pattern_2_keyword"] == "중반 무표현"
-    assert f["pattern_3_keyword"] == "위기 일괄 폭발"
-    assert f["stability_boost_pct"] == "41%"
+    assert f["pattern_2_keyword"] == "중간에 표현이 줄어듦"
+    assert f["pattern_3_keyword"] == "쌓였다가 한 번에 터짐"
+    # 안정성 부스트 % 키는 2026-06-05 폐기 (화면 근거 없는 유령 수치) — facts에 없음
+    assert "stability_boost_pct" not in f
 
 
 def _pattern_valid_text(facts: dict[str, str]) -> str:
@@ -156,7 +159,7 @@ def _pattern_valid_text(facts: dict[str, str]) -> str:
         "표현 빈도가 떨어지는 침묵 구간이에요. "
         f"3단계 — {facts['pattern_3_keyword']} (발생률 {facts['pattern_3_pct']}). 누적 감정 폭발 구간입니다.\n\n"
         f"{facts['ilgan_full']} 일간 특유의 패턴이에요. "
-        f"1단계 속도만 평균선까지 조정해도 전체 안정성이 {facts['stability_boost_pct']} 향상됩니다."
+        "1단계 속도만 평균선까지 조정해도 관계가 한결 더 안정적으로 자리잡습니다."
     )
 
 
@@ -172,5 +175,5 @@ async def test_pattern_usecase_falls_back() -> None:
     out = await GenerateP3PatternUseCase(ai_client=fake).execute(
         user_name="홍길동", ilgan="임수"
     )
-    assert "초기 과진입" in out
+    assert "처음부터 너무 깊이" in out
     assert "81%" in out

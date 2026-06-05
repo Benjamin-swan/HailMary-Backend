@@ -21,11 +21,12 @@ def test_unknown_ilgan_raises() -> None:
 
 def test_html_dummy_imsu_case() -> None:
     out = compose_doyoon_p1_emotion(user_name="홍길동", ilgan="임수")
-    # 위기 95%, 1.8배, 회복 60%, 표현 효과 32%
+    # 단락1 위기 95% + 회복 60% 유지, 비수치 흔들림. 단락3 조언 수치(32%)는 폐기.
     assert "95%" in out
-    assert "1.8배" in out
+    assert "평소보다 훨씬 크게" in out
+    assert "배" not in out
     assert "60%" in out
-    assert "32%" in out
+    assert "32%" not in out
     # 3단락
     assert out.count("\n\n") == 2
 
