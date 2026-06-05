@@ -36,7 +36,7 @@ def compose_doyoon_p5_charm_index(
 
     return (
         f"상위 {charm_pct}%예요. 이거 그냥 숫자가 아니에요.\n\n"
-        f"여섯 가지 매력 중에서 특히 빛나는 게 두 가지예요. {d.strength_axis_1}과 {d.strength_axis_2} — "
+        f"여섯 가지 매력 중에서 특히 빛나는 게 두 가지예요. {d.strength_axis_1}, 그리고 {d.strength_axis_2} — "
         "둘 다 또래 분들 사이에서도 유난히 두드러져요. 같은 일간을 가진 분들 중에서도 "
         "이 두 가지가 이만큼 살아 있는 분은 흔하지 않아요. 나머지 매력들도 평균은 충분히 넘고요. "
         "약한 데가 있는 게 아니라, 강한 데가 또렷한 분이에요.\n\n"
@@ -79,7 +79,7 @@ def compose_doyoon_p5_appeal(
         "당신의 매력을 이루는 네 가지 모습을 짚어드릴게요.\n\n"
         f"{m1.name} {m1.value}, {m2.name} {m2.value}, {m3.name} {m3.value}, {m4.name} {m4.value}. "
         "특히 빛나는 두 가지와 아직 덜 드러난 두 가지가 또렷해요.\n\n"
-        f"{d.weakness_axis_1}과 {d.weakness_axis_2}이 아직 덜 드러난 쪽이에요. "
+        f"{d.weakness_axis_1}, 그리고 {d.weakness_axis_2} — 이 둘이 아직 덜 드러난 쪽이에요. "
         f"그런데 이건 {user_name}님이 마음만 먹으면 가장 쉽게 챙길 수 있는 부분이기도 해요. "
         "이 두 가지를 조금만 살리면 호감이 한결 또렷하게 전해져요. "
         "이미 강한 데를 더 키우기보다, 덜 드러난 데를 살피는 쪽이 훨씬 빠르게 와닿아요."

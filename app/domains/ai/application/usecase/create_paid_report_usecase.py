@@ -755,7 +755,9 @@ class CreatePaidReportUseCase:
                     name, user_id, result,
                 )
                 continue
-            ai_text = str(result)
+            # 프론트 DoyoonAiBlock은 마크다운 미파싱 — AI가 붙인 ** 굵게가 그대로
+            # 노출되므로 모든 도윤 AI 슬롯에서 일괄 제거 (2026-06-05 QA).
+            ai_text = str(result).replace("**", "")
             if name == "p0_intro" and response.p0_doyoon is not None:
                 response.p0_doyoon.ai_intro = ai_text
             elif name == "p1_opening" and response.p1_doyoon is not None:

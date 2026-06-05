@@ -64,7 +64,7 @@ def _build_step1_answer_block(
 
     if slug == "crushing" and p5:
         return (
-            f"썸 진행 중: 매력 강점 {p5.strength_axis_1}·{p5.strength_axis_2}가 "
+            f"썸 진행 중: 매력 강점 두 가지({p5.strength_axis_1}·{p5.strength_axis_2})가 "
             "평소보다 두드러지게 측정. "
             "두 번째 만남에서 호감 전환율이 한결 더 올라가는 흐름."
         )
