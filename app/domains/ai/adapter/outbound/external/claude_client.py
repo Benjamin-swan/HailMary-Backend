@@ -1,3 +1,5 @@
+import logging
+
 from anthropic import (
     APIConnectionError,
     APIStatusError,
@@ -10,6 +12,8 @@ from app.domains.ai.domain.port.ai_client_port import (
     AIClientPort,
     AIClientRateLimitError,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class ClaudeClient(AIClientPort):
@@ -54,6 +58,13 @@ class ClaudeClient(AIClientPort):
             raise AIClientError("Claude API 연결 실패") from exc
         except APIStatusError as exc:
             raise AIClientError(f"Claude API status error: {exc.status_code}") from exc
+
+        # 절단 감지 (QA F-064): max_tokens 도달 시 mid-sentence 잘림 → 경고 로깅.
+        if getattr(message, "stop_reason", None) == "max_tokens":
+            logger.warning(
+                "Claude 응답이 max_tokens로 절단됨 (max_tokens=%d, model=%s)",
+                max_tokens, model or self._model,
+            )
 
         text_parts: list[str] = []
         for block in message.content:
