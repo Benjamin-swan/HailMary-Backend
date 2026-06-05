@@ -35,7 +35,6 @@ def test_each_data_has_all_fields() -> None:
         assert "배" not in d.crisis_multiplier
         assert "평소" in d.crisis_multiplier
         assert 10 <= d.self_control_pct <= 50
-        assert 20 <= d.expression_effect_pct <= 50
 
 
 def test_data_is_frozen() -> None:
@@ -47,11 +46,10 @@ def test_data_is_frozen() -> None:
 
 
 def test_html_dummy_imsu_data() -> None:
-    """HTML 도윤_final.html 임수 더미 케이스 매칭 — 8%, 12.4%, 비수치 흔들림, 자기조절 17%, 표현 효과 32%."""
+    """HTML 도윤_final.html 임수 더미 케이스 매칭 — 8%, 12.4%, 비수치 흔들림, 자기조절 17%."""
     d = DOYOON_P1_DATA["임수"]
     assert d.pct_value == 8
     assert d.distribution_pct == 12.4
     assert d.crisis_multiplier == "평소보다 훨씬 크게"
     assert d.self_control_pct == 17
-    assert d.expression_effect_pct == 32
     assert d.emotion_curve == (45, 85, 95, 60)

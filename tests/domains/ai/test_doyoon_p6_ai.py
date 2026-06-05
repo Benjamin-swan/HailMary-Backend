@@ -131,7 +131,7 @@ def test_meeting_facts_imsu() -> None:
         user_name="홍길동", ilgan="임수", match_slot_id="f-water-yang"
     )
     assert f["existing_path_multiplier"] == "훨씬 높게"
-    assert f["low_impact_pct"] == "73%"
+    assert "low_impact_pct" not in f
     assert f["second_contact_multiplier"] == "눈에 띄게 빠르게"
 
 
@@ -141,7 +141,7 @@ def _meeting_valid(facts):
         f"{facts['existing_path_multiplier']} 높게 측정됩니다. "
         "새로운 환경 매칭률은 상대적으로 낮은 분포예요.\n\n"
         f"첫 접촉 패턴 — 짧고 평이한 대화로 시작. "
-        f"인상에 강하게 남지 않는 케이스가 {facts['low_impact_pct']}로 다수입니다. "
+        "인상에 강하게 남지 않는 경우가 많은 편입니다. "
         "데이터 자체가 그렇게 분포돼요.\n\n"
         f"결정적인 건 두 번째 접촉이에요. 호감 전환율이 첫 번째 대비 {facts['second_contact_multiplier']}로 급상승. "
         f"{facts['user_name']}님, 첫 만남에서 두 번째 약속을 자연스럽게 잡아두시는 게 효율적이에요."

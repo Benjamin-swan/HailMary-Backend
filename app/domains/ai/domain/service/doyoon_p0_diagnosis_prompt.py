@@ -31,9 +31,10 @@ _SYSTEM_PROMPT = (
     "- 사용자 이름 ({user_name})\n"
     "- 일간 한글 + 한자 ({ilgan_full}, {ilgan_hanja})\n"
     "- 오행 한자 ({excess_ohang_hanja}, {lack_ohang_hanja})\n"
-    "- 백분위 ({excess_percentile}, {lack_percentile})\n"
-    "- 접촉률 감소 ({contact_rate_drop})\n"
     "출력 텍스트에 위 문자열들이 그대로 포함돼야 합니다.\n\n"
+    "[수치 금지]\n"
+    "백분위·퍼센트·접촉률 같은 숫자 통계는 절대 쓰지 마세요. 오행 과다·부족은 "
+    '"뚜렷하게 과다", "눈에 띄게 부족"처럼 질적 강도로만 표현합니다.\n\n'
     "[구성] 4 단락, 단락 사이 빈 줄 1개, 총 220~340자\n"
     "1. 호명 + 데이터 정리 완료 신호 (1문장)\n"
     "2. 일간 진단 + 강점 (2문장)\n"
@@ -52,10 +53,7 @@ _USER_PROMPT_TPL = """\
 - ilgan_full: {ilgan_full}
 - ilgan_hanja: {ilgan_hanja}
 - excess_ohang_hanja: {excess_ohang_hanja}
-- excess_percentile: {excess_percentile}
 - lack_ohang_hanja: {lack_ohang_hanja}
-- lack_percentile: {lack_percentile}
-- contact_rate_drop: {contact_rate_drop}
 
 [참고 문구 — 일간 강점 설명]
 {ilgan_para_2}
@@ -88,10 +86,7 @@ def build_p0_diagnosis_prompt(facts: dict[str, str]) -> tuple[str, str]:
         "ilgan_full",
         "ilgan_hanja",
         "excess_ohang_hanja",
-        "excess_percentile",
         "lack_ohang_hanja",
-        "lack_percentile",
-        "contact_rate_drop",
         "ilgan_para_2",
         "rule_text",
     }
@@ -105,9 +100,6 @@ def build_p0_diagnosis_prompt(facts: dict[str, str]) -> tuple[str, str]:
         ilgan_hanja=facts["ilgan_hanja"],
         excess_ohang_hanja=facts["excess_ohang_hanja"],
         lack_ohang_hanja=facts["lack_ohang_hanja"],
-        excess_percentile=facts["excess_percentile"],
-        lack_percentile=facts["lack_percentile"],
-        contact_rate_drop=facts["contact_rate_drop"],
     )
     user = _USER_PROMPT_TPL.format(**{k: facts[k] for k in required_keys})
     return system, user
@@ -132,10 +124,9 @@ def validate_p0_diagnosis(text: str, facts: dict[str, str]) -> tuple[bool, str]:
         3. ilgan_full + ilgan_hanja 포함
         4. excess_ohang_hanja 포함
         5. lack_ohang_hanja 포함
-        6. excess_percentile 정확 문자열 포함
-        7. lack_percentile 정확 문자열 포함
-        8. contact_rate_drop 정확 문자열 포함
-        9. 4단락 구조 (\\n\\n 정확히 3회)
+        6. 4단락 구조 (\\n\\n 정확히 3회)
+
+    수치(백분위·접촉률)는 2026-06-05 폐기 — 더 이상 검증하지 않음.
     """
     length = len(text)
     if length < _MIN_LENGTH or length > _MAX_LENGTH:
@@ -153,10 +144,6 @@ def validate_p0_diagnosis(text: str, facts: dict[str, str]) -> tuple[bool, str]:
         return False, f"excess_ohang_hanja missing: {facts['excess_ohang_hanja']!r}"
     if facts["lack_ohang_hanja"] not in text:
         return False, f"lack_ohang_hanja missing: {facts['lack_ohang_hanja']!r}"
-
-    for key in ("excess_percentile", "lack_percentile", "contact_rate_drop"):
-        if facts[key] not in text:
-            return False, f"{key} missing: {facts[key]!r}"
 
     paragraph_breaks = text.count("\n\n")
     if paragraph_breaks != 3:

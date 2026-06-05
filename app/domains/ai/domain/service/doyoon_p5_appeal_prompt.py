@@ -23,12 +23,12 @@ _SYSTEM_PROMPT = (
     "- {user_name}, {ilgan_full}\n"
     "- 네 가지 점수 ({meter_1_name} {meter_1_value} / {meter_2_name} {meter_2_value} /\n"
     "  {meter_3_name} {meter_3_value} / {meter_4_name} {meter_4_value})\n"
-    "- 아쉬운 축 2개 ({weakness_axis_1} / {weakness_axis_2})\n"
-    "- 호감 상승 폭 ({appeal_boost_pct})\n\n"
+    "- 아쉬운 축 2개 ({weakness_axis_1} / {weakness_axis_2})\n\n"
     "[구성] 3 단락, 총 220~380자\n"
     "1. 네 가지 점수 정리\n"
     "2. 잘 드러나는 점과 아쉬운 점\n"
-    "3. 아쉬운 축을 보완하면 좋아지는 흐름 + 조언\n\n"
+    "3. 아쉬운 축을 보완하면 좋아지는 흐름 + 조언\n"
+    "   ※ 위 네 점수 외에 새로운 수치(%)를 만들지 마세요. 보완 효과는 '호감이 한결 또렷하게 전해진다'처럼 정성 표현으로만.\n\n"
     "[출력] 3단락만 출력. 메타 설명·주석·헤더·코드블록 금지.\n"
 )
 
@@ -42,7 +42,6 @@ _USER_PROMPT_TPL = """\
 - meter_4: {meter_4_name} {meter_4_value}
 - weakness_axis_1: {weakness_axis_1}
 - weakness_axis_2: {weakness_axis_2}
-- appeal_boost_pct: {appeal_boost_pct}
 
 [기반]
 {rule_text}
@@ -56,7 +55,7 @@ _REQUIRED_KEYS = {
     "meter_2_name", "meter_2_value",
     "meter_3_name", "meter_3_value",
     "meter_4_name", "meter_4_value",
-    "weakness_axis_1", "weakness_axis_2", "appeal_boost_pct", "rule_text",
+    "weakness_axis_1", "weakness_axis_2", "rule_text",
 }
 
 
@@ -82,7 +81,7 @@ def validate_p5_appeal(text: str, facts: dict[str, str]) -> tuple[bool, str]:
     # 4 변수 이름 + 점수 모두 포함
     for k in ("meter_1_name", "meter_2_name", "meter_3_name", "meter_4_name",
               "meter_1_value", "meter_2_value", "meter_3_value", "meter_4_value",
-              "weakness_axis_1", "weakness_axis_2", "appeal_boost_pct"):
+              "weakness_axis_1", "weakness_axis_2"):
         if facts[k] not in text:
             return False, f"{k} missing: {facts[k]!r}"
     paragraph_breaks = text.count("\n\n")

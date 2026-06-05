@@ -30,12 +30,12 @@ _SYSTEM_PROMPT = (
     "- 사용자 이름 ({user_name})\n"
     "- 일간 한글 + 한자 ({ilgan_full}, {ilgan_hanja})\n"
     "- 일주 한자 ({ilju_hanja})\n"
-    "- 상위 N% ({pct_value}), 분포 N% ({distribution_pct})\n"
+    "- 상위 N% ({pct_value})\n"
     "- 연애 유형 ({love_type})\n"
     "출력 텍스트에 위 문자열들이 그대로 포함돼야 합니다.\n\n"
     "[구성] 4 단락, 단락 사이 빈 줄 1개, 총 320~440자\n"
     "1. 호명 + 상위 N% 자리에 든다는 신호 (1~2문장)\n"
-    "2. 분포 N% + 연애 유형 + 일주를 묶어 어떤 결인지 (2문장)\n"
+    "2. 연애 유형 + 일주를 묶어 어떤 결인지 (2문장)\n"
     "3. 일간 진단 — 관계에서 드러나는 성향을 일상어로 (2문장)\n"
     "4. 도움이 될 작은 행동 하나 (1~2문장)\n\n"
     "[출력]\n"
@@ -52,7 +52,6 @@ _USER_PROMPT_TPL = """\
 - ilgan_hanja: {ilgan_hanja}
 - ilju_hanja: {ilju_hanja}
 - pct_value: {pct_value}
-- distribution_pct: {distribution_pct}
 - love_type: {love_type}
 
 [참고 — 일간 진단 본문]
@@ -77,7 +76,6 @@ _REQUIRED_KEYS = {
     "ilgan_hanja",
     "ilju_hanja",
     "pct_value",
-    "distribution_pct",
     "love_type",
     "ilgan_diagnosis_text",
     "ilgan_optimization_text",
@@ -97,7 +95,6 @@ def build_p1_opening_prompt(facts: dict[str, str]) -> tuple[str, str]:
         ilgan_hanja=facts["ilgan_hanja"],
         ilju_hanja=facts["ilju_hanja"],
         pct_value=facts["pct_value"],
-        distribution_pct=facts["distribution_pct"],
         love_type=facts["love_type"],
     )
     user = _USER_PROMPT_TPL.format(**{k: facts[k] for k in _REQUIRED_KEYS})
@@ -127,8 +124,6 @@ def validate_p1_opening(text: str, facts: dict[str, str]) -> tuple[bool, str]:
         return False, f"ilju_hanja missing: {facts['ilju_hanja']!r}"
     if facts["pct_value"] not in text:
         return False, f"pct_value missing: {facts['pct_value']!r}"
-    if facts["distribution_pct"] not in text:
-        return False, f"distribution_pct missing: {facts['distribution_pct']!r}"
     if facts["love_type"] not in text:
         return False, f"love_type missing: {facts['love_type']!r}"
 

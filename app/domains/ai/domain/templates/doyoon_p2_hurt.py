@@ -75,6 +75,5 @@ def get_doyoon_p2_hurt_facts(
         "hurt_type_1_risk_pct": data.hurt_type_1.risk_pct,
         "hurt_type_2_keyword": data.hurt_type_2.keyword,
         "hurt_type_2_risk_pct": data.hurt_type_2.risk_pct,
-        "intervention_drop_pct": data.intervention_drop_pct,
         "rule_text": composed["ai_hurt"],
     }

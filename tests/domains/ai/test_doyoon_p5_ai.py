@@ -117,7 +117,7 @@ def test_conversion_facts_imsu() -> None:
     assert f["step_1_pct"] == "30%"
     assert f["step_4_pct"] == "88%"
     assert f["second_meeting_multiplier"] == "부쩍"
-    assert f["final_gap_pct"] == "38%p"
+    assert "final_gap_pct" not in f
 
 
 def _cv_valid(facts):
@@ -125,7 +125,7 @@ def _cv_valid(facts):
         f"첫 인상 {facts['step_1_pct']}에서 시작해서 끌림 {facts['step_4_pct']}까지 도달하는 4단계 전환율입니다. "
         f"중간 단계 {facts['step_2_pct']}와 {facts['step_3_pct']}로 올라가요.\n\n"
         f"두 번째 만남에서 호감이 {facts['second_meeting_multiplier']} 깊어지는 흐름이 또렷해요. "
-        f"첫 만남 종료 vs 두 번째 진행 케이스의 호감도 격차가 {facts['final_gap_pct']} 벌어집니다.\n\n"
+        "첫 만남 종료 vs 두 번째 진행 케이스의 호감도 격차가 눈에 띄게 벌어집니다.\n\n"
         f"{facts['user_name']}님 전략은 두 번째 약속 사전 확보예요."
     )
 
@@ -154,7 +154,8 @@ def test_appeal_facts_imsu() -> None:
     assert f["meter_1_name"] == "존재감"
     assert f["meter_1_value"] == "92"
     assert f["weakness_axis_1"] == "표현 일관성"
-    assert f["appeal_boost_pct"] == "26%"
+    # 호감 상승 폭 % 키는 2026-06-05 폐기 (그래프 근거 없는 유령 수치) — facts에 없음
+    assert "appeal_boost_pct" not in f
 
 
 def _ap_valid(facts):
@@ -167,7 +168,7 @@ def _ap_valid(facts):
         f"{facts['meter_4_name']} {facts['meter_4_value']}. "
         f"{facts['weakness_axis_1']}과 {facts['weakness_axis_2']}가 약점 변수입니다. "
         "이 두 축이 통제 가능한 영역이라 가장 효율적인 개선 포인트예요.\n\n"
-        f"{facts['user_name']}님 케이스에서 두 변수만 올리면 호감 유발 효율이 {facts['appeal_boost_pct']} 상승해요. "
+        f"{facts['user_name']}님 케이스에서 두 변수만 올리면 호감이 한결 또렷하게 전해져요. "
         "강점 보완보다 약점 보완이 효율 높은 영역입니다. 우선순위 정해서 진입하세요."
     )
 

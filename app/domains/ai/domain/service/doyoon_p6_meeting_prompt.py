@@ -21,11 +21,13 @@ _SYSTEM_PROMPT = (
     "[사실값 보존]\n"
     "- {user_name}, {ilgan_full}\n"
     "- 기존 동선 {existing_path_multiplier}\n"
-    "- 첫 만남에서 강한 인상으로 남을 확률 {low_impact_pct}\n"
     "- 두 번째 만남 {second_contact_multiplier}\n\n"
+    "[수치 금지] 본문에 퍼센트(%)·확률 수치를 쓰지 마세요. 이 화면엔 뒷받침할 그래프가 없어 "
+    "숫자를 쓰면 근거 없어 보입니다. 첫 만남은 '인상에 강하게 남지 않는 경우가 많다'처럼 "
+    "방향만 말로 풀고, 강하게 남는다고 반대로 뒤집지 마세요.\n\n"
     "[구성] 3단락, 총 280~440자\n"
     "1. 어디서 어떤 분위기로 만나게 되는지\n"
-    "2. 첫 만남에서 자연스럽게 나타나는 모습\n"
+    "2. 첫 만남에서 자연스럽게 나타나는 모습 (인상이 옅게 남는 쪽, 수치 없이)\n"
     "3. 다시 만남을 이어가는 방법 + {user_name}님 호명\n\n"
     "[출력] 3단락만.\n"
 )
@@ -35,7 +37,6 @@ _USER_PROMPT_TPL = """\
 - user_name: {user_name}
 - ilgan_full: {ilgan_full}
 - existing_path_multiplier: {existing_path_multiplier}
-- low_impact_pct: {low_impact_pct}
 - second_contact_multiplier: {second_contact_multiplier}
 
 [기반]
@@ -46,7 +47,7 @@ _USER_PROMPT_TPL = """\
 
 _REQUIRED_KEYS = {
     "user_name", "ilgan_full",
-    "existing_path_multiplier", "low_impact_pct", "second_contact_multiplier",
+    "existing_path_multiplier", "second_contact_multiplier",
     "rule_text",
 }
 
@@ -68,9 +69,8 @@ def validate_p6_meeting(text: str, facts: dict[str, str]) -> tuple[bool, str]:
     length = len(text)
     if length < _MIN_LENGTH or length > _MAX_LENGTH:
         return False, f"length out of range: {length}"
-    for k in ("user_name", "low_impact_pct"):
-        if facts[k] not in text:
-            return False, f"{k} missing"
+    if facts["user_name"] not in text:
+        return False, "user_name missing"
     paragraph_breaks = text.count("\n\n")
     if paragraph_breaks != 2:
         return False, f"paragraph structure invalid: {paragraph_breaks}"

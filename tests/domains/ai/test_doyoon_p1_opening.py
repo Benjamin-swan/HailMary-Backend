@@ -27,7 +27,7 @@ def test_html_dummy_imsu_case() -> None:
     assert "홍길동님" in out
     assert "상위 8%" in out
     assert "임수" in out
-    assert "12.4%" in out
+    assert "12.4%" not in out  # 일간 분포 % 제거 (10개 고정값이라 분포 무의미)
     assert "생각이 깊은 신중한 사람" in out  # love_type
     assert "임술(壬戌)" in out
     # 4단락 구조

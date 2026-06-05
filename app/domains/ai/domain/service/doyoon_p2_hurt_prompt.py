@@ -26,13 +26,15 @@ _SYSTEM_PROMPT = (
     "- 사용자 이름 ({user_name})\n"
     "- 일간 한글 + 한자 ({ilgan_full}, {ilgan_hanja})\n"
     "- 약점 키워드 1 ({hurt_type_1_keyword}) + 위험도 ({hurt_type_1_risk_pct})\n"
-    "- 약점 키워드 2 ({hurt_type_2_keyword}) + 위험도 ({hurt_type_2_risk_pct})\n"
-    "- 개입 효과 ({intervention_drop_pct})\n\n"
+    "- 약점 키워드 2 ({hurt_type_2_keyword}) + 위험도 ({hurt_type_2_risk_pct})\n\n"
+    "[마지막 처방 규칙] 4단락 처방에는 퍼센트(%)·수치를 절대 쓰지 마세요. "
+    "수치를 꺼내면 문장이 딱딱해집니다. 위험도 %는 1~3단락에서만 쓰고, "
+    "마지막은 '하루 정도 여유를 두면 한결 가벼워진다'처럼 따뜻하게 풀어 마무리하세요.\n\n"
     "[구성] 4 단락, 단락 사이 빈 줄 1개, 총 230~400자\n"
     "1. 두 유형 도입 (1문장)\n"
     "2. 첫 번째 유형 분석 + 위험도 (2~3문장)\n"
     "3. 두 번째 유형 분석 + 위험도 (1~2문장)\n"
-    "4. 처방 + 개입 효과 (2문장)\n\n"
+    "4. 처방 — 수치 없이 부드럽게, 다시 다잡을 수 있다는 한 줄로 마무리 (2문장)\n\n"
     "[출력] 4단락 텍스트만. 메타·헤더 금지.\n"
 )
 
@@ -48,7 +50,6 @@ _USER_PROMPT_TPL = """\
 - hurt_type_1_risk_pct: {hurt_type_1_risk_pct}
 - hurt_type_2_keyword: {hurt_type_2_keyword}
 - hurt_type_2_risk_pct: {hurt_type_2_risk_pct}
-- intervention_drop_pct: {intervention_drop_pct}
 
 [룰 합성 기반 텍스트 — 기반으로 표현 다양화. 사실값 한 글자도 바꾸지 마세요.]
 
@@ -67,7 +68,6 @@ _REQUIRED_KEYS = {
     "hurt_type_1_risk_pct",
     "hurt_type_2_keyword",
     "hurt_type_2_risk_pct",
-    "intervention_drop_pct",
     "rule_text",
 }
 
@@ -84,7 +84,6 @@ def build_p2_hurt_prompt(facts: dict[str, str]) -> tuple[str, str]:
         hurt_type_1_risk_pct=facts["hurt_type_1_risk_pct"],
         hurt_type_2_keyword=facts["hurt_type_2_keyword"],
         hurt_type_2_risk_pct=facts["hurt_type_2_risk_pct"],
-        intervention_drop_pct=facts["intervention_drop_pct"],
     )
     user = _USER_PROMPT_TPL.format(**{k: facts[k] for k in _REQUIRED_KEYS})
     return system, user
@@ -112,8 +111,6 @@ def validate_p2_hurt(text: str, facts: dict[str, str]) -> tuple[bool, str]:
         return False, f"hurt_type_2_keyword missing: {facts['hurt_type_2_keyword']!r}"
     if facts["hurt_type_2_risk_pct"] not in text:
         return False, f"hurt_type_2_risk_pct missing: {facts['hurt_type_2_risk_pct']!r}"
-    if facts["intervention_drop_pct"] not in text:
-        return False, f"intervention_drop_pct missing: {facts['intervention_drop_pct']!r}"
     paragraph_breaks = text.count("\n\n")
     if paragraph_breaks not in (2, 3):
         return False, f"paragraph structure invalid: {paragraph_breaks} (expected 2 or 3)"

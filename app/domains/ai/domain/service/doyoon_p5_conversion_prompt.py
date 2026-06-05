@@ -21,15 +21,21 @@ _SYSTEM_PROMPT = (
     "[사실값 보존 — 절대 변경 금지]\n"
     "다음 값은 *변경, 누락, 풀어쓰기, 약어화* 모두 금지하고 그대로 출력에 포함:\n"
     "- {user_name}, {ilgan_full}\n"
-    "- 4단계 % ({step_1_pct} → {step_2_pct} → {step_3_pct} → {step_4_pct})\n"
-    "- 호감도 차이 ({final_gap_pct})\n\n"
+    "- 4단계 % ({step_1_pct} → {step_2_pct} → {step_3_pct} → {step_4_pct})\n\n"
+    "[수치 금지] 위 4단계 % 외에 새 퍼센트·%p·배수를 만들어내지 마세요. "
+    "호감도 '차이'는 화면에 그래프가 없어, 숫자로 쓰면 근거 없어 보입니다. "
+    "'눈에 띄게 벌어진다'처럼 말로만 표현하세요.\n\n"
     "[표현 가이드]\n"
     "- 두 번째 만남에서 호감이 {second_meeting_multiplier} 깊어진다는 식으로 풀어준다 "
     "(숫자 배수 표현은 쓰지 않는다)\n\n"
+    "[의미 보존 — 가장 중요]\n"
+    "마지막 단락 조언은 '첫 만남 자리에서 두 번째 약속을 자연스럽게 잡아두라'는 *권유*입니다. "
+    "표현만 다양화하고 방향은 절대 뒤집지 마세요. "
+    "'흘려두다·넘기다·미루다·포기하다'처럼 반대 의미로 바꾸면 안 됩니다.\n\n"
     "[구성] 3 단락, 총 180~330자\n"
     "1. 4단계 흐름 도입\n"
-    "2. 두 번째 만남에서 달라지는 점 + 차이\n"
-    "3. 실천할 한 줄 + {user_name}님 호명\n\n"
+    "2. 두 번째 만남에서 달라지는 점 (수치 없이)\n"
+    "3. 실천할 한 줄(두 번째 약속 잡아두기) + {user_name}님 호명\n\n"
     "[출력] 3단락만 출력. 메타 설명·주석·헤더·코드블록 금지.\n"
 )
 
@@ -42,7 +48,6 @@ _USER_PROMPT_TPL = """\
 - step_3_pct: {step_3_pct}
 - step_4_pct: {step_4_pct}
 - second_meeting_multiplier: {second_meeting_multiplier}
-- final_gap_pct: {final_gap_pct}
 
 [기반]
 {rule_text}
@@ -53,7 +58,7 @@ _USER_PROMPT_TPL = """\
 _REQUIRED_KEYS = {
     "user_name", "ilgan_full",
     "step_1_pct", "step_2_pct", "step_3_pct", "step_4_pct",
-    "second_meeting_multiplier", "final_gap_pct", "rule_text",
+    "second_meeting_multiplier", "rule_text",
 }
 
 
@@ -81,8 +86,7 @@ def validate_p5_conversion(text: str, facts: dict[str, str]) -> tuple[bool, str]
     if pcts_found < 3:
         return False, f"conversion steps insufficient: {pcts_found}/4"
     # 배수 게이트 완화: second_meeting_multiplier(비수치 강조어)는 필수 포함 검사 제외.
-    if facts["final_gap_pct"] not in text:
-        return False, "final_gap_pct missing"
+    # final_gap_pct(%p) 2026-06-05 폐기 — 그래프 없는 '차이' 수치는 근거 없어 제거.
     paragraph_breaks = text.count("\n\n")
     if paragraph_breaks != 2:
         return False, f"paragraph structure invalid: {paragraph_breaks}"

@@ -142,8 +142,7 @@ def compose_doyoon_p1_opening(
     )
 
     para2 = (
-        f"{ilgan} 일간이 전체 중에서 {data.distribution_pct}% 정도인데, "
-        f"그중에서도 '{data.love_type}'에 해당하는 분은 더 적어요. "
+        f"{ilgan} 일간 중에서도 '{data.love_type}'에 해당하는 분은 흔치 않아요. "
         f"여기에 {ilju} 일주까지 더하면 결이 한층 더 또렷해집니다."
     )
 
@@ -192,7 +191,6 @@ def get_doyoon_p1_opening_facts(
         "ilju_hanja": ilju_hanja,
         "love_type": data.love_type,
         "pct_value": f"{data.pct_value}%",
-        "distribution_pct": f"{data.distribution_pct}%",
         "ilgan_diagnosis_text": ILGAN_DIAGNOSIS[ilgan],
         "ilgan_optimization_text": ILGAN_OPTIMIZATION[ilgan].replace(
             "{USER_NAME}", user_name

@@ -24,13 +24,12 @@ _SYSTEM_PROMPT = (
     "[사실값 보존 — 절대 변경 금지]\n"
     "- 사용자 이름 ({user_name})\n"
     "- 일간 ({ilgan_full})\n"
-    "- 도달 수치 ({trigger_completion_pct})\n"
     "- 초기 진입 시간 ({peak_window_days})\n"
-    "- 마음을 다잡기 어려운 정도 ({self_control_pct})\n"
     "출력 텍스트에 위 문자열들이 그대로 포함돼야 합니다.\n\n"
+    "[수치 금지] 퍼센트(%) 등 수치는 본문에 쓰지 마세요. 상단 그래프에 이미 표시됩니다.\n"
     "[구성] 2 단락, 단락 사이 빈 줄 1개, 총 180~310자\n"
-    "1. 마음을 흔드는 신호 3가지가 차례로 겹칠 때 {trigger_completion_pct}가 의미하는 바 (1~2문장)\n"
-    "2. {peak_window_days} 초기 + 첫 두 신호가 겹칠 때 + 마음을 다잡기 어려운 정도 {self_control_pct} (3~4문장)\n\n"
+    "1. 마음을 흔드는 신호 3가지가 차례로 겹치면 그 흐름이 거의 정해진다는 의미 — 수치 없이 (1~2문장)\n"
+    "2. {peak_window_days} 초기 + 첫 두 신호가 겹칠 때 + 속도 조절이 어려운 이유 — 수치 없이 (3~4문장)\n\n"
     "[출력] 2단락 텍스트만. 메타 설명·헤더·코드블록 금지.\n"
 )
 
@@ -43,9 +42,7 @@ _USER_PROMPT_TPL = """\
 - ilgan_full: {ilgan_full}
 - trigger_1: {trigger_1}
 - trigger_2: {trigger_2}
-- trigger_completion_pct: {trigger_completion_pct}
 - peak_window_days: {peak_window_days}
-- self_control_pct: {self_control_pct}
 
 [참고 — 자기조절 어려운 이유 본문]
 {control_reason_text}
@@ -66,9 +63,7 @@ _REQUIRED_KEYS = {
     "trigger_1",
     "trigger_2",
     "trigger_3",
-    "trigger_completion_pct",
     "peak_window_days",
-    "self_control_pct",
     "control_reason_text",
     "rule_text",
 }
@@ -82,9 +77,7 @@ def build_p1_trigger_prompt(facts: dict[str, str]) -> tuple[str, str]:
     system = _SYSTEM_PROMPT.format(
         user_name=facts["user_name"],
         ilgan_full=facts["ilgan_full"],
-        trigger_completion_pct=facts["trigger_completion_pct"],
         peak_window_days=facts["peak_window_days"],
-        self_control_pct=facts["self_control_pct"],
     )
     user = _USER_PROMPT_TPL.format(**{k: facts[k] for k in _REQUIRED_KEYS})
     return system, user
@@ -103,12 +96,8 @@ def validate_p1_trigger(text: str, facts: dict[str, str]) -> tuple[bool, str]:
         return False, "user_name missing"
     if facts["ilgan_full"] not in text:
         return False, f"ilgan_full missing: {facts['ilgan_full']!r}"
-    if facts["trigger_completion_pct"] not in text:
-        return False, "trigger_completion_pct missing"
     if facts["peak_window_days"] not in text:
         return False, "peak_window_days missing"
-    if facts["self_control_pct"] not in text:
-        return False, "self_control_pct missing"
     # trigger_1, trigger_2 중 적어도 둘은 포함 (룰 본문에 둘 다 박혀있음)
     if facts["trigger_1"] not in text:
         return False, "trigger_1 missing"

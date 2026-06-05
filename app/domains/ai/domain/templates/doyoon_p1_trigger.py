@@ -1,8 +1,8 @@
 """도윤 P-1 1-2 트리거 발화 메커니즘 — 2단락 200~250자 합성.
 
 HTML 도윤_final.html line 2042~2047 임수 더미 톤 미러:
-- 단락 1 (~80자): 3 트리거 순차 88% 임계점 도달 의미
-- 단락 2 (~140자): 처음 30일 + 트리거 1+2 결합 + 자기조절 N% + 진단
+- 단락 1 (~80자): 3 트리거 순차로 겹치면 흐름이 거의 정해진다는 의미 (수치 미언급)
+- 단락 2 (~140자): 처음 30일 + 트리거 1+2 결합 + 속도 조절 어려운 이유 (수치 미언급)
 
 어휘: 발화, 도달 확률, 자기조절, 임계점 — P-1 시그니처. P-0의 "분포"와 다른 결.
 """
@@ -48,15 +48,15 @@ def compose_doyoon_p1_trigger(
     data = DOYOON_P1_DATA[ilgan]
 
     para1 = (
-        "흥미로운 부분이에요. 마음을 흔드는 신호 세 가지가 차례로 겹치면, "
-        "거기까지 가는 경우가 88%예요. 사실상 거의 정해진 흐름이라는 뜻이죠."
+        "흥미로운 부분이에요. 마음을 흔드는 신호 세 가지가 차례로 겹치는 순간, "
+        "그 흐름이 그대로 이어지는 경우가 대부분이에요. 사실상 방향이 잡혔다고 봐도 될 만큼이죠."
     )
 
     para2 = (
         f"특히 처음 30일 안에 '{data.trigger_1}'과 '{data.trigger_2}'가 같이 찾아오면, "
-        f"{user_name}님이 스스로 속도를 늦추기가 어려워져요. "
-        f"{ilgan} 일간은 이 시기에 마음을 다잡는 분이 {data.self_control_pct}% 정도거든요. "
-        f"{ILGAN_CONTROL_REASON[ilgan]} 미리 알고 들어가시는 게 훨씬 나아요."
+        f"{ilgan} 일간인 {user_name}님은 그때부터 스스로 속도를 늦추기가 쉽지 않아요. "
+        f"{ILGAN_CONTROL_REASON[ilgan]} 그래서 신호가 겹치기 시작하는 시점을 "
+        "미리 알아두는 게 생각보다 많이 달라질 수 있어요."
     )
 
     return "\n\n".join([para1, para2])
@@ -65,8 +65,7 @@ def compose_doyoon_p1_trigger(
 # ── AI prompt + 검증용 facts 추출 ────────────────────────────────
 
 
-# 트리거 발화 임계점 + 위기 진입 시간 — 일간 무관 고정 표기.
-TRIGGER_COMPLETION_PCT = "88%"
+# 초기 진입 시간 — 일간 무관 고정 표기.
 PEAK_WINDOW_DAYS = "30일"
 
 
@@ -79,7 +78,7 @@ def get_doyoon_p1_trigger_facts(
 
     Returns:
         사실값 dict + rule_text. AI가 모두 보존해야 함.
-        검증 핵심: user_name, ilgan, trigger_1/2, 88%, 30일, self_control_pct.
+        검증 핵심: user_name, ilgan, trigger_1/2, 30일 (수치 %는 제거).
 
     Raises:
         ValueError / KeyError: 입력 가드 실패.
@@ -97,9 +96,7 @@ def get_doyoon_p1_trigger_facts(
         "trigger_1": data.trigger_1,
         "trigger_2": data.trigger_2,
         "trigger_3": data.trigger_3,
-        "trigger_completion_pct": TRIGGER_COMPLETION_PCT,
         "peak_window_days": PEAK_WINDOW_DAYS,
-        "self_control_pct": f"{data.self_control_pct}%",
         "control_reason_text": ILGAN_CONTROL_REASON[ilgan],
         "rule_text": rule_text,
     }

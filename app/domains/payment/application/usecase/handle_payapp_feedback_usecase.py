@@ -64,6 +64,9 @@ _PAY_TYPE_TO_METHOD: dict[str, str] = {
     "23": "applepay",
     "24": "myaccount",
     "25": "tosspay",
+    # ⚠️ 26 미검증: PayApp 공식 webhook pay_type 표(04-webhook.md)는 25(토스페이)에서 끝 — 26/payco 없음.
+    #   페이코는 결제수단으론 지원되나(payrequest openpaytype) 결과 pay_type 코드가 명세에 없음.
+    #   카드 기반이라 pay_type=1(card)로 올 가능성 → 그 경우 이 매핑은 안 잡힘. 실 결제 payload로 확정 필요.
     "26": "payco",
 }
 # 간편결제로 분류되는 pay_type → easy_pay_provider 로도 기록.

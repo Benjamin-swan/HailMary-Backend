@@ -25,12 +25,12 @@ _SYSTEM_PROMPT = (
     "- 일간 ({ilgan_full})\n"
     "- 힘든 시기의 흔들림 정도 ({crisis_pct})\n"
     "- 회복되는 정도 ({recovery_pct})\n"
-    "- 마음을 표현했을 때의 효과 ({expression_effect_pct})\n"
     "출력 텍스트에 위 문자열들이 그대로 포함돼야 합니다.\n\n"
     "[구성] 3 단락, 단락 사이 빈 줄 1개, 총 210~380자\n"
     "1. 도입 — 힘든 시기 {crisis_pct} + 흔들림이 {crisis_multiplier} 커진다는 점 + 회복 {recovery_pct} (2~3문장)\n"
     "2. {ilgan_full} 일간의 감정이 흐르는 특성 (2문장)\n"
-    "3. 마음을 솔직히 표현하는 작은 습관 + 그 효과 {expression_effect_pct} (2~3문장)\n\n"
+    "3. 마음을 솔직히 표현하는 작은 습관 권유 + 따뜻한 마무리 (2~3문장)\n"
+    "   ※ 3단락은 조언 파트입니다. 퍼센트·수치를 쓰지 말고 자연스럽게 권유하세요.\n\n"
     "[출력] 3단락 텍스트만. 메타 설명·헤더·코드블록 금지.\n"
 )
 
@@ -43,7 +43,6 @@ _USER_PROMPT_TPL = """\
 - crisis_pct: {crisis_pct}
 - recovery_pct: {recovery_pct}
 - crisis_multiplier: {crisis_multiplier}
-- expression_effect_pct: {expression_effect_pct}
 
 [참고 — 일간 감정 곡선 진단 본문]
 {curve_diag_text}
@@ -64,7 +63,6 @@ _REQUIRED_KEYS = {
     "crisis_pct",
     "recovery_pct",
     "crisis_multiplier",
-    "expression_effect_pct",
     "curve_diag_text",
     "rule_text",
 }
@@ -80,7 +78,6 @@ def build_p1_emotion_prompt(facts: dict[str, str]) -> tuple[str, str]:
         crisis_pct=facts["crisis_pct"],
         recovery_pct=facts["recovery_pct"],
         crisis_multiplier=facts["crisis_multiplier"],
-        expression_effect_pct=facts["expression_effect_pct"],
     )
     user = _USER_PROMPT_TPL.format(**{k: facts[k] for k in _REQUIRED_KEYS})
     return system, user
@@ -102,8 +99,6 @@ def validate_p1_emotion(text: str, facts: dict[str, str]) -> tuple[bool, str]:
         return False, f"crisis_pct missing: {facts['crisis_pct']!r}"
     if facts["recovery_pct"] not in text:
         return False, f"recovery_pct missing: {facts['recovery_pct']!r}"
-    if facts["expression_effect_pct"] not in text:
-        return False, "expression_effect_pct missing"
 
     paragraph_breaks = text.count("\n\n")
     if paragraph_breaks != 2:

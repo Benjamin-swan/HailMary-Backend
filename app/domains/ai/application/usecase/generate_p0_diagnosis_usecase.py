@@ -4,10 +4,10 @@
 character == "doyoon" 분기에서 `ai_intro` 값을 받기 위해 사용.
 
 흐름:
-    1. doyoon_p0_intro.get_doyoon_p0_facts() — 사실값 12개 + 룰 텍스트 추출
+    1. doyoon_p0_intro.get_doyoon_p0_facts() — 사실값 9개 + 룰 텍스트 추출
     2. doyoon_p0_diagnosis_prompt.build_p0_diagnosis_prompt() — system/user 구성
-    3. ai_client.generate_chapter(model=haiku) — Claude API 호출
-    4. validate_p0_diagnosis() — 9단계 검증
+    3. ai_client.generate_chapter(model=sonnet) — Claude API 호출
+    4. validate_p0_diagnosis() — 6단계 검증
     5. 실패/예외 시 → 룰 합성 결과(`rule_text`) fallback
 
 CLAUDE.md 규칙:

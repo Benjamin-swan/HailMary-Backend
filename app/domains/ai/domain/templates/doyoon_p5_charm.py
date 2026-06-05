@@ -128,7 +128,6 @@ def get_doyoon_p5_conversion_facts(
         "step_3_pct": f"{CONVERSION_STEPS[2][1]}%",
         "step_4_pct": f"{CONVERSION_STEPS[3][1]}%",
         "second_meeting_multiplier": d.second_meeting_multiplier,
-        "final_gap_pct": d.final_gap_pct,
         "rule_text": rule_text,
     }
 
@@ -155,7 +154,6 @@ def get_doyoon_p5_appeal_facts(
         "meter_4_value": str(m4.value),
         "weakness_axis_1": d.weakness_axis_1,
         "weakness_axis_2": d.weakness_axis_2,
-        "appeal_boost_pct": d.appeal_boost_pct,
         "rule_text": rule_text,
     }
 

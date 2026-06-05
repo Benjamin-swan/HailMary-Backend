@@ -8,7 +8,6 @@ HTML 도윤_final.html line 1974~2096 (P-1 1-1/1-2/1-3) 변수 매핑:
 - emotion_curve: 4 데이터 포인트 (초반/중반/위기/회복 강도 %)
 - crisis_multiplier: 위기 구간 흔들림 정도 비수치 표현 (필드명 유지, 값은 비수치)
 - self_control_pct: 처음 30일 자기조절 성공률
-- expression_effect_pct: 표현 빈도 ↑ 시 위기 강도 감소 폭
 
 톤: 도윤 — 존댓말 + 분석적 + 통계 어휘.
 어휘 다양화 (`feedback_template_word_diversity`): P-0 시그니처 어휘(표본/분포/임계점/전환율)는
@@ -31,7 +30,6 @@ class DoyoonP1IlganData:
     emotion_curve: tuple[int, int, int, int]   # (초반, 중반, 위기, 회복) %
     crisis_multiplier: str               # 위기 흔들림 비수치 표현 (예: "평소보다 크게")
     self_control_pct: int                # 자기조절 (12~38)
-    expression_effect_pct: int           # 표현 효과 (24~38)
 
 
 DOYOON_P1_DATA: dict[str, DoyoonP1IlganData] = {
@@ -45,7 +43,6 @@ DOYOON_P1_DATA: dict[str, DoyoonP1IlganData] = {
         emotion_curve=(50, 80, 90, 65),
         crisis_multiplier="평소보다 한결 크게",
         self_control_pct=34,
-        expression_effect_pct=28,
     ),
     "을목": DoyoonP1IlganData(
         love_type="적응 우선형 점진 진입자",
@@ -57,7 +54,6 @@ DOYOON_P1_DATA: dict[str, DoyoonP1IlganData] = {
         emotion_curve=(35, 70, 85, 55),
         crisis_multiplier="평소보다 크게",
         self_control_pct=22,
-        expression_effect_pct=30,
     ),
     "병화": DoyoonP1IlganData(
         love_type="고텐션 즉시 발산자",
@@ -69,7 +65,6 @@ DOYOON_P1_DATA: dict[str, DoyoonP1IlganData] = {
         emotion_curve=(60, 88, 92, 78),
         crisis_multiplier="평소보다 크게",
         self_control_pct=20,
-        expression_effect_pct=26,
     ),
     "정화": DoyoonP1IlganData(
         love_type="한 사람 집중형 깊이 케이스",
@@ -81,7 +76,6 @@ DOYOON_P1_DATA: dict[str, DoyoonP1IlganData] = {
         emotion_curve=(30, 65, 88, 45),
         crisis_multiplier="평소보다 두드러지게 크게",
         self_control_pct=18,
-        expression_effect_pct=34,
     ),
     "무토": DoyoonP1IlganData(
         love_type="안정 추구형 신중 진입자",
@@ -93,7 +87,6 @@ DOYOON_P1_DATA: dict[str, DoyoonP1IlganData] = {
         emotion_curve=(25, 55, 75, 50),
         crisis_multiplier="평소보다 크게",
         self_control_pct=38,
-        expression_effect_pct=24,
     ),
     "기토": DoyoonP1IlganData(
         love_type="받쳐주기 우선형 헌신 케이스",
@@ -105,7 +98,6 @@ DOYOON_P1_DATA: dict[str, DoyoonP1IlganData] = {
         emotion_curve=(40, 72, 85, 52),
         crisis_multiplier="평소보다 크게",
         self_control_pct=23,
-        expression_effect_pct=29,
     ),
     "경금": DoyoonP1IlganData(
         love_type="명확 판단형 직설 표현자",
@@ -117,7 +109,6 @@ DOYOON_P1_DATA: dict[str, DoyoonP1IlganData] = {
         emotion_curve=(45, 78, 92, 70),
         crisis_multiplier="평소보다 크게",
         self_control_pct=32,
-        expression_effect_pct=27,
     ),
     "신금": DoyoonP1IlganData(
         love_type="단정 매력 노출형 보호 케이스",
@@ -129,7 +120,6 @@ DOYOON_P1_DATA: dict[str, DoyoonP1IlganData] = {
         emotion_curve=(32, 68, 90, 48),
         crisis_multiplier="평소보다 훨씬 크게",
         self_control_pct=26,
-        expression_effect_pct=31,
     ),
     "임수": DoyoonP1IlganData(
         love_type="생각이 깊은 신중한 사람",
@@ -141,7 +131,6 @@ DOYOON_P1_DATA: dict[str, DoyoonP1IlganData] = {
         emotion_curve=(45, 85, 95, 60),
         crisis_multiplier="평소보다 훨씬 크게",
         self_control_pct=17,
-        expression_effect_pct=32,
     ),
     "계수": DoyoonP1IlganData(
         love_type="스며들기 우선형 섬세 케이스",
@@ -153,7 +142,6 @@ DOYOON_P1_DATA: dict[str, DoyoonP1IlganData] = {
         emotion_curve=(28, 60, 82, 45),
         crisis_multiplier="평소보다 한결 크게",
         self_control_pct=19,
-        expression_effect_pct=35,
     ),
 }
 

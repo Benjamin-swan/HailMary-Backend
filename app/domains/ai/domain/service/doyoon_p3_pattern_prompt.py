@@ -23,13 +23,13 @@ _SYSTEM_PROMPT = (
     "- 일간 ({ilgan_full})\n"
     "- 패턴 키워드 3종 ({pattern_1_keyword} / {pattern_2_keyword} / {pattern_3_keyword})\n"
     "- 패턴 발생률 3종 ({pattern_1_pct} / {pattern_2_pct} / {pattern_3_pct})\n"
-    "- 안정성 부스트 ({stability_boost_pct})\n"
     "위 값들은 변경·누락·풀어쓰기·약어화 모두 금지. 출력에 그대로 포함돼야 합니다.\n\n"
     "[구성] 4 단락, 총 230~400자\n"
     "1. 도입 (1문장)\n"
     "2. 첫 번째 반복 패턴 풀이\n"
     "3. 두 번째 + 세 번째 반복 패턴 풀이\n"
-    "4. {ilgan_full} 일간 특유의 흐름 + 안정성 부스트\n\n"
+    "4. {ilgan_full} 일간 특유의 흐름 + 속도 조절 조언\n"
+    "   ※ 마지막 조언은 수치(%) 없이 '한결 안정적으로 자리잡는다'처럼 정성 표현으로만.\n\n"
     "[출력] 4단락 텍스트만. 메타·헤더 금지.\n"
 )
 
@@ -46,7 +46,6 @@ _USER_PROMPT_TPL = """\
 - pattern_2_pct: {pattern_2_pct}
 - pattern_3_keyword: {pattern_3_keyword}
 - pattern_3_pct: {pattern_3_pct}
-- stability_boost_pct: {stability_boost_pct}
 
 [룰 합성 기반 텍스트 — 기반으로 표현 다양화. 사실값 한 글자도 바꾸지 마세요.]
 
@@ -66,7 +65,6 @@ _REQUIRED_KEYS = {
     "pattern_2_pct",
     "pattern_3_keyword",
     "pattern_3_pct",
-    "stability_boost_pct",
     "rule_text",
 }
 
@@ -93,8 +91,7 @@ def validate_p3_pattern(text: str, facts: dict[str, str]) -> tuple[bool, str]:
     if facts["ilgan_full"] not in text:
         return False, f"ilgan_full missing: {facts['ilgan_full']!r}"
     for k in ("pattern_1_keyword", "pattern_2_keyword", "pattern_3_keyword",
-              "pattern_1_pct", "pattern_2_pct", "pattern_3_pct",
-              "stability_boost_pct"):
+              "pattern_1_pct", "pattern_2_pct", "pattern_3_pct"):
         if facts[k] not in text:
             return False, f"{k} missing: {facts[k]!r}"
     paragraph_breaks = text.count("\n\n")

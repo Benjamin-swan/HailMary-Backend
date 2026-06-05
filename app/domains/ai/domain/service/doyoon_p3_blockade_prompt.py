@@ -23,9 +23,9 @@ _SYSTEM_PROMPT = (
     "- 일간 ({ilgan_full})\n"
     "- 오행 과다 ({ohang_excess}) + 한자 ({ohang_excess_hanja})\n"
     "- 기운 강도 표현 ({blockade_multiplier})\n"
-    "- 차단율 ({blockage_rate_drop})\n"
-    "- 비움 회복률 ({recovery_after_clearing_pct})\n"
     "위 값들은 변경·누락·풀어쓰기·약어화 모두 금지. 출력에 그대로 포함돼야 합니다.\n\n"
+    "[수치 금지] 이 화면엔 그래프·수치 그래픽이 없어, 퍼센트(%)를 쓰면 근거 없는 숫자로 보여 반발을 부릅니다. "
+    "%·배수 등 숫자는 본문에 절대 쓰지 말고 '눈에 띄게 더디게', '한결 가벼워진다'처럼 말로 풀어주세요.\n\n"
     "[구성] 3 단락, 단락 사이 빈 줄 1개, 총 270~430자\n"
     "1. 호명 + 오행이 어느 쪽으로 쏠려 있는지 (1~2문장)\n"
     "2. 그 쏠림이 관계를 막는 양상 (2~3문장)\n"
@@ -43,8 +43,6 @@ _USER_PROMPT_TPL = """\
 - ohang_excess: {ohang_excess}
 - ohang_excess_hanja: {ohang_excess_hanja}
 - blockade_multiplier: {blockade_multiplier}
-- blockage_rate_drop: {blockage_rate_drop}
-- recovery_after_clearing_pct: {recovery_after_clearing_pct}
 
 [룰 합성 기반 텍스트 — 기반으로 표현 다양화. 사실값 한 글자도 바꾸지 마세요.]
 
@@ -63,8 +61,6 @@ _REQUIRED_KEYS = {
     "ohang_excess_hanja",
     "blockade_pct",
     "blockade_multiplier",
-    "blockage_rate_drop",
-    "recovery_after_clearing_pct",
     "rule_text",
 }
 
@@ -79,8 +75,6 @@ def build_p3_blockade_prompt(facts: dict[str, str]) -> tuple[str, str]:
         ohang_excess=facts["ohang_excess"],
         ohang_excess_hanja=facts["ohang_excess_hanja"],
         blockade_multiplier=facts["blockade_multiplier"],
-        blockage_rate_drop=facts["blockage_rate_drop"],
-        recovery_after_clearing_pct=facts["recovery_after_clearing_pct"],
     )
     user = _USER_PROMPT_TPL.format(
         user_name=facts["user_name"],
@@ -88,8 +82,6 @@ def build_p3_blockade_prompt(facts: dict[str, str]) -> tuple[str, str]:
         ohang_excess=facts["ohang_excess"],
         ohang_excess_hanja=facts["ohang_excess_hanja"],
         blockade_multiplier=facts["blockade_multiplier"],
-        blockage_rate_drop=facts["blockage_rate_drop"],
-        recovery_after_clearing_pct=facts["recovery_after_clearing_pct"],
         rule_text=facts["rule_text"],
     )
     return system, user
@@ -108,10 +100,7 @@ def validate_p3_blockade(text: str, facts: dict[str, str]) -> tuple[bool, str]:
     if facts["ohang_excess_hanja"] not in text:
         return False, f"ohang_excess_hanja missing: {facts['ohang_excess_hanja']!r}"
     # blockade_multiplier(비수치 강도 표현)는 배수 게이트 완화로 필수 포함 검사에서 제외.
-    if facts["blockage_rate_drop"] not in text:
-        return False, f"blockage_rate_drop missing: {facts['blockage_rate_drop']!r}"
-    if facts["recovery_after_clearing_pct"] not in text:
-        return False, f"recovery_after_clearing_pct missing: {facts['recovery_after_clearing_pct']!r}"
+    # blockage_rate_drop / recovery_after_clearing_pct(%) 2026-06-05 폐기 — 그래프 없는 화면에 수치 노출 금지.
     paragraph_breaks = text.count("\n\n")
     if paragraph_breaks != 2:
         return False, f"paragraph structure invalid: {paragraph_breaks} (expected 2)"

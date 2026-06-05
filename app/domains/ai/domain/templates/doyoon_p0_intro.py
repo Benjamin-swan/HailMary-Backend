@@ -7,12 +7,13 @@
 데이터 구조 (단일 진실원):
 - ILGAN_HANJA: 일간 한글 → 한자 매핑 (10셀)
 - OHANG_HANJA: 오행 한글 → 한자 (5셀)
-- OHANG_EXCESS_PERCENTILE: 과다 백분위 (5셀, "상위 N%")
-- OHANG_LACK_PERCENTILE: 부족 백분위 (5셀, "하위 N%")
-- OHANG_CONTACT_RATE_DROP: excess별 신규 인연 접촉률 감소 (5셀, "N%")
+- OHANG_EXCESS_INTENSITY: 과다 강도 정성어 (5셀, 셀마다 다른 어휘)
+- OHANG_LACK_INTENSITY: 부족 강도 정성어 (5셀)
+- OHANG_EXCESS_IMPACT: excess별 과다 작용 메커니즘 1문장 (5셀)
 
-기존 PARA_3A/3B/IMPACT는 위 dict 4종에서 *합성*돼 생성 — 동일 텍스트 출력 보장
-(테스트 호환). 정량 정책 §정량 표현 기준 §2와 정합 (퍼센트 12~17%, contact 24~36%).
+기존 PARA_3A/3B/IMPACT는 위 dict에서 *합성*돼 생성 — 동일 텍스트 출력 보장
+(테스트 호환). 정량 정책(2026-06-05 결정): 오행 5원소에 "상위 N%" 백분위는 근거가
+없어 폐기 — 접촉률 등 모든 수치 통계를 질적 강도 표현으로 대체.
 """
 
 from __future__ import annotations
@@ -34,33 +35,24 @@ OHANG_HANJA: dict[str, str] = {
     "목": "木", "화": "火", "토": "土", "금": "金", "수": "水",
 }
 
-# 정량 정책 §2 "위험도/차단율 자유, 상위 12~20% / 하위 12~15%" 정합.
-# 과다 백분위: 사주 분포상 상위에 잡히는 정도 (5종).
-OHANG_EXCESS_PERCENTILE: dict[str, str] = {
-    "목": "상위 13%",
-    "화": "상위 12%",
-    "토": "상위 17%",
-    "금": "상위 14%",
-    "수": "상위 15%",
+# 백분위 수치 폐기(2026-06-05). 오행 5원소에 "상위 N%" percentile은 근거가 없어
+# 질적 강도 표현으로 대체. 셀마다 다른 어휘 (템플릿 어휘 다양화).
+# 문장: "{오행}({한자}) 기운이 {강도} 과다한 상태고,"
+OHANG_EXCESS_INTENSITY: dict[str, str] = {
+    "목": "도드라지게",
+    "화": "뚜렷하게",
+    "토": "두텁게",
+    "금": "강하게",
+    "수": "넘치도록",
 }
 
-# 부족 백분위: 사주 분포상 하위에 잡히는 정도 (5종).
-OHANG_LACK_PERCENTILE: dict[str, str] = {
-    "목": "하위 16%",
-    "화": "하위 14%",
-    "토": "하위 12%",
-    "금": "하위 15%",
-    "수": "하위 18%",
-}
-
-# 과다 오행별 신규 인연 접촉률 감소율. 정량 정책 §2 "차단율 60~88% 자유"의 작은 값
-# (전체 차단이 아니라 *접촉률 저하*라 24~36% 범위).
-OHANG_CONTACT_RATE_DROP: dict[str, str] = {
-    "목": "28%",
-    "화": "32%",
-    "토": "24%",
-    "금": "30%",
-    "수": "36%",
+# 부족 강도 정성어 (5종). 문장: "{오행}({한자}) 기운은 {강도} 부족한 것으로 나타나요."
+OHANG_LACK_INTENSITY: dict[str, str] = {
+    "목": "현저히",
+    "화": "확연히",
+    "토": "눈에 띄게",
+    "금": "두드러지게",
+    "수": "심하게",
 }
 
 
@@ -114,21 +106,25 @@ ILGAN_PARA_2: dict[str, str] = {
 # ── 단락 3 합성 (위 dict에서 생성, 단일 진실원) ──────────────────
 
 OHANG_EXCESS_PARA_3A: dict[str, str] = {
-    oh: f"다만 오행 분포에서 {oh}({OHANG_HANJA[oh]}) 기운이 과다({OHANG_EXCESS_PERCENTILE[oh]}) 상태고,"
+    oh: f"다만 오행 분포에서 {oh}({OHANG_HANJA[oh]}) 기운이 {OHANG_EXCESS_INTENSITY[oh]} 과다한 상태고,"
     for oh in OHANG_HANJA
 }
 
 OHANG_LACK_PARA_3B: dict[str, str] = {
     oh: (
-        f"{oh}({OHANG_HANJA[oh]}) 기운이 부족({OHANG_LACK_PERCENTILE[oh]})으로 측정돼요. "
-        "이 두 변수가 연애 영역에서 직접적인 영향을 주거든요."
+        f"{oh}({OHANG_HANJA[oh]}) 기운은 {OHANG_LACK_INTENSITY[oh]} 부족한 것으로 나타나요. "
+        "이 두 변수가 연애 영역에서 직접적인 영향을 줘요."
     )
     for oh in OHANG_HANJA
 }
 
+# 과다 오행별 작용 메커니즘 1문장 (수치 없이 질적). 셀마다 다른 어휘.
 OHANG_EXCESS_IMPACT: dict[str, str] = {
-    oh: f"실제로 동일 패턴 표본의 신규 인연 접촉률이 평균보다 {OHANG_CONTACT_RATE_DROP[oh]} 낮게 잡혀요."
-    for oh in OHANG_HANJA
+    "목": "木이 과하면 추진력은 세지지만, 속도를 조절하지 못해 관계가 버거워지는 지점이 생겨요.",
+    "화": "火가 넘치면 감정 표현은 빠르고 강해지지만, 그 흐름을 안정적으로 이어가는 힘이 약해지는 지점이 생겨요.",
+    "토": "土가 두터우면 안정감은 크지만, 변화에 둔해져 관계가 정체되는 지점이 생겨요.",
+    "금": "金이 강하면 판단은 또렷하지만, 날카로움이 앞서 상대가 움츠러드는 지점이 생겨요.",
+    "수": "水가 넘치면 공감의 폭은 넓지만, 감정에 깊이 잠겨 거리 조절이 어려워지는 지점이 생겨요.",
 }
 
 
@@ -205,11 +201,10 @@ def get_doyoon_p0_facts(
     검증 함수가 각 값이 AI 출력에 포함됐는지 verify.
 
     Returns:
-        키 12개:
+        키 9개:
             user_name, ilgan_full, ilgan_hanja,
-            excess_ohang, excess_ohang_hanja, excess_percentile,
-            lack_ohang, lack_ohang_hanja, lack_percentile,
-            contact_rate_drop,
+            excess_ohang, excess_ohang_hanja,
+            lack_ohang, lack_ohang_hanja,
             ilgan_para_2 (참고용 룰 합성 일간 강점 문구),
             rule_text (전체 룰 합성 결과 — AI variation 기반)
 
@@ -237,11 +232,8 @@ def get_doyoon_p0_facts(
         "ilgan_hanja": ILGAN_HANJA[ilgan],
         "excess_ohang": ohang_excess,
         "excess_ohang_hanja": OHANG_HANJA[ohang_excess],
-        "excess_percentile": OHANG_EXCESS_PERCENTILE[ohang_excess],
         "lack_ohang": ohang_lack,
         "lack_ohang_hanja": OHANG_HANJA[ohang_lack],
-        "lack_percentile": OHANG_LACK_PERCENTILE[ohang_lack],
-        "contact_rate_drop": OHANG_CONTACT_RATE_DROP[ohang_excess],
         "ilgan_para_2": ILGAN_PARA_2[ilgan],
         "rule_text": rule_text,
     }

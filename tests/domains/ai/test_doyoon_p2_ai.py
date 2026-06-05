@@ -123,7 +123,7 @@ def test_hurt_facts_imsu() -> None:
     assert f["hurt_type_1_risk_pct"] == "78%"
     assert f["hurt_type_2_keyword"] == "의도 미독해"
     assert f["hurt_type_2_risk_pct"] == "64%"
-    assert f["intervention_drop_pct"] == "41%"
+    assert "intervention_drop_pct" not in f
     assert f["ilgan_hanja"] == "壬水"
 
 
@@ -136,8 +136,8 @@ def _hurt_valid_text(facts: dict[str, str]) -> str:
         "평균 대비 차단율이 높고 누적 손실도 큰 패턴입니다.\n\n"
         f"두 번째는 {facts['hurt_type_2_keyword']}예요. 위험도 {facts['hurt_type_2_risk_pct']}. "
         "신호 인지 실패 변수가 같이 들어오면 두 케이스 모두 발화돼요.\n\n"
-        f"신호 해석 전 24시간 텀을 두시면 두 패턴 모두 발생률이 {facts['intervention_drop_pct']} 떨어집니다. "
-        "통제 가능한 영역이에요. 조금만 의식해보세요."
+        "두 가지 모두 신호가 신경 쓰일 때 바로 결론 내리지 말고 하루 정도 여유를 두면 한결 가벼워져요. "
+        "조금만 의식하면 충분히 다잡을 수 있어요."
     )
 
 
@@ -182,18 +182,17 @@ def test_recovery_facts_imsu() -> None:
     f = get_doyoon_p2_recovery_facts(user_name="홍길동", ilgan="임수")
     assert f["recovery_lag_multiplier"] == "한결 더디게"
     assert "배" not in f["recovery_lag_multiplier"]
-    assert f["meter_pct_0"] == "20%"
-    assert f["meter_pct_1"] == "40%"
-    assert f["meter_pct_2"] == "65%"
-    assert f["meter_pct_3"] == "90%"
+    # 회복률 % 키는 2026-06-05 폐기 (진행바와 중복) — facts에 없음
+    assert "meter_pct_0" not in f
+    assert "meter_pct_3" not in f
 
 
 def _recovery_valid_text(facts: dict[str, str]) -> str:
     return (
         f"회복 데이터 정리해 드릴게요. {facts['ilgan_full']}({facts['ilgan_hanja']}) 일간의 평균 회복 곡선 분석입니다. "
         "4단계로 나누어 살펴봅니다.\n\n"
-        f"진행률을 보면, 직후 {facts['meter_pct_0']} / 1개월 {facts['meter_pct_1']} / "
-        f"3개월 {facts['meter_pct_2']} / 6개월 {facts['meter_pct_3']} 회복으로 측정돼요. "
+        "흐름을 보면, 직후엔 감정이 거의 그대로 남아 있다가 한 달이 지나며 천천히 가라앉기 시작해요. "
+        "세 달쯤엔 한결 가벼워지고 여섯 달이 되면 대부분 옅어집니다. "
         f"{facts['user_name']}님 케이스의 잔여 인덱스가 평균보다 길게 유지되는 패턴입니다. "
         "각 단계 임계점이 다른 일간보다 깊게 잡혀요.\n\n"
         f"평균 회복 곡선과 견주면 {facts['recovery_lag_multiplier']} 흘러가는 편입니다. "

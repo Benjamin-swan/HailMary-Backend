@@ -150,7 +150,6 @@ def get_doyoon_p6_meeting_facts(
         "user_name": user_name,
         "ilgan_full": ilgan,
         "existing_path_multiplier": i.existing_path_multiplier,
-        "low_impact_pct": i.low_impact_pct,
         "second_contact_multiplier": i.second_contact_multiplier,
         "rule_text": rule_text,
     }

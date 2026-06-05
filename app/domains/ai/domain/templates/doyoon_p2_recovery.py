@@ -26,15 +26,14 @@ def compose_doyoon_p2_recovery(
 
     data = DOYOON_P2_DATA[ilgan]
     ilgan_hanja = ILGAN_HANJA[ilgan]
-    # 회복률 → 잔여 감정 강도 변환 (100 - pct)
-    residual = [100 - m.pct for m in data.meters]
 
+    # 단락2는 위 진행바(직후/1개월/3개월/6개월 %)와 중복되므로 수치 없이 문장으로만 (2026-06-05 결정).
     ai_recovery = (
         f"이별 후 마음이 어떻게 가라앉는지 정리해 드릴게요. "
         f"{ilgan}({ilgan_hanja}) 일간을 가진 분들의 평균적인 회복 흐름이에요.\n\n"
-        f"헤어진 직후엔 감정이 거의 그대로 {residual[0]}%만큼 남아 있어요. "
-        f"한 달이 지나면 {residual[1]}% 정도로 천천히 가라앉고, "
-        f"세 달쯤엔 {residual[2]}% 수준, 여섯 달이 되면 {residual[3]}%까지 옅어집니다.\n\n"
+        "헤어진 직후엔 감정이 거의 그대로 남아 묵직하게 자리해요. "
+        "한 달이 지나면 조금씩 천천히 가라앉기 시작하고, "
+        "세 달쯤엔 한결 가벼워진 게 느껴져요. 여섯 달이 되면 대부분 옅어져 일상에 무리가 없을 만큼 정리됩니다.\n\n"
         f"평균 회복 곡선과 견주면 {data.recovery_lag_multiplier} 흘러가는 편이에요. "
         f"{user_name}님은 마음이 자연스럽게 가라앉기를 기다려 주는 게 가장 편안한 길입니다. "
         "억지로 잊으려 애쓰면 오히려 더 오래 머물러요.\n\n"
@@ -66,10 +65,6 @@ def get_doyoon_p2_recovery_facts(
         "user_name": user_name,
         "ilgan_full": ilgan,
         "ilgan_hanja": ILGAN_HANJA[ilgan],
-        "meter_pct_0": f"{data.meters[0].pct}%",
-        "meter_pct_1": f"{data.meters[1].pct}%",
-        "meter_pct_2": f"{data.meters[2].pct}%",
-        "meter_pct_3": f"{data.meters[3].pct}%",
         "recovery_lag_multiplier": data.recovery_lag_multiplier,
         "rule_text": composed["ai_recovery"],
     }

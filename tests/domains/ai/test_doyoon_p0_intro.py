@@ -43,7 +43,7 @@ def test_html_dummy_case() -> None:
     assert "임수(壬水)" in out
     assert "수(水)" in out
     assert "토(土)" in out
-    assert "36%" in out  # 수 과다 IMPACT
+    assert "水가 넘치면" in out  # 수 과다 IMPACT 메커니즘 (수치 폐기)
     # 4단락 구조
     assert out.count("\n\n") == 3
 

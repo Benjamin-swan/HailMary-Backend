@@ -3,7 +3,7 @@
 HTML 도윤_final.html line 2085~2089 임수 더미 톤 미러:
 - 단락 1 (~70자): 위기 % + 흔들림 정도 비수치 표현 + 회복 % 평이성
 - 단락 2 (~100자): {ILGAN} 일간 특성 — 초반 차분 → 폭발 패턴
-- 단락 3 (~80자): 작은 표현 효과 N% + 마무리
+- 단락 3 (~110자): 조언 파트 — 수치 없이 자연스러운 표현 습관 권유 + 마무리
 
 어휘: 진폭, 폭발 강도, 회복 곡선, 의식적 노출 — P-1 시그니처. 차트 보조 톤.
 """
@@ -87,10 +87,11 @@ def compose_doyoon_p1_emotion(
 
     para2 = ILGAN_CURVE_DIAG[ilgan].replace("{ILGAN}", ilgan)
 
+    # 단락3은 조언 파트 — 수치 없이 자연스러운 권유에 집중 (2026-06-05 결정).
     para3 = (
-        f"마음을 미리 조금씩 꺼내두면 그 흔들림이 줄어요. 작은 표현이라도 주 2회 이상 꾸준히 해보시면 "
-        f"힘든 시기의 흔들림이 {data.expression_effect_pct}%만큼 잦아들어요. 어렵게 생각하지 마시고, "
-        f"그냥 작은 표현을 자주 하시면 돼요."
+        "다만 그 흔들림을 혼자 안고 있으면 폭이 더 커지기 쉬워요. "
+        "마음을 솔직히 표현하는 작은 습관을 들이면 힘든 시기의 진폭도 한결 잦아들어요. "
+        "거창하게 털어놓지 않아도, 그냥 조금씩 자주 꺼내두면 충분해요."
     )
 
     return "\n\n".join([para1, para2, para3])
@@ -108,7 +109,8 @@ def get_doyoon_p1_emotion_facts(
 
     Returns:
         사실값 dict + rule_text. AI가 모두 보존해야 함.
-        검증 핵심: ilgan, crisis_pct, recovery_pct, crisis_multiplier, expression_effect_pct.
+        검증 핵심: ilgan, crisis_pct, recovery_pct, crisis_multiplier.
+        단락3 조언 효과 수치(expression_effect_pct)는 2026-06-05 폐기.
         user_name은 본 박스 룰에 안 들어가서 검증 생략 (선택적 포함).
 
     Raises:
@@ -127,7 +129,6 @@ def get_doyoon_p1_emotion_facts(
         "crisis_pct": f"{data.emotion_curve[2]}%",
         "recovery_pct": f"{data.emotion_curve[3]}%",
         "crisis_multiplier": data.crisis_multiplier,
-        "expression_effect_pct": f"{data.expression_effect_pct}%",
         "curve_diag_text": ILGAN_CURVE_DIAG[ilgan].replace("{ILGAN}", ilgan),
         "rule_text": rule_text,
     }
