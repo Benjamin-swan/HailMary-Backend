@@ -1,3 +1,5 @@
+from urllib.parse import quote
+
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.responses import PlainTextResponse, RedirectResponse
 
@@ -88,16 +90,28 @@ def get_frontend_base_url() -> str:
 
 @router.post("/return")
 async def payapp_return(
-    request: Request,  # noqa: ARG001 — POST body는 사용 안 하지만 form 처리 위해 keep
+    request: Request,
     frontend_base_url: str = Depends(get_frontend_base_url),
 ) -> RedirectResponse:
     """PayApp `skip_cstpage=y` 시 returnurl로 POST 호출됨 — S3는 POST 못 받으므로
     BE가 받아서 FE `/checkout/success/` 로 303 redirect (POST → GET 우회).
 
-    PayApp이 form-data로 결제 결과 같이 보내지만 우리는 webhook(`/feedback`)에서 이미
-    처리하므로 여기선 무시. FE polling이 sessionStorage.checkoutPending 으로 상태 추적.
+    2026-06-05 prod 실결제 사고 hotfix: FE가 sessionStorage(checkoutPending)에만
+    의존하면 카드사 인증 복귀가 새 브라우저 컨텍스트로 떨어질 때 세션이 유실돼
+    "결제 세션 정보 없음"이 떴음. payrequest에 var1=order_id를 보내두었고 PayApp이
+    returnurl POST form에 동봉하므로, 이를 ?order_id= 쿼리로 FE에 전달한다.
+    FE는 URL 쿼리 우선 → sessionStorage → localStorage 순으로 복구.
+    (결제 기록 자체는 webhook `/feedback`에서 처리 — 여기는 표시용 식별자만.)
     """
+    order_id = ""
+    try:
+        form = await request.form()
+        order_id = str(form.get("var1") or "")
+    except Exception:  # noqa: BLE001 — form 파싱 실패해도 redirect는 유지 (기존 동작)
+        order_id = ""
     target = f"{frontend_base_url.rstrip('/')}/checkout/success/"
+    if order_id:
+        target = f"{target}?order_id={quote(order_id)}"
     return RedirectResponse(url=target, status_code=status.HTTP_303_SEE_OTHER)
 
 
