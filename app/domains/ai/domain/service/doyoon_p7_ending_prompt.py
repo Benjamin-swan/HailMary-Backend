@@ -6,6 +6,8 @@
 
 from __future__ import annotations
 
+import re
+
 from app.domains.ai.domain.service.doyoon_tone_guide import (
     DOYOON_FORBIDDEN_BLOCK,
     DOYOON_TONE_GUIDE,
@@ -87,15 +89,19 @@ def build_p7_ending_prompt(facts: dict[str, str]) -> tuple[str, str]:
 _MIN_LENGTH = 340
 _MAX_LENGTH = 620
 
-# 카드에 없는 별도 수치 — 답변에 등장 시 fail
+# 카드에 없는 별도 수치 — 답변에 등장 시 fail.
+# 배수("N배")는 그래프 근거 없는 자작 수치라 데이터에서 비수치로 전환됨(정책 Z).
+# 아래 금지어는 AI가 임의 배수·기대값 수치를 끌어오는 것을 막는 안전장치로 유지한다.
+# "N배" 패턴(숫자+배)만 차단해 "배려" 등 정상 어휘 오탐을 피한다.
 _FORBIDDEN_METRICS = (
     "20%", "22%", "24%", "25%", "26%",   # sc1 별도 성립률
     "66%", "68%", "70%", "73%", "74%",   # sc2 별도 성립률
     "34%", "35%", "36%", "38%", "40%", "42%", "44%",  # sc3 별도 성립률
-    "1.2배", "1.3배", "1.5배", "1.6배",  # initiative
-    "2.4배", "2.5배", "2.7배", "2.8배", "2.9배", "3.0배",  # wait_cost
     "기대값",  # 기대값 배수 표현 자체
 )
+
+# 자작 배수("1.4배", "3배" 등) 차단용 정규식 — 숫자(소수 포함) 직후 "배".
+_FORBIDDEN_MULTIPLIER_RE = re.compile(r"\d+(?:\.\d+)?배")
 
 
 def validate_p7_ending(text: str, facts: dict[str, str]) -> tuple[bool, str]:
@@ -112,6 +118,10 @@ def validate_p7_ending(text: str, facts: dict[str, str]) -> tuple[bool, str]:
     for n in _FORBIDDEN_METRICS:
         if n in text:
             return False, f"forbidden meta-value: {n!r} (not in card display)"
+    # 자작 배수("N배") 금지 — 그래프 근거 없는 임의 수치
+    multiplier_hit = _FORBIDDEN_MULTIPLIER_RE.search(text)
+    if multiplier_hit:
+        return False, f"forbidden multiplier: {multiplier_hit.group()!r} (no chart basis)"
     paragraph_breaks = text.count("\n\n")
     if paragraph_breaks != 4:
         return False, f"paragraph structure invalid: {paragraph_breaks} (expected 4)"

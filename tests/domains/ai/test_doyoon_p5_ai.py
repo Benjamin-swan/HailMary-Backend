@@ -76,8 +76,8 @@ def test_charm_index_facts_imsu() -> None:
     assert f["charm_pct"] == "8%"
     assert f["strength_axis_1"] == "존재감"
     assert f["strength_axis_2"] == "깊이감"
-    assert f["strength_multiplier"] == "1.7배"
-    assert f["conscious_gap_multiplier"] == "2.4배"
+    assert f["strength_multiplier"] == "두드러지게"
+    assert f["conscious_gap_multiplier"] == "한결 더"
 
 
 def _ci_valid(facts):
@@ -85,9 +85,9 @@ def _ci_valid(facts):
         f"상위 {facts['charm_pct']} 케이스로 측정됐어요. 일반적인 분포에서 벗어난 수치입니다. "
         "동일 일간 표본 안에서도 흔치 않은 구간이에요.\n\n"
         f"6축 중 강점이 둘이에요. {facts['strength_axis_1']}과 {facts['strength_axis_2']} — "
-        f"평균 대비 {facts['strength_multiplier']}로 나오네요. 나머지 축들은 평균~약상위 구간입니다. "
+        f"평균보다 {facts['strength_multiplier']} 살아 있어요. 나머지 축들은 평균~약상위 구간입니다. "
         "약점이 있는 게 아니라 강점이 분명한 구조예요. 분포 특성상 두 축 모두 이만큼 나오기 쉽지 않습니다.\n\n"
-        f"다만 {facts['user_name']}님은 의식적 발현과 무의식 발현 차이가 {facts['conscious_gap_multiplier']}예요. "
+        f"다만 {facts['user_name']}님은 의식적 발현과 무의식 발현 차이가 {facts['conscious_gap_multiplier']} 벌어져요. "
         "잠재력 활용도가 낮은 상태입니다. 조금만 의식하셔도 측정값이 더 올라갈 여지가 큽니다."
     )
 
@@ -116,7 +116,7 @@ def test_conversion_facts_imsu() -> None:
     f = get_doyoon_p5_conversion_facts(user_name="홍길동", ilgan="임수")
     assert f["step_1_pct"] == "30%"
     assert f["step_4_pct"] == "88%"
-    assert f["second_meeting_multiplier"] == "1.4배"
+    assert f["second_meeting_multiplier"] == "부쩍"
     assert f["final_gap_pct"] == "38%p"
 
 
@@ -124,7 +124,7 @@ def _cv_valid(facts):
     return (
         f"첫 인상 {facts['step_1_pct']}에서 시작해서 끌림 {facts['step_4_pct']}까지 도달하는 4단계 전환율입니다. "
         f"중간 단계 {facts['step_2_pct']}와 {facts['step_3_pct']}로 올라가요.\n\n"
-        f"두 번째 만남에서 평균의 {facts['second_meeting_multiplier']}로 효율이 뛰어요. "
+        f"두 번째 만남에서 호감이 {facts['second_meeting_multiplier']} 깊어지는 흐름이 또렷해요. "
         f"첫 만남 종료 vs 두 번째 진행 케이스의 호감도 격차가 {facts['final_gap_pct']} 벌어집니다.\n\n"
         f"{facts['user_name']}님 전략은 두 번째 약속 사전 확보예요."
     )

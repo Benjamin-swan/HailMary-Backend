@@ -253,7 +253,7 @@ def test_emotion_facts_html_dummy() -> None:
     f = get_doyoon_p1_emotion_facts(user_name="홍길동", ilgan="임수")
     assert f["crisis_pct"] == "95%"
     assert f["recovery_pct"] == "60%"
-    assert f["crisis_multiplier"] == "1.8배"
+    assert f["crisis_multiplier"] == "평소보다 훨씬 크게"
     assert f["expression_effect_pct"] == "32%"
 
 
@@ -261,14 +261,14 @@ def test_emotion_prompt_substitutes_facts() -> None:
     f = get_doyoon_p1_emotion_facts(user_name="홍길동", ilgan="임수")
     system, user = build_p1_emotion_prompt(f)
     assert "95%" in system
-    assert "1.8배" in system
+    assert "평소보다 훨씬 크게" in system
     assert "32%" in system
 
 
 def _emotion_valid_text(facts: dict[str, str]) -> str:
     return (
         f"그래프를 보시면, 위기 구간에서 진폭이 {facts['crisis_pct']}까지 튀어요. "
-        f"평균의 {facts['crisis_multiplier']} 수준입니다. "
+        f"{facts['crisis_multiplier']} 흔들리는 패턴입니다. "
         f"회복 구간도 {facts['recovery_pct']}대에 한참 머무는 패턴이에요.\n\n"
         f"{facts['ilgan_full']} 일간이 원래 그런 구조입니다. 초반엔 차분해 보이다가 어느 순간 한꺼번에 쏟아져요. "
         "회복 구간도 평균보다 깊고 길게 잡힙니다.\n\n"
@@ -284,12 +284,13 @@ def test_emotion_validate_passes() -> None:
     assert ok, f"unexpected fail: {reason}"
 
 
-def test_emotion_validate_fails_multiplier_mutated() -> None:
+def test_emotion_validate_fails_crisis_pct_mutated() -> None:
+    # 배수 게이트는 제거됨 — 수치 게이트(crisis_pct)는 유지되는지 확인
     f = get_doyoon_p1_emotion_facts(user_name="홍길동", ilgan="임수")
-    text = _emotion_valid_text(f).replace("1.8배", "1.7배")
+    text = _emotion_valid_text(f).replace(f["crisis_pct"], "10%")
     ok, reason = validate_p1_emotion(text, f)
     assert not ok
-    assert "crisis_multiplier" in reason
+    assert "crisis_pct" in reason
 
 
 @pytest.mark.asyncio
@@ -311,5 +312,5 @@ async def test_emotion_usecase_falls_back_on_ai_error() -> None:
     )
     # 룰 fallback
     assert "95%" in out
-    assert "1.8배" in out
+    assert "평소보다 훨씬 크게" in out
     assert "32%" in out

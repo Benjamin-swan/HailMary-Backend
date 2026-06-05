@@ -68,8 +68,7 @@ def validate_p6_meeting(text: str, facts: dict[str, str]) -> tuple[bool, str]:
     length = len(text)
     if length < _MIN_LENGTH or length > _MAX_LENGTH:
         return False, f"length out of range: {length}"
-    for k in ("user_name", "existing_path_multiplier", "low_impact_pct",
-              "second_contact_multiplier"):
+    for k in ("user_name", "low_impact_pct"):
         if facts[k] not in text:
             return False, f"{k} missing"
     paragraph_breaks = text.count("\n\n")

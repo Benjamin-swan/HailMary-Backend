@@ -26,14 +26,14 @@ class DoyoonInyonData:
     ]
     height_distribution_pct: str          # "71%"
     profile_signal_pct: str               # "78%"
-    emotional_stability_multiplier: str   # "0.6배"
-    stability_high_multiplier: str        # "1.7배"
+    emotional_stability_multiplier: str   # "한결 차분한 편" (비수치)
+    stability_high_multiplier: str        # "두드러지게" (비수치)
     compatibility_pct: str                # "82%"
     avg_compatibility_baseline: str       # "54%"
-    compatibility_lift: str               # "1.5배"
-    existing_path_multiplier: str         # "2.3배"
+    compatibility_lift: str               # "한결 더 높게" (비수치)
+    existing_path_multiplier: str         # "훨씬 높게" (비수치)
     low_impact_pct: str                   # "73%"
-    second_contact_multiplier: str        # "2.4배"
+    second_contact_multiplier: str        # "눈에 띄게 빠르게" (비수치)
     profile_bubble: str
 
 
@@ -51,11 +51,11 @@ class DoyoonP6IlganData:
     expression_score: int           # 52
     durability_score: int           # 88
     behavior_cards: tuple[BehaviorCard, BehaviorCard]
-    answer_length_multiplier: str   # "3.2배"
+    answer_length_multiplier: str   # "훨씬 길게" (비수치)
     hesitation_pct: str             # "78%"
     cut_intent_pct: str             # "12%"
     resolution_pct: str             # "87%"
-    initiative_multiplier: str      # "1.4배"
+    initiative_multiplier: str      # "한결 잘 맞게" (비수치)
 
 
 # 인연 SD spotlight (4-2)
@@ -82,7 +82,7 @@ _FALLBACK_INFO_ROWS: tuple[
     InyonInfoRow(key="얼굴상", val="선이 부드러운 둥근형 · 이마 넓음"),
     InyonInfoRow(key="이목구비", val="눈매 길고 끝 부드러움 · 입꼬리 상향"),
     InyonInfoRow(key="손·실루엣", val="손가락 길고 단정 · 자세 차분"),
-    InyonInfoRow(key="성격 데이터", val="감정 변동성 평균 대비 0.6배"),
+    InyonInfoRow(key="성격 데이터", val="감정 변동성 평소보다 낮게 잡힘"),
     InyonInfoRow(key="직업군", val="기획·교육·창작 계열"),
     InyonInfoRow(key="접촉 시나리오", val="기존 동선 내 재접촉 확률 높음"),
     InyonInfoRow(key="궁합 지수", val="82%"),
@@ -95,14 +95,14 @@ def _build_default_inyon() -> DoyoonInyonData:
         info_rows=_FALLBACK_INFO_ROWS,
         height_distribution_pct="71%",
         profile_signal_pct="78%",
-        emotional_stability_multiplier="0.6배",
-        stability_high_multiplier="1.7배",
+        emotional_stability_multiplier="한결 차분한 편",
+        stability_high_multiplier="두드러지게",
         compatibility_pct="82%",
         avg_compatibility_baseline="54%",
-        compatibility_lift="1.5배",
-        existing_path_multiplier="2.3배",
+        compatibility_lift="한결 더 높게",
+        existing_path_multiplier="훨씬 높게",
         low_impact_pct="73%",
-        second_contact_multiplier="2.4배",
+        second_contact_multiplier="눈에 띄게 빠르게",
         profile_bubble="이 사람, {USER_NAME}님 주변에 이미 있을 확률이 높아요. 데이터가 그렇게 가리키고 있어요.",
     )
 
@@ -142,72 +142,72 @@ DOYOON_P6_DATA: dict[str, DoyoonP6IlganData] = {
     "임수": DoyoonP6IlganData(
         interest_score=78, expression_score=52, durability_score=88,
         behavior_cards=_COMMON_BEHAVIOR_CARDS,
-        answer_length_multiplier="3.2배", hesitation_pct="78%",
+        answer_length_multiplier="훨씬 길게", hesitation_pct="78%",
         cut_intent_pct="12%", resolution_pct="87%",
-        initiative_multiplier="1.4배",
+        initiative_multiplier="한결 잘 맞게",
     ),
     "갑목": DoyoonP6IlganData(
         interest_score=72, expression_score=68, durability_score=82,
         behavior_cards=_COMMON_BEHAVIOR_CARDS,
-        answer_length_multiplier="2.8배", hesitation_pct="64%",
+        answer_length_multiplier="훨씬 길게", hesitation_pct="64%",
         cut_intent_pct="18%", resolution_pct="82%",
-        initiative_multiplier="1.3배",
+        initiative_multiplier="한결 잘 맞게",
     ),
     "을목": DoyoonP6IlganData(
         interest_score=76, expression_score=58, durability_score=85,
         behavior_cards=_COMMON_BEHAVIOR_CARDS,
-        answer_length_multiplier="3.0배", hesitation_pct="72%",
+        answer_length_multiplier="훨씬 길게", hesitation_pct="72%",
         cut_intent_pct="14%", resolution_pct="84%",
-        initiative_multiplier="1.4배",
+        initiative_multiplier="한결 잘 맞게",
     ),
     "병화": DoyoonP6IlganData(
         interest_score=82, expression_score=74, durability_score=78,
         behavior_cards=_COMMON_BEHAVIOR_CARDS,
-        answer_length_multiplier="2.6배", hesitation_pct="58%",
+        answer_length_multiplier="훨씬 길게", hesitation_pct="58%",
         cut_intent_pct="22%", resolution_pct="79%",
-        initiative_multiplier="1.2배",
+        initiative_multiplier="한결 잘 맞게",
     ),
     "정화": DoyoonP6IlganData(
         interest_score=76, expression_score=54, durability_score=90,
         behavior_cards=_COMMON_BEHAVIOR_CARDS,
-        answer_length_multiplier="3.4배", hesitation_pct="80%",
+        answer_length_multiplier="훨씬 길게", hesitation_pct="80%",
         cut_intent_pct="10%", resolution_pct="88%",
-        initiative_multiplier="1.5배",
+        initiative_multiplier="한결 잘 맞게",
     ),
     "무토": DoyoonP6IlganData(
         interest_score=74, expression_score=56, durability_score=92,
         behavior_cards=_COMMON_BEHAVIOR_CARDS,
-        answer_length_multiplier="3.0배", hesitation_pct="74%",
+        answer_length_multiplier="훨씬 길게", hesitation_pct="74%",
         cut_intent_pct="12%", resolution_pct="86%",
-        initiative_multiplier="1.4배",
+        initiative_multiplier="한결 잘 맞게",
     ),
     "기토": DoyoonP6IlganData(
         interest_score=78, expression_score=58, durability_score=88,
         behavior_cards=_COMMON_BEHAVIOR_CARDS,
-        answer_length_multiplier="3.1배", hesitation_pct="76%",
+        answer_length_multiplier="훨씬 길게", hesitation_pct="76%",
         cut_intent_pct="13%", resolution_pct="86%",
-        initiative_multiplier="1.4배",
+        initiative_multiplier="한결 잘 맞게",
     ),
     "경금": DoyoonP6IlganData(
         interest_score=72, expression_score=66, durability_score=84,
         behavior_cards=_COMMON_BEHAVIOR_CARDS,
-        answer_length_multiplier="2.7배", hesitation_pct="62%",
+        answer_length_multiplier="훨씬 길게", hesitation_pct="62%",
         cut_intent_pct="20%", resolution_pct="81%",
-        initiative_multiplier="1.3배",
+        initiative_multiplier="한결 잘 맞게",
     ),
     "신금": DoyoonP6IlganData(
         interest_score=76, expression_score=54, durability_score=89,
         behavior_cards=_COMMON_BEHAVIOR_CARDS,
-        answer_length_multiplier="3.3배", hesitation_pct="78%",
+        answer_length_multiplier="훨씬 길게", hesitation_pct="78%",
         cut_intent_pct="11%", resolution_pct="87%",
-        initiative_multiplier="1.5배",
+        initiative_multiplier="한결 잘 맞게",
     ),
     "계수": DoyoonP6IlganData(
         interest_score=80, expression_score=50, durability_score=89,
         behavior_cards=_COMMON_BEHAVIOR_CARDS,
-        answer_length_multiplier="3.4배", hesitation_pct="82%",
+        answer_length_multiplier="훨씬 길게", hesitation_pct="82%",
         cut_intent_pct="10%", resolution_pct="89%",
-        initiative_multiplier="1.5배",
+        initiative_multiplier="한결 잘 맞게",
     ),
 }
 

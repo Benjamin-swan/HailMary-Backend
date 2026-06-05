@@ -24,9 +24,9 @@ class DoyoonP7IlganData:
     sc1_six_month_pct: str       # "22%" — 6개월 후 관계 성립
     sc2_six_month_pct: str       # "71%"
     sc3_six_month_pct: str       # "38%"
-    initiative_multiplier: str   # "1.4배"
-    wait_cost_multiplier: str    # "2.7배"
-    expected_value_ratio: str    # "3배" — 71% vs 22%
+    initiative_multiplier: str   # 비수치 강도 표현 — "한결 더" 등
+    wait_cost_multiplier: str    # 비수치 강도 표현 — "훨씬 크게" 등
+    expected_value_ratio: str    # 비수치 강도 표현 — "두드러지게 높게" 등
     sd_ending_asset: str         # "dy_05"
     ending_bubble: str
 
@@ -60,73 +60,73 @@ DOYOON_P7_DATA: dict[str, DoyoonP7IlganData] = {
         sc1_six_month_pct="22%",
         sc2_six_month_pct="71%",
         sc3_six_month_pct="38%",
-        initiative_multiplier="1.4배",
-        wait_cost_multiplier="2.7배",
-        expected_value_ratio="3배",
+        initiative_multiplier="한결 더",
+        wait_cost_multiplier="훨씬 크게",
+        expected_value_ratio="두드러지게 높게",
         sd_ending_asset="dy_05",
         ending_bubble="{USER_NAME}님이 먼저 움직이는 게 제일 안전한 선택이에요. 데이터가 그렇게 나왔어요.",
     ),
     "갑목": DoyoonP7IlganData(
         scenarios=_build_scenarios(),
         sc1_six_month_pct="24%", sc2_six_month_pct="68%", sc3_six_month_pct="40%",
-        initiative_multiplier="1.3배", wait_cost_multiplier="2.4배",
-        expected_value_ratio="2.8배", sd_ending_asset="dy_05",
+        initiative_multiplier="한결 더", wait_cost_multiplier="평소보다 크게",
+        expected_value_ratio="눈에 띄게 높게", sd_ending_asset="dy_05",
         ending_bubble="결단력이 가장 큰 무기예요. 망설이지 마시고 한 번 보내세요.",
     ),
     "을목": DoyoonP7IlganData(
         scenarios=_build_scenarios(),
         sc1_six_month_pct="26%", sc2_six_month_pct="66%", sc3_six_month_pct="42%",
-        initiative_multiplier="1.4배", wait_cost_multiplier="2.5배",
-        expected_value_ratio="2.5배", sd_ending_asset="dy_05",
+        initiative_multiplier="한결 더", wait_cost_multiplier="제법 크게",
+        expected_value_ratio="제법 높게", sd_ending_asset="dy_05",
         ending_bubble="유연성이 강점이에요. 작은 신호 한 번이면 흐름 바뀝니다.",
     ),
     "병화": DoyoonP7IlganData(
         scenarios=_build_scenarios(),
         sc1_six_month_pct="20%", sc2_six_month_pct="73%", sc3_six_month_pct="35%",
-        initiative_multiplier="1.2배", wait_cost_multiplier="3.0배",
-        expected_value_ratio="3.6배", sd_ending_asset="dy_05",
+        initiative_multiplier="조금 더", wait_cost_multiplier="훨씬 크게",
+        expected_value_ratio="크게 앞서게", sd_ending_asset="dy_05",
         ending_bubble="매력을 환하게 드러내는 분이라, 먼저 다가갈 때 가장 잘 풀려요.",
     ),
     "정화": DoyoonP7IlganData(
         scenarios=_build_scenarios(),
         sc1_six_month_pct="25%", sc2_six_month_pct="74%", sc3_six_month_pct="40%",
-        initiative_multiplier="1.5배", wait_cost_multiplier="2.8배",
-        expected_value_ratio="3배", sd_ending_asset="dy_05",
+        initiative_multiplier="훨씬 더", wait_cost_multiplier="훨씬 크게",
+        expected_value_ratio="두드러지게 높게", sd_ending_asset="dy_05",
         ending_bubble="잔잔한 표현이 무기예요. 한 번이면 충분합니다.",
     ),
     "무토": DoyoonP7IlganData(
         scenarios=_build_scenarios(),
         sc1_six_month_pct="23%", sc2_six_month_pct="69%", sc3_six_month_pct="42%",
-        initiative_multiplier="1.4배", wait_cost_multiplier="2.6배",
-        expected_value_ratio="3배", sd_ending_asset="dy_05",
+        initiative_multiplier="한결 더", wait_cost_multiplier="제법 크게",
+        expected_value_ratio="두드러지게 높게", sd_ending_asset="dy_05",
         ending_bubble="안정감을 주는 분이라, 신호를 보내면 상대가 마음을 놓아요.",
     ),
     "기토": DoyoonP7IlganData(
         scenarios=_build_scenarios(),
         sc1_six_month_pct="22%", sc2_six_month_pct="70%", sc3_six_month_pct="40%",
-        initiative_multiplier="1.4배", wait_cost_multiplier="2.7배",
-        expected_value_ratio="3.2배", sd_ending_asset="dy_05",
+        initiative_multiplier="한결 더", wait_cost_multiplier="평소보다 크게",
+        expected_value_ratio="눈에 띄게 높게", sd_ending_asset="dy_05",
         ending_bubble="배려가 강점이에요. 그 배려를 신호로 바꿔 보내세요.",
     ),
     "경금": DoyoonP7IlganData(
         scenarios=_build_scenarios(),
         sc1_six_month_pct="25%", sc2_six_month_pct="68%", sc3_six_month_pct="38%",
-        initiative_multiplier="1.3배", wait_cost_multiplier="2.5배",
-        expected_value_ratio="2.7배", sd_ending_asset="dy_05",
+        initiative_multiplier="한결 더", wait_cost_multiplier="제법 크게",
+        expected_value_ratio="제법 높게", sd_ending_asset="dy_05",
         ending_bubble="명확함이 강점입니다. 직접적으로 전달하시면 됩니다.",
     ),
     "신금": DoyoonP7IlganData(
         scenarios=_build_scenarios(),
         sc1_six_month_pct="20%", sc2_six_month_pct="72%", sc3_six_month_pct="36%",
-        initiative_multiplier="1.5배", wait_cost_multiplier="2.9배",
-        expected_value_ratio="3.6배", sd_ending_asset="dy_05",
+        initiative_multiplier="훨씬 더", wait_cost_multiplier="훨씬 크게",
+        expected_value_ratio="크게 앞서게", sd_ending_asset="dy_05",
         ending_bubble="섬세한 표현이 강점이에요. 그 디테일 그대로 보내세요.",
     ),
     "계수": DoyoonP7IlganData(
         scenarios=_build_scenarios(),
         sc1_six_month_pct="18%", sc2_six_month_pct="74%", sc3_six_month_pct="34%",
-        initiative_multiplier="1.5배", wait_cost_multiplier="3.0배",
-        expected_value_ratio="4배", sd_ending_asset="dy_05",
+        initiative_multiplier="훨씬 더", wait_cost_multiplier="훨씬 크게",
+        expected_value_ratio="크게 앞서게", sd_ending_asset="dy_05",
         ending_bubble="잠재력이 큰 분이에요. 신호 하나로 모든 게 움직입니다.",
     ),
 }

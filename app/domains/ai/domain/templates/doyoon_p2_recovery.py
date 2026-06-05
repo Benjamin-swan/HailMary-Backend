@@ -35,7 +35,7 @@ def compose_doyoon_p2_recovery(
         f"헤어진 직후엔 감정이 거의 그대로 {residual[0]}%만큼 남아 있어요. "
         f"한 달이 지나면 {residual[1]}% 정도로 천천히 가라앉고, "
         f"세 달쯤엔 {residual[2]}% 수준, 여섯 달이 되면 {residual[3]}%까지 옅어집니다.\n\n"
-        f"평균보다 회복이 {data.recovery_lag_multiplier} 정도 더디게 흘러가는 편이에요. "
+        f"평균 회복 곡선과 견주면 {data.recovery_lag_multiplier} 흘러가는 편이에요. "
         f"{user_name}님은 마음이 자연스럽게 가라앉기를 기다려 주는 게 가장 편안한 길입니다. "
         "억지로 잊으려 애쓰면 오히려 더 오래 머물러요.\n\n"
         "마음이 정리되기 전에 새 인연을 서두르면 부딪히기 쉬워요. "

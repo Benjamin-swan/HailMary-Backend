@@ -1,7 +1,7 @@
 """도윤 P-1 1-3 감정 강도 분석 — 3단락 250~300자 합성.
 
 HTML 도윤_final.html line 2085~2089 임수 더미 톤 미러:
-- 단락 1 (~70자): 위기 % + 평균 대비 1.X배 + 회복 % 평이성
+- 단락 1 (~70자): 위기 % + 흔들림 정도 비수치 표현 + 회복 % 평이성
 - 단락 2 (~100자): {ILGAN} 일간 특성 — 초반 차분 → 폭발 패턴
 - 단락 3 (~80자): 작은 표현 효과 N% + 마무리
 
@@ -82,7 +82,7 @@ def compose_doyoon_p1_emotion(
 
     para1 = (
         f"그래프 보시면 느끼시겠지만, 힘든 시기에 마음이 {crisis_pct}%까지 출렁여요. "
-        f"평소의 {data.crisis_multiplier} 정도예요. 회복도 {recovery_pct}% 수준에서 한참 머물러요."
+        f"{data.crisis_multiplier} 흔들리는 셈이에요. 회복도 {recovery_pct}% 수준에서 한참 머물러요."
     )
 
     para2 = ILGAN_CURVE_DIAG[ilgan].replace("{ILGAN}", ilgan)

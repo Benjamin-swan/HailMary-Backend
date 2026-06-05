@@ -6,7 +6,7 @@ HTML 도윤_final.html line 1974~2096 (P-1 1-1/1-2/1-3) 변수 매핑:
 - distribution_pct: 전체 표본 대비 {ILGAN} 일간 비율 (예: 12.4%)
 - trigger_1/2/3: 감정 발화 트리거 3종 (30% → 62% → 88% flow)
 - emotion_curve: 4 데이터 포인트 (초반/중반/위기/회복 강도 %)
-- crisis_multiplier: 위기 구간 평균 대비 배수 (예: "1.8배")
+- crisis_multiplier: 위기 구간 흔들림 정도 비수치 표현 (필드명 유지, 값은 비수치)
 - self_control_pct: 처음 30일 자기조절 성공률
 - expression_effect_pct: 표현 빈도 ↑ 시 위기 강도 감소 폭
 
@@ -29,7 +29,7 @@ class DoyoonP1IlganData:
     trigger_2: str
     trigger_3: str
     emotion_curve: tuple[int, int, int, int]   # (초반, 중반, 위기, 회복) %
-    crisis_multiplier: str               # "1.7배" / "1.8배" / "2.0배"
+    crisis_multiplier: str               # 위기 흔들림 비수치 표현 (예: "평소보다 크게")
     self_control_pct: int                # 자기조절 (12~38)
     expression_effect_pct: int           # 표현 효과 (24~38)
 
@@ -43,7 +43,7 @@ DOYOON_P1_DATA: dict[str, DoyoonP1IlganData] = {
         trigger_2="분명한 의사 표시",
         trigger_3="직접적인 거리 좁힘",
         emotion_curve=(50, 80, 90, 65),
-        crisis_multiplier="1.6배",
+        crisis_multiplier="평소보다 한결 크게",
         self_control_pct=34,
         expression_effect_pct=28,
     ),
@@ -55,7 +55,7 @@ DOYOON_P1_DATA: dict[str, DoyoonP1IlganData] = {
         trigger_2="일관된 관심 신호",
         trigger_3="깊은 이해 표명",
         emotion_curve=(35, 70, 85, 55),
-        crisis_multiplier="1.7배",
+        crisis_multiplier="평소보다 크게",
         self_control_pct=22,
         expression_effect_pct=30,
     ),
@@ -67,7 +67,7 @@ DOYOON_P1_DATA: dict[str, DoyoonP1IlganData] = {
         trigger_2="같은 텐션의 대화",
         trigger_3="즉각 답신 빈도",
         emotion_curve=(60, 88, 92, 78),
-        crisis_multiplier="1.7배",
+        crisis_multiplier="평소보다 크게",
         self_control_pct=20,
         expression_effect_pct=26,
     ),
@@ -79,7 +79,7 @@ DOYOON_P1_DATA: dict[str, DoyoonP1IlganData] = {
         trigger_2="차분한 시선 누적",
         trigger_3="한 주제 깊은 몰입",
         emotion_curve=(30, 65, 88, 45),
-        crisis_multiplier="1.9배",
+        crisis_multiplier="평소보다 두드러지게 크게",
         self_control_pct=18,
         expression_effect_pct=34,
     ),
@@ -91,7 +91,7 @@ DOYOON_P1_DATA: dict[str, DoyoonP1IlganData] = {
         trigger_2="큰 변화 없는 일관성",
         trigger_3="점진적 신뢰 누적",
         emotion_curve=(25, 55, 75, 50),
-        crisis_multiplier="1.5배",
+        crisis_multiplier="평소보다 크게",
         self_control_pct=38,
         expression_effect_pct=24,
     ),
@@ -103,7 +103,7 @@ DOYOON_P1_DATA: dict[str, DoyoonP1IlganData] = {
         trigger_2="약점 노출 순간",
         trigger_3="의지하는 분위기",
         emotion_curve=(40, 72, 85, 52),
-        crisis_multiplier="1.7배",
+        crisis_multiplier="평소보다 크게",
         self_control_pct=23,
         expression_effect_pct=29,
     ),
@@ -115,7 +115,7 @@ DOYOON_P1_DATA: dict[str, DoyoonP1IlganData] = {
         trigger_2="솔직한 피드백 교환",
         trigger_3="단호한 거리 좁힘",
         emotion_curve=(45, 78, 92, 70),
-        crisis_multiplier="1.7배",
+        crisis_multiplier="평소보다 크게",
         self_control_pct=32,
         expression_effect_pct=27,
     ),
@@ -127,7 +127,7 @@ DOYOON_P1_DATA: dict[str, DoyoonP1IlganData] = {
         trigger_2="감각적 인정 신호",
         trigger_3="보호 의지 표명",
         emotion_curve=(32, 68, 90, 48),
-        crisis_multiplier="1.8배",
+        crisis_multiplier="평소보다 훨씬 크게",
         self_control_pct=26,
         expression_effect_pct=31,
     ),
@@ -139,7 +139,7 @@ DOYOON_P1_DATA: dict[str, DoyoonP1IlganData] = {
         trigger_2="답장이 빨리 오가는 흐름",
         trigger_3="자연스럽게 가까워지는 거리",
         emotion_curve=(45, 85, 95, 60),
-        crisis_multiplier="1.8배",
+        crisis_multiplier="평소보다 훨씬 크게",
         self_control_pct=17,
         expression_effect_pct=32,
     ),
@@ -151,7 +151,7 @@ DOYOON_P1_DATA: dict[str, DoyoonP1IlganData] = {
         trigger_2="침묵 공유의 편안함",
         trigger_3="작은 변화 알아챔",
         emotion_curve=(28, 60, 82, 45),
-        crisis_multiplier="1.6배",
+        crisis_multiplier="평소보다 한결 크게",
         self_control_pct=19,
         expression_effect_pct=35,
     ),

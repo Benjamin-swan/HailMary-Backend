@@ -21,14 +21,12 @@ _SYSTEM_PROMPT = (
     "[사실값 보존 — 절대 변경 금지]\n"
     "- 사용자 이름 ({user_name})\n"
     "- 일간 ({ilgan_full})\n"
-    "- 착각 발생률 배수 ({illusion_multiplier})\n"
     "- 헷갈리기 쉬운 신호 키워드 3종 ({sign_1_keyword} / {sign_2_keyword} / {sign_3_keyword})\n"
     "- 신호 발생률 3종 ({sign_1_pct} / {sign_2_pct} / {sign_3_pct})\n"
-    "- 진짜 인연 성장률 ({real_growth_pct}) + 착각 인연 하락률 ({fake_drop_pct})\n"
-    "- 정확도 배수 ({accuracy_multiplier})\n\n"
+    "- 진짜 인연 성장률 ({real_growth_pct}) + 착각 인연 하락률 ({fake_drop_pct})\n\n"
     "[구성] 4 단락, 총 290~500자\n"
     "1. 일간별 착각 발생률 (1~2문장)\n"
-    "2. 3개월쯤 지나면 진짜와 착각이 갈리는 변화 + 정확도 배수 (2~3문장)\n"
+    "2. 3개월쯤 지나면 진짜와 착각이 갈리는 변화 (2~3문장)\n"
     "3. 헷갈리기 쉬운 신호 3종 요약 (2~3문장)\n"
     "4. {user_name}님 호명 + 마지막 한 줄\n\n"
     "[출력] 4단락 텍스트만. 메타·헤더 금지.\n"
@@ -41,7 +39,6 @@ _USER_PROMPT_TPL = """\
 [보존해야 하는 사실값 — 모두 출력에 포함]
 - user_name: {user_name}
 - ilgan_full: {ilgan_full}
-- illusion_multiplier: {illusion_multiplier}
 - sign_1_keyword: {sign_1_keyword}
 - sign_1_pct: {sign_1_pct}
 - sign_2_keyword: {sign_2_keyword}
@@ -50,7 +47,6 @@ _USER_PROMPT_TPL = """\
 - sign_3_pct: {sign_3_pct}
 - real_growth_pct: {real_growth_pct}
 - fake_drop_pct: {fake_drop_pct}
-- accuracy_multiplier: {accuracy_multiplier}
 
 [룰 합성 기반 텍스트 — 기반으로 표현 다양화. 사실값 한 글자도 바꾸지 마세요.]
 
@@ -99,8 +95,7 @@ def validate_p4_illusion(text: str, facts: dict[str, str]) -> tuple[bool, str]:
         return False, "user_name missing"
     if facts["ilgan_full"] not in text:
         return False, "ilgan_full missing"
-    for k in ("illusion_multiplier", "real_growth_pct", "fake_drop_pct",
-              "accuracy_multiplier",
+    for k in ("real_growth_pct", "fake_drop_pct",
               "sign_1_keyword", "sign_1_pct",
               "sign_2_keyword", "sign_2_pct",
               "sign_3_keyword", "sign_3_pct"):

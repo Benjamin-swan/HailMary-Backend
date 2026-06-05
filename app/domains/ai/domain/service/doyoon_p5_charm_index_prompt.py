@@ -21,11 +21,14 @@ _SYSTEM_PROMPT = (
     "[사실값 보존 — 절대 변경 금지]\n"
     "다음 값은 *변경, 누락, 풀어쓰기, 약어화* 모두 금지하고 그대로 출력에 포함:\n"
     "- {user_name}, {ilgan_full}\n"
-    "- 상위 {charm_pct}, 강점 축 {strength_axis_1}/{strength_axis_2} (평균 대비 {strength_multiplier})\n"
-    "- 평소 모습과 본래 모습의 차이 {conscious_gap_multiplier}\n\n"
+    "- 상위 {charm_pct}, 강점 축 {strength_axis_1}/{strength_axis_2}\n\n"
+    "[표현 가이드]\n"
+    "- 강점 두 축이 평균보다 {strength_multiplier} 살아 있다는 식으로 풀어준다 "
+    "(숫자 배수 표현은 쓰지 않는다)\n"
+    "- 평소 모습과 본래 모습의 차이는 {conscious_gap_multiplier} 벌어진다는 식으로 묘사한다\n\n"
     "[구성] 3 단락, 총 280~430자\n"
     "1. 상위 % + 어떤 점이 돋보이는지\n"
-    "2. 강점 2축 + 배수\n"
+    "2. 강점 2축이 얼마나 살아 있는지\n"
     "3. 평소 모습과 본래 모습의 차이 + 사람을 향한 한 줄\n\n"
     "[출력] 3단락만 출력. 메타 설명·주석·헤더·코드블록 금지.\n"
 )
@@ -70,8 +73,8 @@ def validate_p5_charm_index(text: str, facts: dict[str, str]) -> tuple[bool, str
     length = len(text)
     if length < _MIN_LENGTH or length > _MAX_LENGTH:
         return False, f"length out of range: {length}"
-    for k in ("user_name", "charm_pct", "strength_axis_1", "strength_axis_2",
-              "strength_multiplier", "conscious_gap_multiplier"):
+    # 배수 게이트 완화: *_multiplier(비수치 강조어)는 출력 필수 포함 검사에서 제외.
+    for k in ("user_name", "charm_pct", "strength_axis_1", "strength_axis_2"):
         if facts[k] not in text:
             return False, f"{k} missing: {facts[k]!r}"
     paragraph_breaks = text.count("\n\n")

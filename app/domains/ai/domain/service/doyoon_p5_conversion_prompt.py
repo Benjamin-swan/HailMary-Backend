@@ -22,8 +22,10 @@ _SYSTEM_PROMPT = (
     "다음 값은 *변경, 누락, 풀어쓰기, 약어화* 모두 금지하고 그대로 출력에 포함:\n"
     "- {user_name}, {ilgan_full}\n"
     "- 4단계 % ({step_1_pct} → {step_2_pct} → {step_3_pct} → {step_4_pct})\n"
-    "- 두 번째 만남 배수 ({second_meeting_multiplier})\n"
     "- 호감도 차이 ({final_gap_pct})\n\n"
+    "[표현 가이드]\n"
+    "- 두 번째 만남에서 호감이 {second_meeting_multiplier} 깊어진다는 식으로 풀어준다 "
+    "(숫자 배수 표현은 쓰지 않는다)\n\n"
     "[구성] 3 단락, 총 180~330자\n"
     "1. 4단계 흐름 도입\n"
     "2. 두 번째 만남에서 달라지는 점 + 차이\n"
@@ -78,8 +80,7 @@ def validate_p5_conversion(text: str, facts: dict[str, str]) -> tuple[bool, str]
     pcts_found = sum(1 for k in ("step_1_pct", "step_2_pct", "step_3_pct", "step_4_pct") if facts[k] in text)
     if pcts_found < 3:
         return False, f"conversion steps insufficient: {pcts_found}/4"
-    if facts["second_meeting_multiplier"] not in text:
-        return False, "second_meeting_multiplier missing"
+    # 배수 게이트 완화: second_meeting_multiplier(비수치 강조어)는 필수 포함 검사 제외.
     if facts["final_gap_pct"] not in text:
         return False, "final_gap_pct missing"
     paragraph_breaks = text.count("\n\n")

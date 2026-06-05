@@ -25,11 +25,10 @@ _SYSTEM_PROMPT = (
     "- 일간 ({ilgan_full})\n"
     "- 힘든 시기의 흔들림 정도 ({crisis_pct})\n"
     "- 회복되는 정도 ({recovery_pct})\n"
-    "- 평소 대비 배수 ({crisis_multiplier})\n"
     "- 마음을 표현했을 때의 효과 ({expression_effect_pct})\n"
     "출력 텍스트에 위 문자열들이 그대로 포함돼야 합니다.\n\n"
     "[구성] 3 단락, 단락 사이 빈 줄 1개, 총 210~380자\n"
-    "1. 도입 — 힘든 시기 {crisis_pct} + 평소 대비 {crisis_multiplier} + 회복 {recovery_pct} (2~3문장)\n"
+    "1. 도입 — 힘든 시기 {crisis_pct} + 흔들림이 {crisis_multiplier} 커진다는 점 + 회복 {recovery_pct} (2~3문장)\n"
     "2. {ilgan_full} 일간의 감정이 흐르는 특성 (2문장)\n"
     "3. 마음을 솔직히 표현하는 작은 습관 + 그 효과 {expression_effect_pct} (2~3문장)\n\n"
     "[출력] 3단락 텍스트만. 메타 설명·헤더·코드블록 금지.\n"
@@ -103,8 +102,6 @@ def validate_p1_emotion(text: str, facts: dict[str, str]) -> tuple[bool, str]:
         return False, f"crisis_pct missing: {facts['crisis_pct']!r}"
     if facts["recovery_pct"] not in text:
         return False, f"recovery_pct missing: {facts['recovery_pct']!r}"
-    if facts["crisis_multiplier"] not in text:
-        return False, f"crisis_multiplier missing: {facts['crisis_multiplier']!r}"
     if facts["expression_effect_pct"] not in text:
         return False, "expression_effect_pct missing"
 

@@ -22,7 +22,7 @@ _SYSTEM_PROMPT = (
     "- 사용자 이름 ({user_name})\n"
     "- 일간 ({ilgan_full})\n"
     "- 오행 과다 ({ohang_excess}) + 한자 ({ohang_excess_hanja})\n"
-    "- 평균 대비 배수 ({blockade_multiplier})\n"
+    "- 기운 강도 표현 ({blockade_multiplier})\n"
     "- 차단율 ({blockage_rate_drop})\n"
     "- 비움 회복률 ({recovery_after_clearing_pct})\n"
     "위 값들은 변경·누락·풀어쓰기·약어화 모두 금지. 출력에 그대로 포함돼야 합니다.\n\n"
@@ -107,8 +107,7 @@ def validate_p3_blockade(text: str, facts: dict[str, str]) -> tuple[bool, str]:
         return False, "user_name missing"
     if facts["ohang_excess_hanja"] not in text:
         return False, f"ohang_excess_hanja missing: {facts['ohang_excess_hanja']!r}"
-    if facts["blockade_multiplier"] not in text:
-        return False, f"blockade_multiplier missing: {facts['blockade_multiplier']!r}"
+    # blockade_multiplier(비수치 강도 표현)는 배수 게이트 완화로 필수 포함 검사에서 제외.
     if facts["blockage_rate_drop"] not in text:
         return False, f"blockage_rate_drop missing: {facts['blockage_rate_drop']!r}"
     if facts["recovery_after_clearing_pct"] not in text:

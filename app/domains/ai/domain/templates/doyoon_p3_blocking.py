@@ -36,7 +36,7 @@ def compose_doyoon_p3_blockade(
 
     return (
         f"먼저 흐름부터 짚어드릴게요. {user_name}님의 사주를 보면 {ohang_excess}({b.ohang_hanja}) "
-        f"기운이 평균 대비 {b.blockade_multiplier}로 강하게 나타나요. 잠깐 강한 정도가 아니라 깊게 쌓여 있는 상태예요.\n\n"
+        f"기운이 {b.blockade_multiplier} 강하게 나타나요. 잠깐 강한 정도가 아니라 깊게 쌓여 있는 상태예요.\n\n"
         f"이게 새 인연이 들어올 자리를 좁혀요. 같은 기운이 이미 가득 차 있으면 비슷한 결의 사람이 들어설 틈이 줄어들거든요. "
         f"같은 일간을 가진 분들 중에서도 {ohang_excess}({b.ohang_hanja})가 강한 경우엔 새 인연이 닿는 흐름이 "
         f"평균 대비 {b.blockage_rate_drop} 덜해요. 우연이 아니에요.\n\n"

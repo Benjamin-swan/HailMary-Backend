@@ -18,7 +18,7 @@ class BlockadeOhangData:
     """오행 과다 구조적 원인 — 큰 card-warn 1 매핑."""
     ohang_hanja: str               # "水"
     blockade_pct: str              # "상위 15%"
-    blockade_multiplier: str       # "1.7배"
+    blockade_multiplier: str       # 비수치 강도 표현 (예: "평소보다 크게") — DTO 호환 위해 필드명 유지
     blockage_rate_drop: str        # "36%"
     recovery_after_clearing_pct: str  # "24%"
 
@@ -28,7 +28,7 @@ class PatternEntry:
     """반복 실수 패턴 — card-warn × 3 매핑."""
     keyword: str                   # "처음부터 너무 깊이"
     pct: str                       # "81%"
-    multiplier: str                # "1.8배" 또는 "47%"
+    multiplier: str                # 비수치 강도 표현 — DTO 호환 위해 필드명 유지 (프로즈 미사용)
     desc: str
 
 
@@ -64,35 +64,35 @@ BLOCKADE_BY_OHANG: dict[str, BlockadeOhangData] = {
     "수": BlockadeOhangData(
         ohang_hanja="水",
         blockade_pct="상위 15%",
-        blockade_multiplier="1.7배",
+        blockade_multiplier="평소보다 크게",
         blockage_rate_drop="36%",
         recovery_after_clearing_pct="24%",
     ),
     "목": BlockadeOhangData(
         ohang_hanja="木",
         blockade_pct="상위 13%",
-        blockade_multiplier="1.6배",
+        blockade_multiplier="한결 더",
         blockage_rate_drop="28%",
         recovery_after_clearing_pct="22%",
     ),
     "화": BlockadeOhangData(
         ohang_hanja="火",
         blockade_pct="상위 12%",
-        blockade_multiplier="1.8배",
+        blockade_multiplier="두드러지게",
         blockage_rate_drop="32%",
         recovery_after_clearing_pct="26%",
     ),
     "토": BlockadeOhangData(
         ohang_hanja="土",
         blockade_pct="상위 17%",
-        blockade_multiplier="1.5배",
+        blockade_multiplier="제법 두드러지게",
         blockage_rate_drop="24%",
         recovery_after_clearing_pct="20%",
     ),
     "금": BlockadeOhangData(
         ohang_hanja="金",
         blockade_pct="상위 14%",
-        blockade_multiplier="1.7배",
+        blockade_multiplier="훨씬 크게",
         blockage_rate_drop="30%",
         recovery_after_clearing_pct="23%",
     ),
@@ -107,11 +107,11 @@ DOYOON_P3_DATA: dict[str, DoyoonP3IlganData] = {
     # ── 임수 (원본 더미) ───────────────────────────────────────
     "임수": DoyoonP3IlganData(
         patterns=(
-            PatternEntry(keyword="처음부터 너무 깊이", pct="81%", multiplier="1.8배",
+            PatternEntry(keyword="처음부터 너무 깊이", pct="81%", multiplier="두드러지게",
                          desc="첫 한 달 동안 마음을 한꺼번에 쏟아붓는 편이에요."),
             PatternEntry(keyword="중간에 표현이 줄어듦", pct="67%", multiplier="47%",
                          desc="마음은 그대로인데 말로 드러내는 게 눈에 띄게 줄어들어요."),
-            PatternEntry(keyword="쌓였다가 한 번에 터짐", pct="54%", multiplier="2.1배",
+            PatternEntry(keyword="쌓였다가 한 번에 터짐", pct="54%", multiplier="두드러지게",
                          desc="참아둔 감정이 어느 순간 한꺼번에 쏟아져 나오곤 해요."),
         ),
         strategies=(
@@ -130,11 +130,11 @@ DOYOON_P3_DATA: dict[str, DoyoonP3IlganData] = {
     # ── 갑목 ───────────────────────────────────────────────────
     "갑목": DoyoonP3IlganData(
         patterns=(
-            PatternEntry(keyword="앞만 보고 밀어붙임", pct="76%", multiplier="1.6배",
+            PatternEntry(keyword="앞만 보고 밀어붙임", pct="76%", multiplier="두드러지게",
                          desc="한번 마음먹으면 뒤돌아보거나 다시 살피는 일이 드문 편이에요."),
             PatternEntry(keyword="맞춰가기를 피함", pct="62%", multiplier="43%",
                          desc="서로 조율하자는 말이 나오면 반응이 눈에 띄게 줄어들어요."),
-            PatternEntry(keyword="한번 어긋나면 돌아섬", pct="58%", multiplier="2.0배",
+            PatternEntry(keyword="한번 어긋나면 돌아섬", pct="58%", multiplier="두드러지게",
                          desc="신뢰가 깨지면 다시 다가가기보다 그대로 등을 돌리곤 해요."),
         ),
         strategies=(
@@ -153,11 +153,11 @@ DOYOON_P3_DATA: dict[str, DoyoonP3IlganData] = {
     # ── 을목 ───────────────────────────────────────────────────
     "을목": DoyoonP3IlganData(
         patterns=(
-            PatternEntry(keyword="상대에게 너무 맞춤", pct="78%", multiplier="1.5배",
+            PatternEntry(keyword="상대에게 너무 맞춤", pct="78%", multiplier="두드러지게",
                          desc="상대에게 맞추다 보면 정작 본인 마음을 잘 못 드러내요."),
             PatternEntry(keyword="내 마음을 잘 안 비침", pct="71%", multiplier="38%",
                          desc="원하는 걸 분명히 말하는 일이 다른 분들보다 적은 편이에요."),
-            PatternEntry(keyword="다 받아주다 지침", pct="56%", multiplier="1.7배",
+            PatternEntry(keyword="다 받아주다 지침", pct="56%", multiplier="두드러지게",
                          desc="갈등을 혼자 끌어안다가 어느 순간 한계에 다다르곤 해요."),
         ),
         strategies=(
@@ -176,11 +176,11 @@ DOYOON_P3_DATA: dict[str, DoyoonP3IlganData] = {
     # ── 병화 ───────────────────────────────────────────────────
     "병화": DoyoonP3IlganData(
         patterns=(
-            PatternEntry(keyword="처음부터 화끈하게", pct="83%", multiplier="1.9배",
+            PatternEntry(keyword="처음부터 화끈하게", pct="83%", multiplier="두드러지게",
                          desc="첫 만남부터 마음을 강하게 드러내는 편이에요."),
             PatternEntry(keyword="반응이 약하면 식음", pct="69%", multiplier="42%",
                          desc="기대만큼 반응이 안 오면 마음이 빠르게 닫혀버려요."),
-            PatternEntry(keyword="기분 따라 온도 차", pct="51%", multiplier="2.2배",
+            PatternEntry(keyword="기분 따라 온도 차", pct="51%", multiplier="두드러지게",
                          desc="뜨거웠다 차가워지는 변화가 자주 오가는 편이에요."),
         ),
         strategies=(
@@ -199,11 +199,11 @@ DOYOON_P3_DATA: dict[str, DoyoonP3IlganData] = {
     # ── 정화 ───────────────────────────────────────────────────
     "정화": DoyoonP3IlganData(
         patterns=(
-            PatternEntry(keyword="한 사람에게 깊이 빠짐", pct="74%", multiplier="1.7배",
+            PatternEntry(keyword="한 사람에게 깊이 빠짐", pct="74%", multiplier="두드러지게",
                          desc="한 사람에게 마음을 깊이 쏟다 보니 상처도 그만큼 커요."),
             PatternEntry(keyword="조용히 정성만 쌓음", pct="68%", multiplier="33%",
                          desc="티 내지 않고 챙기는 마음이 다른 분들보다 많은 편이에요."),
-            PatternEntry(keyword="딴 데 보면 마음 닫음", pct="52%", multiplier="1.9배",
+            PatternEntry(keyword="딴 데 보면 마음 닫음", pct="52%", multiplier="두드러지게",
                          desc="상대 시선이 다른 데로 향한다 느끼면 마음을 닫아버려요."),
         ),
         strategies=(
@@ -222,11 +222,11 @@ DOYOON_P3_DATA: dict[str, DoyoonP3IlganData] = {
     # ── 무토 ───────────────────────────────────────────────────
     "무토": DoyoonP3IlganData(
         patterns=(
-            PatternEntry(keyword="안정에 너무 매달림", pct="72%", multiplier="1.5배",
+            PatternEntry(keyword="안정에 너무 매달림", pct="72%", multiplier="두드러지게",
                          desc="흔들릴 것 같은 상황이 오면 마음을 잘 안 열어요."),
             PatternEntry(keyword="속도 안 맞으면 멈춤", pct="65%", multiplier="36%",
                          desc="상대가 서두르면 따라가기보다 멈춰 서버리는 편이에요."),
-            PatternEntry(keyword="믿기까지 오래 걸림", pct="59%", multiplier="1.7배",
+            PatternEntry(keyword="믿기까지 오래 걸림", pct="59%", multiplier="두드러지게",
                          desc="상대를 마음으로 믿기까지 다른 분들보다 시간이 더 걸려요."),
         ),
         strategies=(
@@ -245,11 +245,11 @@ DOYOON_P3_DATA: dict[str, DoyoonP3IlganData] = {
     # ── 기토 ───────────────────────────────────────────────────
     "기토": DoyoonP3IlganData(
         patterns=(
-            PatternEntry(keyword="늘 상대만 챙김", pct="79%", multiplier="1.6배",
+            PatternEntry(keyword="늘 상대만 챙김", pct="79%", multiplier="두드러지게",
                          desc="자신보다 상대를 먼저 챙기다 보니 마음이 쉽게 지쳐요."),
             PatternEntry(keyword="내 욕구는 뒷전", pct="73%", multiplier="40%",
                          desc="정작 본인이 원하는 건 잘 말하지 않는 편이에요."),
-            PatternEntry(keyword="지치면 갑자기 멈춤", pct="55%", multiplier="2.0배",
+            PatternEntry(keyword="지치면 갑자기 멈춤", pct="55%", multiplier="두드러지게",
                          desc="혼자 다 짊어지다 어느 순간 마음을 탁 닫아버리곤 해요."),
         ),
         strategies=(
@@ -268,11 +268,11 @@ DOYOON_P3_DATA: dict[str, DoyoonP3IlganData] = {
     # ── 경금 ───────────────────────────────────────────────────
     "경금": DoyoonP3IlganData(
         patterns=(
-            PatternEntry(keyword="모호함에 빠른 결론", pct="77%", multiplier="1.7배",
+            PatternEntry(keyword="모호함에 빠른 결론", pct="77%", multiplier="두드러지게",
                          desc="애매한 상황이면 곧장 마음을 정리해버리는 편이에요."),
             PatternEntry(keyword="돌려 말하면 신뢰 하락", pct="64%", multiplier="37%",
                          desc="상대가 빙 둘러 말하면 믿음이 빠르게 식어버려요."),
-            PatternEntry(keyword="한번 어긋나면 단호함", pct="57%", multiplier="2.1배",
+            PatternEntry(keyword="한번 어긋나면 단호함", pct="57%", multiplier="두드러지게",
                          desc="믿음이 깨지면 다시 다가가기보다 딱 잘라 돌아서곤 해요."),
         ),
         strategies=(
@@ -291,11 +291,11 @@ DOYOON_P3_DATA: dict[str, DoyoonP3IlganData] = {
     # ── 신금 ───────────────────────────────────────────────────
     "신금": DoyoonP3IlganData(
         patterns=(
-            PatternEntry(keyword="작은 실망도 크게 남음", pct="75%", multiplier="1.6배",
+            PatternEntry(keyword="작은 실망도 크게 남음", pct="75%", multiplier="두드러지게",
                          desc="사소한 실망 하나도 마음속에 오래 무겁게 남는 편이에요."),
             PatternEntry(keyword="마음 여는 데 오래 걸림", pct="70%", multiplier="34%",
                          desc="처음 마음을 여는 데까지 다른 분들보다 시간이 더 걸려요."),
-            PatternEntry(keyword="옛 상처가 오래감", pct="53%", multiplier="1.9배",
+            PatternEntry(keyword="옛 상처가 오래감", pct="53%", multiplier="두드러지게",
                          desc="지난 상처가 마음에 꽤 오래 머물러 있곤 해요."),
         ),
         strategies=(
@@ -314,11 +314,11 @@ DOYOON_P3_DATA: dict[str, DoyoonP3IlganData] = {
     # ── 계수 ───────────────────────────────────────────────────
     "계수": DoyoonP3IlganData(
         patterns=(
-            PatternEntry(keyword="속마음을 잘 안 내비침", pct="76%", multiplier="1.8배",
+            PatternEntry(keyword="속마음을 잘 안 내비침", pct="76%", multiplier="두드러지게",
                          desc="겉으로 잘 드러내지 않아 마음이 속에만 고여 있곤 해요."),
             PatternEntry(keyword="서두르면 흐려짐", pct="68%", multiplier="35%",
                          desc="상대가 재촉하면 마음이 흐트러지며 멀어지는 편이에요."),
-            PatternEntry(keyword="몰라주면 자신감 떨어짐", pct="54%", multiplier="2.0배",
+            PatternEntry(keyword="몰라주면 자신감 떨어짐", pct="54%", multiplier="두드러지게",
                          desc="마음을 알아봐 주지 않으면 스스로에 대한 믿음이 빠르게 줄어요."),
         ),
         strategies=(

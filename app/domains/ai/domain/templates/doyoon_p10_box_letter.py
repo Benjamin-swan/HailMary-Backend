@@ -52,14 +52,14 @@ def _build_step1_answer_block(
     if slug == "crushing" and p5:
         return (
             f"썸 진행 중: 매력 강점 {p5.strength_axis_1}·{p5.strength_axis_2}가 "
-            f"평균 대비 {p5.strength_multiplier} 측정. "
-            f"두 번째 만남에서 호감 전환율 {p5.second_meeting_multiplier} 상승."
+            "평소보다 두드러지게 측정. "
+            "두 번째 만남에서 호감 전환율이 한결 더 올라가는 흐름."
         )
     if slug == "in_relationship" and p6:
         return (
             f"연애 중: 상대 관심도 {p6.interest_score}점·표현 의지 {p6.expression_score}점·"
-            f"지속 가능성 {p6.durability_score}점. 답장 길이가 평균 대비 "
-            f"{p6.answer_length_multiplier} 길게 측정되는 패턴."
+            f"지속 가능성 {p6.durability_score}점. 답장 길이가 평소보다 "
+            "한결 더 길게 측정되는 패턴."
         )
     if slug == "missing_ex" and p3 and p4:
         p_pat = p3.patterns
@@ -67,18 +67,18 @@ def _build_step1_answer_block(
         return (
             f"헤어진 연인: 반복 패턴 — {p_pat[0].keyword}({p_pat[0].pct}), "
             f"{p_pat[1].keyword}({p_pat[1].pct}). "
-            f"착각 인연 발생률 평균 대비 {p4.illusion_multiplier} 높음 — "
+            "착각 인연 발생률이 평소보다 두드러지게 높음 — "
             f"{p_ill[0].keyword}({p_ill[0].pct}) 신호 분포."
         )
     if slug == "waiting_new":
         if peak_labels:
             return (
-                f"새 인연 기다리는 상태: 향후 12개월 신규 접촉 확률이 평균 대비 "
-                f"2.3배 올라가는 시기는 {peak_labels[0]}과 {peak_labels[1]}."
+                "새 인연 기다리는 상태: 향후 12개월 신규 접촉 확률이 평소보다 크게 "
+                f"올라가는 시기는 {peak_labels[0]}과 {peak_labels[1]}."
             )
         return (
-            "새 인연 기다리는 상태: 향후 12개월 동안 신규 접촉 확률이 평균 대비 "
-            "2배 이상 올라가는 피크 구간이 두 곳 측정됨."
+            "새 인연 기다리는 상태: 향후 12개월 동안 신규 접촉 확률이 평소보다 "
+            "크게 올라가는 피크 구간이 두 곳 측정됨."
         )
     return f"{STEP1_LABEL.get(slug, slug)}: 데이터 분석 진행 중."
 
@@ -96,22 +96,22 @@ def _build_step2_answer_block(
         # 일간 무관 공통 fallback 데이터 (f-water-yang 베이스)
         return (
             "운명의 상대: 인연 프로파일 — 따뜻한 인상·조용한 사람·표현 일관성. "
-            "감정 변동성이 평균의 0.6배로 안정. 궁합 지수 82%까지 측정됨 — 평균 54% 대비 1.5배."
+            "감정 변동성이 평소보다 한결 안정적. 궁합 지수 82%까지 측정됨 — 평균 54%를 훨씬 웃돔."
         )
     if slug == "timing":
         if peak_labels:
             return (
                 f"다음 인연 시기: {peak_labels[0]}과 {peak_labels[1]}에 "
-                "신규 접촉 확률이 평균 대비 2.3배 상승. 그 사이 구간은 충전기."
+                "신규 접촉 확률이 평소보다 크게 상승. 그 사이 구간은 충전기."
             )
         return (
-            "다음 인연 시기: 향후 12개월에 신규 접촉 확률이 평균 대비 2배 이상 "
+            "다음 인연 시기: 향후 12개월에 신규 접촉 확률이 평소보다 크게 "
             "올라가는 피크 구간이 두 차례 측정됨."
         )
     if slug == "compatibility" and p6:
         return (
             f"현재 궁합: 상대 관심도 {p6.interest_score}점·표현 {p6.expression_score}점·"
-            f"지속 {p6.durability_score}점. 답장 길이 {p6.answer_length_multiplier} 길이 — "
+            f"지속 {p6.durability_score}점. 답장 길이가 평소보다 한결 더 긴 편 — "
             "관심은 있되 망설이는 교착 패턴."
         )
     if slug == "patterns" and p3:
@@ -146,7 +146,7 @@ def build_step2_answer_data(
 
 
 def calc_box_length_range(option_count: int, *, base_min: int, base_max: int) -> tuple[int, int]:
-    """선택 옵션 수에 비례한 min/max 글자수. 옵션 1개 = base, 4개 = ~2배."""
+    """선택 옵션 수에 비례한 min/max 글자수. 옵션 1개 = base, 4개 = base의 약 2배 길이."""
     n = max(1, min(4, option_count))
     multiplier = 1.0 + (n - 1) * 0.33  # 1→1.0, 2→1.33, 3→1.66, 4→2.0
     return int(base_min * multiplier), int(base_max * multiplier)

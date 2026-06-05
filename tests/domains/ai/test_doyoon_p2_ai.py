@@ -5,6 +5,8 @@
 
 from __future__ import annotations
 
+import re
+
 import pytest
 
 from app.domains.ai.application.usecase.generate_p2_hurt_usecase import (
@@ -35,6 +37,9 @@ from app.domains.ai.domain.value_object.doyoon_p2_data import (
     DOYOON_P2_DATA,
     VALID_DOYOON_P2_ILGAN,
 )
+
+# "1.4배" / "2배" 같은 수치 배수 패턴 (정책 Z: 잔존 0 목표)
+_RE_BAESU = re.compile(r"\d+(?:\.\d+)?\s*배")
 
 
 class _FakeAIClient(AIClientPort):
@@ -75,6 +80,26 @@ def test_all_10_ilgan_have_data() -> None:
         assert d.meters[0].label == "직후"
         assert d.meters[3].label == "6개월"
         assert d.sd_avatar_asset
+
+
+def test_no_numeric_baesu_in_data() -> None:
+    # 정책 Z: P-2 데이터(desc + recovery_lag_multiplier)에 수치 'N배' 잔존 0.
+    for ilgan, d in DOYOON_P2_DATA.items():
+        for field in (
+            d.hurt_type_1.desc,
+            d.hurt_type_2.desc,
+            d.recovery_lag_multiplier,
+        ):
+            assert not _RE_BAESU.search(field), f"{ilgan}: 'N배' 잔존 -> {field!r}"
+
+
+def test_no_numeric_baesu_in_composed_text() -> None:
+    # compose 결과(룰 합성 텍스트)에도 수치 'N배' 잔존 0.
+    for ilgan in VALID_DOYOON_P2_ILGAN:
+        hurt = compose_doyoon_p2_hurt(user_name="홍길동", ilgan=ilgan)["ai_hurt"]
+        rec = compose_doyoon_p2_recovery(user_name="홍길동", ilgan=ilgan)["ai_recovery"]
+        assert not _RE_BAESU.search(hurt), f"{ilgan} hurt 'N배' 잔존"
+        assert not _RE_BAESU.search(rec), f"{ilgan} recovery 'N배' 잔존"
 
 
 def test_all_10_ilgan_compose_hurt() -> None:
@@ -155,7 +180,8 @@ async def test_hurt_usecase_falls_back_on_error() -> None:
 
 def test_recovery_facts_imsu() -> None:
     f = get_doyoon_p2_recovery_facts(user_name="홍길동", ilgan="임수")
-    assert f["recovery_lag_multiplier"] == "1.4배"
+    assert f["recovery_lag_multiplier"] == "한결 더디게"
+    assert "배" not in f["recovery_lag_multiplier"]
     assert f["meter_pct_0"] == "20%"
     assert f["meter_pct_1"] == "40%"
     assert f["meter_pct_2"] == "65%"
@@ -170,7 +196,7 @@ def _recovery_valid_text(facts: dict[str, str]) -> str:
         f"3개월 {facts['meter_pct_2']} / 6개월 {facts['meter_pct_3']} 회복으로 측정돼요. "
         f"{facts['user_name']}님 케이스의 잔여 인덱스가 평균보다 길게 유지되는 패턴입니다. "
         "각 단계 임계점이 다른 일간보다 깊게 잡혀요.\n\n"
-        f"평균 대비 회복 지연이 {facts['recovery_lag_multiplier']} 수준입니다. "
+        f"평균 회복 곡선과 견주면 {facts['recovery_lag_multiplier']} 흘러가는 편입니다. "
         "자연 인덱스 감소가 가장 안전한 회복 경로예요. 강제 삭제는 곡선을 오히려 늦춥니다. "
         "회복 구간 내 새 매칭 시도는 충돌 확률을 높입니다."
     )
@@ -182,12 +208,12 @@ def test_recovery_validate_passes() -> None:
     assert ok, f"unexpected fail: {reason}"
 
 
-def test_recovery_validate_fails_multiplier_mutated() -> None:
+def test_recovery_validate_passes_without_multiplier() -> None:
+    # 배수 게이트 완화(정책 Z): recovery_lag_multiplier 문구가 출력에 없어도 통과해야 한다.
     f = get_doyoon_p2_recovery_facts(user_name="홍길동", ilgan="임수")
-    text = _recovery_valid_text(f).replace("1.4배", "1.3배")
+    text = _recovery_valid_text(f).replace(f["recovery_lag_multiplier"], "")
     ok, reason = validate_p2_recovery(text, f)
-    assert not ok
-    assert "recovery_lag_multiplier" in reason
+    assert ok, f"unexpected fail: {reason}"
 
 
 @pytest.mark.asyncio
@@ -196,4 +222,5 @@ async def test_recovery_usecase_falls_back_on_error() -> None:
     out = await GenerateP2RecoveryUseCase(ai_client=fake).execute(
         user_name="홍길동", ilgan="임수"
     )
-    assert "1.4배" in out
+    assert "한결 더디게" in out
+    assert not _RE_BAESU.search(out), "fallback에 'N배' 잔존"

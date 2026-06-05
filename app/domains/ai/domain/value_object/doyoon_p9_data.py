@@ -203,5 +203,6 @@ VALID_DOYOON_P9_ILGAN: frozenset[str] = frozenset(DOYOON_P9_DATA.keys())
 
 # 6-1 공통 사실값
 OHANG_BOOST_PCT: str = "23%"
-OHANG_RESPONSE_MULTIPLIER: str = "1.6배"
+# 정책 Z: 그래프 근거 없는 자작 배수 제거. 반응성은 비수치 표현으로만 유지(템플릿/프롬프트 미사용).
+OHANG_RESPONSE_MULTIPLIER: str = "평소보다 크게"
 OHANG_MAX_BOOST_PCT: str = "28%"

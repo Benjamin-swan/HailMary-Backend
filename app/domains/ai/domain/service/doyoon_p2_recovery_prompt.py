@@ -102,8 +102,7 @@ def validate_p2_recovery(text: str, facts: dict[str, str]) -> tuple[bool, str]:
         return False, f"ilgan_full missing: {facts['ilgan_full']!r}"
     if facts["ilgan_hanja"] not in text:
         return False, f"ilgan_hanja missing: {facts['ilgan_hanja']!r}"
-    if facts["recovery_lag_multiplier"] not in text:
-        return False, f"recovery_lag_multiplier missing: {facts['recovery_lag_multiplier']!r}"
+    # 배수 게이트 완화(정책 Z): recovery_lag_multiplier는 비수치 문자열이라 출력 필수 포함 검사 제거.
     # 4 단계 회복률 중 *최소 2개* 포함 — 잔여 강도 표현(100-pct)으로 갈 수 있어 완화
     pcts_found = sum(
         1 for k in ("meter_pct_0", "meter_pct_1", "meter_pct_2", "meter_pct_3")

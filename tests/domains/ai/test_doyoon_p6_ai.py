@@ -130,9 +130,9 @@ def test_meeting_facts_imsu() -> None:
     f = get_doyoon_p6_meeting_facts(
         user_name="홍길동", ilgan="임수", match_slot_id="f-water-yang"
     )
-    assert f["existing_path_multiplier"] == "2.3배"
+    assert f["existing_path_multiplier"] == "훨씬 높게"
     assert f["low_impact_pct"] == "73%"
-    assert f["second_contact_multiplier"] == "2.4배"
+    assert f["second_contact_multiplier"] == "눈에 띄게 빠르게"
 
 
 def _meeting_valid(facts):
@@ -174,7 +174,7 @@ def test_pattern_facts_imsu() -> None:
     assert f["hesitation_pct"] == "78%"
     assert f["cut_intent_pct"] == "12%"
     assert f["resolution_pct"] == "87%"
-    assert f["initiative_multiplier"] == "1.4배"
+    assert f["initiative_multiplier"] == "한결 잘 맞게"
 
 
 def _pattern_valid(facts):

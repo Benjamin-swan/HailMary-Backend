@@ -72,8 +72,7 @@ def validate_p6_pattern(text: str, facts: dict[str, str]) -> tuple[bool, str]:
     length = len(text)
     if length < _MIN_LENGTH or length > _MAX_LENGTH:
         return False, f"length out of range: {length}"
-    for k in ("user_name", "answer_length_multiplier", "hesitation_pct",
-              "cut_intent_pct", "resolution_pct", "initiative_multiplier"):
+    for k in ("user_name", "hesitation_pct", "cut_intent_pct", "resolution_pct"):
         if facts[k] not in text:
             return False, f"{k} missing"
     paragraph_breaks = text.count("\n\n")

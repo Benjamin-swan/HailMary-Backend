@@ -56,7 +56,9 @@ def test_all_5_ohang_blockade() -> None:
     for oh in VALID_DOYOON_P3_OHANG:
         b = BLOCKADE_BY_OHANG[oh]
         assert b.ohang_hanja
-        assert b.blockade_multiplier.endswith("배")
+        # 배수 비수치 전환: "N배" 형태가 아닌 강도 표현 문자열이어야 함.
+        assert b.blockade_multiplier
+        assert "배" not in b.blockade_multiplier
 
 
 def test_all_10_ilgan_p3_data() -> None:
@@ -91,7 +93,7 @@ def test_blockade_facts_imsu_su() -> None:
     f = get_doyoon_p3_blockade_facts(user_name="홍길동", ilgan="임수", ohang_excess="수")
     assert f["ohang_excess_hanja"] == "水"
     assert f["blockade_pct"] == "상위 15%"
-    assert f["blockade_multiplier"] == "1.7배"
+    assert f["blockade_multiplier"] == "평소보다 크게"
     assert f["blockage_rate_drop"] == "36%"
     assert f["recovery_after_clearing_pct"] == "24%"
 
@@ -99,8 +101,8 @@ def test_blockade_facts_imsu_su() -> None:
 def _blockade_valid_text(facts: dict[str, str]) -> str:
     return (
         f"데이터부터 정리할게요. {facts['user_name']}님의 사주 구조에서 "
-        f"{facts['ohang_excess']}({facts['ohang_excess_hanja']}) 기운이 평균 대비 "
-        f"{facts['blockade_multiplier']}로 측정됩니다. 단순 강조 수준이 아니라 구조적으로 과다인 상태예요.\n\n"
+        f"{facts['ohang_excess']}({facts['ohang_excess_hanja']}) 기운이 "
+        f"{facts['blockade_multiplier']} 강하게 측정됩니다. 단순 강조 수준이 아니라 구조적으로 과다인 상태예요.\n\n"
         f"이게 새 인연 진입을 차단해요. 같은 결의 사람이 들어올 자리가 부족합니다. "
         f"동일 일간 표본에서 이 케이스의 신규 접촉률이 평균 대비 {facts['blockage_rate_drop']} 낮게 잡혀요. "
         "구조적 변수 누적이 원인이라 우연이 아니에요.\n\n"
@@ -116,12 +118,12 @@ def test_blockade_validate_passes() -> None:
     assert ok, f"unexpected fail: {reason}"
 
 
-def test_blockade_validate_fails_multiplier_mutated() -> None:
+def test_blockade_validate_gate_relaxed_for_multiplier() -> None:
+    """배수 게이트 완화: blockade_multiplier(비수치 표현)가 빠져도 검증 통과해야 함."""
     f = get_doyoon_p3_blockade_facts(user_name="홍길동", ilgan="임수", ohang_excess="수")
-    text = _blockade_valid_text(f).replace("1.7배", "1.6배")
+    text = _blockade_valid_text(f).replace(f["blockade_multiplier"], "꽤")
     ok, reason = validate_p3_blockade(text, f)
-    assert not ok
-    assert "blockade_multiplier" in reason
+    assert ok, f"unexpected fail: {reason}"
 
 
 @pytest.mark.asyncio
@@ -130,7 +132,7 @@ async def test_blockade_usecase_falls_back() -> None:
     out = await GenerateP3BlockadeUseCase(ai_client=fake).execute(
         user_name="홍길동", ilgan="임수", ohang_excess="수"
     )
-    assert "1.7배" in out
+    assert "평소보다 크게" in out
     assert "36%" in out
 
 
