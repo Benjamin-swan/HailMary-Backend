@@ -70,11 +70,12 @@ def test_compose_ohang_all_ilgan() -> None:
 
 
 def test_compose_risk_all_ilgan() -> None:
-    """카드 풀이 톤 — 81% (즉시 위험도) + 130 (실제 임팩트) 포함."""
+    """카드 풀이 톤 — 81% (즉시 위험도) 포함. 무의미 합산(192·130)은 제거됨(F-056)."""
     for ilgan in VALID_DOYOON_P9_ILGAN:
         text = compose_doyoon_p9_risk(user_name="홍길동", ilgan=ilgan)
         assert "81%" in text
-        assert "130" in text
+        assert "192" not in text
+        assert "130" not in text
 
 
 def test_compose_optimize_all_ilgan() -> None:
@@ -123,13 +124,13 @@ async def test_ohang_usecase_falls_back() -> None:
 
 
 def _risk_valid(facts):
-    """카드 풀이 톤 — 81%/64%/47% 카드 라벨 + 192·130 합산 패턴만."""
+    """카드 풀이 톤 — 81%/64%/47% 카드 라벨만. 합산 수치(192·130) 없이 2단락."""
     return (
-        "리스크 카드 세 장 정리해드렸어요. 즉시 81%·단기 64%·중기 47% 위험도가 그대로 우선순위. "
-        "라벨 자체가 진행 순서를 가리킵니다.\n\n"
-        f"{facts['user_name']}님이 셋 다 진행하시면 단순 합산 192가 아니라 "
-        f"{facts['combined_multiplier']} 수준으로 수렴해 약 {facts['combined_value']}가 실제 임팩트입니다. "
-        "즉시(81%)부터 우선 처리하시는 게 효율적이에요."
+        "리스크 카드 세 장을 정리해드렸어요. 즉시 변수 81%가 위험도가 가장 높고, 단기 64%, 중기 47% 순서예요. "
+        "위험도 라벨 자체가 처리 우선순위를 그대로 가리킵니다.\n\n"
+        f"{facts['user_name']}님, 세 가지를 한꺼번에 다 신경 쓰실 필요는 없어요. "
+        "즉시(81%) 변수부터 하나씩 정리하시면 가장 효율적이에요. 위험도 라벨이 그대로 진행 순서를 알려주니, "
+        "위에서부터 차례대로 천천히 정리해 보세요."
     )
 
 
@@ -141,11 +142,12 @@ def test_risk_validate() -> None:
 
 @pytest.mark.asyncio
 async def test_risk_usecase_falls_back() -> None:
-    """fallback 시 카드 라벨 (81%) + 합산 패턴 (130). 36% 같은 별도 수치 X."""
+    """fallback 시 카드 라벨 (81%)만. 무의미 합산(192·130)·36% 같은 별도 수치 X."""
     fake = _FakeAIClient(raise_exc=AIClientError("x"))
     out = await GenerateP9RiskUseCase(ai_client=fake).execute(user_name="홍길동", ilgan="임수")
     assert "81%" in out
-    assert "130" in out
+    assert "192" not in out
+    assert "130" not in out
     assert "36%" not in out  # 카드에 없는 별도 수치 X
 
 

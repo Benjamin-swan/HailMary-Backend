@@ -1,7 +1,8 @@
 """도윤 P-9 6-2 리스크 변수 제거 — AI prompt + validate.
 
-핵심 원칙: *위 카드 표를 풀이하는 톤*. 즉시 변수 단독 임팩트 (36%) 같은
-별도 메타 수치 사용 금지. 카드 라벨 (81%·64%·47%)과 합산 패턴 (192·130)만 사용.
+핵심 원칙: *위 카드 표를 풀이하는 톤*. 카드 라벨 (81%·64%·47%)만 사용.
+즉시 변수 단독 임팩트(36%)·위험도 % 단순 합산(192→130) 등 카드 외 수치 금지
+(QA F-056: 무의미한 합산).
 """
 
 from __future__ import annotations
@@ -26,45 +27,39 @@ _SYSTEM_PROMPT = """\
 **카드에 표시되지 않은 별도 수치를 절대 끌어오지 마세요**:
 - 즉시 변수 단독 임팩트 (36% 같은) X
 - 새 인연 진입률 같은 *추가 사실값 금지*
-- 카드 라벨 (81%, 64%, 47%)과 합산 패턴 (192 → 1.4배 수렴 → {combined_value})만 사용
+- 위험도 % 단순 합산(192)·수렴 배수·130 같은 합산 수치 금지 (통계적으로 무의미)
+- 카드 라벨 (81%, 64%, 47%)만 사용
 
 [사실값 보존]
 - {user_name}, {ilgan_full}
 - 카드 라벨: 81%, 64%, 47% (각각 즉시·단기·중기)
-- 단순 합산: 192
-- 상호작용 수렴 배수: {combined_multiplier}
-- 실제 임팩트: {combined_value}
 
 [구성] 2 단락, 총 170~310자
 1. 카드 3장 정리 + 우선순위 (81% > 64% > 47%)
-2. {user_name}님 호명 + 합산 풀이 (192 단순 합산 → {combined_multiplier} 수렴 → {combined_value}) + 우선순위 행동
+2. {user_name}님 호명 + 우선순위 행동 (즉시 81%부터 하나씩 정리)
 
 [출력] 2단락만. 메타·헤더 금지.
 """
 
 _USER_PROMPT_TPL = """\
-[사실값 — 카드 표시 항목 + 합산 패턴만]
+[사실값 — 카드 표시 항목만]
 - user_name: {user_name}
 - ilgan_full: {ilgan_full}
-- combined_multiplier (1.4배 수렴): {combined_multiplier}
-- combined_value (실제 임팩트): {combined_value}
 
 [카드 표시 라벨 — 답변에 직접 풀이할 것]
 - 즉시 · 위험도 81% — 미정리 관계 변수
 - 단기 · 위험도 64% — 충동 표현 빈도
 - 중기 · 위험도 47% — 동선 단조로움
-- 단순 합산 192 → 실제 수렴 {combined_value}
 
 [기반 룰 텍스트]
 {rule_text}
 
 [요청] 2단락 170~310자.
-카드 라벨 + 합산 패턴만. "새 인연 진입률 36%" 같은 카드 외 별도 수치 금지.
+카드 라벨(81%·64%·47%)만 풀이. 단순 합산(192·130)·"새 인연 진입률 36%" 같은 카드 외 수치 금지.
 """
 
 _REQUIRED_KEYS = {
-    "user_name", "ilgan_full",
-    "combined_multiplier", "combined_value", "rule_text",
+    "user_name", "ilgan_full", "rule_text",
 }
 
 
@@ -80,8 +75,8 @@ def build_p9_risk_prompt(facts: dict[str, str]) -> tuple[str, str]:
 _MIN_LENGTH = 150
 _MAX_LENGTH = 400
 
-# 카드에 없는 별도 수치 — 답변에 등장 시 fail
-_FORBIDDEN_NUMBERS = ("36%", "35%", "37%", "38%")
+# 카드에 없는 별도 수치 — 답변에 등장 시 fail. 192/130(무의미 합산, F-056)도 차단.
+_FORBIDDEN_NUMBERS = ("36%", "35%", "37%", "38%", "192", "130")
 
 
 def validate_p9_risk(text: str, facts: dict[str, str]) -> tuple[bool, str]:
@@ -93,12 +88,7 @@ def validate_p9_risk(text: str, facts: dict[str, str]) -> tuple[bool, str]:
     # 카드 라벨 — 최소 81% (즉시 — 가장 중요)가 등장해야
     if "81%" not in text:
         return False, "card label 81% missing (immediate risk)"
-    # 합산 패턴 둘 다 포함
-    if facts["combined_multiplier"] not in text:
-        return False, f"combined_multiplier missing: {facts['combined_multiplier']!r}"
-    if facts["combined_value"] not in text:
-        return False, f"combined_value missing: {facts['combined_value']!r}"
-    # 카드 외 별도 수치 금지
+    # 카드 외 별도 수치 금지 (192·130 무의미 합산 포함)
     for n in _FORBIDDEN_NUMBERS:
         if n in text:
             return False, f"forbidden meta-value: {n!r} (not in card display)"

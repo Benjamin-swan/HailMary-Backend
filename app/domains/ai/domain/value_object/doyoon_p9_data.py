@@ -138,8 +138,7 @@ RISK_CARDS: tuple[RiskCard, RiskCard, RiskCard] = (
 
 # 리스크 사실값 (공통)
 IMMEDIATE_IMPACT_PCT: str = "36%"
-COMBINED_EFFECT_MULTIPLIER: str = "1.4배"
-COMBINED_EFFECT_VALUE: str = "130"  # 81+64+47 = 192 → 1.4 수렴 ≈ 130
+# COMBINED_EFFECT_*(단순합산 192 → 1.4배 → 130) 상수는 QA F-056(무의미한 위험도 합산) 지적으로 제거.
 
 
 # ── 6-3 매력 최적화 (일간 10셀) ───────────────────────────────────

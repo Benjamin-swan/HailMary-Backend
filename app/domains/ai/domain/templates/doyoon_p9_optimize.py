@@ -7,8 +7,6 @@ from app.domains.ai.domain.templates.doyoon_p0_intro import (
     OHANG_HANJA,
 )
 from app.domains.ai.domain.value_object.doyoon_p9_data import (
-    COMBINED_EFFECT_MULTIPLIER,
-    COMBINED_EFFECT_VALUE,
     DOYOON_P9_DATA,
     OHANG_BOOST_PCT,
     VALID_DOYOON_P9_ILGAN,
@@ -44,17 +42,15 @@ def compose_doyoon_p9_ohang(*, user_name: str, ilgan: str, ohang_lack: str) -> s
 def compose_doyoon_p9_risk(*, user_name: str, ilgan: str) -> str:
     """6-2 리스크 제거 ai_risk 합성 — 카드 풀이 톤.
 
-    별도 메타 수치 (36% 임팩트) 인용 X. 카드 라벨 (81%·64%·47% = 192)과
-    실제 합산 수렴 (1.4배 → 130) 패턴만 풀이.
+    별도 메타 수치 (36% 임팩트) 인용 X. 카드 라벨 (81%·64%·47%)만 풀이.
+    QA F-056: 위험도 % 단순 합산(192→130)은 통계적으로 무의미해 제거.
     """
     _validate(user_name, ilgan)
     return (
         "리스크 카드 세 장 정리해드렸어요. 즉시 변수 81%가 가장 위험도 높고, 단기 64%, 중기 47% 순서예요. "
         "위험도 라벨 자체가 우선순위를 그대로 가리켜요.\n\n"
-        f"{user_name}님께서 셋 다 진행하실 때 단순 합산은 81+64+47 = 192로 잡혀요. "
-        f"하지만 실제는 변수 간 상호작용 효과로 {COMBINED_EFFECT_MULTIPLIER} 수준으로 수렴해 약 {COMBINED_EFFECT_VALUE} 정도가 측정값이에요. "
-        "192라는 단순 합산을 그대로 받지 마시고, 130이 실제 임팩트라고 보시면 됩니다.\n\n"
-        "다만 즉시(81%)부터 우선 처리하시는 게 효율적이에요. 위험도 라벨이 그 자체로 진행 순서를 가리키니까요."
+        f"{user_name}님, 세 가지를 한꺼번에 다 신경 쓰실 필요는 없어요. "
+        "즉시(81%) 변수부터 하나씩 정리하시는 게 가장 효율적이에요. 위험도 라벨이 그대로 진행 순서니까요."
     )
 
 
@@ -98,18 +94,16 @@ def get_doyoon_p9_ohang_facts(*, user_name: str, ilgan: str, ohang_lack: str) ->
 
 
 def get_doyoon_p9_risk_facts(*, user_name: str, ilgan: str) -> dict[str, str]:
-    """6-2 facts — *카드에 표시되는 사실값 + 합산 패턴만* prompt에 노출.
+    """6-2 facts — *카드에 표시되는 사실값만* prompt에 노출.
 
-    즉시 변수 단독 임팩트 (36%) 같은 별도 메타 수치는 제외.
-    192 (단순 합산) / 130 (1.4배 수렴)은 카드 라벨로부터 유도 가능해서 유지.
+    즉시 변수 단독 임팩트(36%)·위험도 단순 합산(192→130) 등 별도 메타 수치는 제외
+    (QA F-056: 무의미한 합산).
     """
     _validate(user_name, ilgan)
     rule_text = compose_doyoon_p9_risk(user_name=user_name, ilgan=ilgan)
     return {
         "user_name": user_name,
         "ilgan_full": ilgan,
-        "combined_multiplier": COMBINED_EFFECT_MULTIPLIER,   # 1.4배
-        "combined_value": COMBINED_EFFECT_VALUE,             # 130
         "rule_text": rule_text,
     }
 
