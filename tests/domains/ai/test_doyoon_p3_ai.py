@@ -139,10 +139,10 @@ async def test_blockade_usecase_falls_back() -> None:
 
 def test_pattern_facts_imsu() -> None:
     f = get_doyoon_p3_pattern_facts(user_name="홍길동", ilgan="임수")
-    assert f["pattern_1_keyword"] == "초기 과진입"
+    assert f["pattern_1_keyword"] == "처음부터 너무 깊이"
     assert f["pattern_1_pct"] == "81%"
-    assert f["pattern_2_keyword"] == "중반 무표현"
-    assert f["pattern_3_keyword"] == "위기 일괄 폭발"
+    assert f["pattern_2_keyword"] == "중간에 표현이 줄어듦"
+    assert f["pattern_3_keyword"] == "쌓였다가 한 번에 터짐"
     assert f["stability_boost_pct"] == "41%"
 
 
@@ -172,5 +172,5 @@ async def test_pattern_usecase_falls_back() -> None:
     out = await GenerateP3PatternUseCase(ai_client=fake).execute(
         user_name="홍길동", ilgan="임수"
     )
-    assert "초기 과진입" in out
+    assert "처음부터 너무 깊이" in out
     assert "81%" in out

@@ -170,11 +170,11 @@ def compose_doyoon_box1_body(
     ilgan_hanja = ILGAN_HANJA[ilgan]
     answer_block = build_step1_answer_data(ilgan, step1, peak_labels)
     return (
-        f"{user_name}님이 선택해주신 상황 변수, 데이터로 정리해드릴게요.\n\n"
-        f"입력값: {labels_text}. {ilgan}({ilgan_hanja}) 일간 표본에서 이 조합은 "
-        "일관된 패턴으로 분류돼요.\n\n"
+        f"{user_name}님이 골라주신 지금 상황, 차근차근 정리해드릴게요.\n\n"
+        f"입력해주신 건 {labels_text}예요. {ilgan}({ilgan_hanja}) 일간이신 분들에게서 "
+        "이 조합은 비슷한 흐름으로 자주 보여요.\n\n"
         f"{answer_block}\n\n"
-        f"{user_name}님께서 당장 결정 내리지 않으셔도 돼요. 데이터부터 보고 그다음에 움직이시는 게 효율적이에요."
+        f"{user_name}님, 지금 당장 무언가 결정하지 않으셔도 돼요. 먼저 차분히 살펴보고 그다음에 움직이셔도 늦지 않아요."
     )
 
 
@@ -193,11 +193,11 @@ def compose_doyoon_box2_body(
     ilgan_hanja = ILGAN_HANJA[ilgan]
     answer_block = build_step2_answer_data(ilgan, step2, peak_labels)
     return (
-        f"{user_name}님이 알고 싶다고 표시하신 영역, 측정된 데이터를 직접 보여드릴게요.\n\n"
-        f"질문 영역: {labels_text}. {ilgan}({ilgan_hanja}) 일간 데이터로 정리하면 다음과 같아요.\n\n"
+        f"{user_name}님이 궁금하다고 표시해주신 부분, 지금 풀어서 보여드릴게요.\n\n"
+        f"여쭤보신 건 {labels_text}예요. {ilgan}({ilgan_hanja}) 일간을 기준으로 정리하면 이렇게 보여요.\n\n"
         f"{answer_block}\n\n"
-        f"{user_name}님, 측정값이 닿는 곳까지는 정확하게 보여드린 결과예요. "
-        "데이터가 답할 수 있는 영역과 그렇지 않은 영역이 분명하게 나뉩니다."
+        f"{user_name}님, 지금 보여드릴 수 있는 부분까지는 최대한 또렷하게 짚어드린 거예요. "
+        "지금 답할 수 있는 부분과 조금 더 지켜봐야 하는 부분은 분명하게 나뉘어요."
     )
 
 

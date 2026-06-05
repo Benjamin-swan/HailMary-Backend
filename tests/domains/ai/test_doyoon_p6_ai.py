@@ -18,8 +18,6 @@ from app.domains.ai.domain.service.doyoon_p6_meeting_prompt import validate_p6_m
 from app.domains.ai.domain.service.doyoon_p6_pattern_prompt import validate_p6_pattern
 from app.domains.ai.domain.service.doyoon_p6_profile_prompt import validate_p6_profile
 from app.domains.ai.domain.templates.doyoon_p6_destined import (
-    compose_doyoon_p6_meeting,
-    compose_doyoon_p6_pattern,
     compose_doyoon_p6_profile,
     get_doyoon_p6_meeting_facts,
     get_doyoon_p6_pattern_facts,
@@ -71,7 +69,7 @@ def test_compose_unknown_slot_fallback() -> None:
         user_name="홍길동", ilgan="임수", match_slot_id="m-unknown-yang",
         pct_value=8, ohang_lack="화",
     )
-    assert "71%" in text  # f-water-yang fallback
+    assert "82%" in text  # f-water-yang fallback (compatibility_pct)
 
 
 # ── PROFILE ─────────────────────────────────────────────────────
@@ -164,8 +162,8 @@ async def test_meeting_usecase_falls_back() -> None:
     out = await GenerateP6MeetingUseCase(ai_client=fake).execute(
         user_name="홍길동", ilgan="임수", match_slot_id="f-water-yang"
     )
-    assert "2.3배" in out
-    assert "2.4배" in out
+    assert "두 번째 마주침" in out
+    assert "홍길동님" in out
 
 
 # ── PATTERN ─────────────────────────────────────────────────────
@@ -204,5 +202,5 @@ async def test_pattern_usecase_falls_back() -> None:
     out = await GenerateP6PatternUseCase(ai_client=fake).execute(
         user_name="홍길동", ilgan="임수"
     )
-    assert "78%" in out
-    assert "1.4배" in out
+    assert "마음 상태" in out
+    assert "홍길동님" in out

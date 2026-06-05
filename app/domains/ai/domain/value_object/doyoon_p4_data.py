@@ -73,9 +73,9 @@ _FALLBACK_INFO_ROWS: tuple[
     AkyonInfoRow(key="이목구비", val="얇은 입술 · 눈꼬리 상향"),
     AkyonInfoRow(key="스타일 특성", val="시즌 트렌드 추종도 높음"),
     AkyonInfoRow(key="인상 점수", val="첫인상 강도 91 / 6개월 호감 14"),
-    AkyonInfoRow(key="감정 변동성", val="평균 대비 1.9배"),
+    AkyonInfoRow(key="감정 변동성", val="기복이 큰 편"),
     AkyonInfoRow(key="행동 신호", val="초기 과접근, 중반 급랭각"),
-    AkyonInfoRow(key="비호환 이유", val="감정 주파수 불일치 87%"),
+    AkyonInfoRow(key="갈등이 잦은 이유", val="감정 주파수가 잘 안 맞음"),
     AkyonInfoRow(key="대응 전략", val="초기 신호 2개 이상 시 즉시 거리 조정"),
 )
 
@@ -142,47 +142,47 @@ DOYOON_P4_DATA: dict[str, DoyoonP4IlganData] = {
     "갑목": DoyoonP4IlganData(
         illusion_multiplier="1.1배",
         illusion_signs=_COMMON_SIGNS,
-        illusion_bubble="단호함이 강점이지만, 첫 인상 강도에 가중치 주지 마세요.",
+        illusion_bubble="단호함이 강점이지만, 첫인상이 강하다고 너무 무게 두지 마세요.",
     ),
     "을목": DoyoonP4IlganData(
         illusion_multiplier="1.2배",
         illusion_signs=_COMMON_SIGNS,
-        illusion_bubble="환경 적응 케이스라 초기 끌림 보존 시간이 길어요. 객관 지표 우선.",
+        illusion_bubble="잘 맞춰주는 성향이라 초기 끌림이 오래가요. 차분히 지켜보는 게 먼저예요.",
     ),
     "병화": DoyoonP4IlganData(
         illusion_multiplier="1.4배",
         illusion_signs=_COMMON_SIGNS,
-        illusion_bubble="고텐션 케이스라 첫 만남 점수에 휘둘리기 가장 쉬워요.",
+        illusion_bubble="에너지가 높은 편이라 첫 만남 점수에 휘둘리기 가장 쉬워요.",
     ),
     "정화": DoyoonP4IlganData(
         illusion_multiplier="1.3배",
         illusion_signs=_COMMON_SIGNS,
-        illusion_bubble="한 사람 집중 케이스라 초기 강한 끌림을 운명으로 오인하기 쉬워요.",
+        illusion_bubble="한 사람에게 깊이 빠지는 편이라 초기의 강한 끌림을 운명으로 착각하기 쉬워요.",
     ),
     "무토": DoyoonP4IlganData(
         illusion_multiplier="1.0배",
         illusion_signs=_COMMON_SIGNS,
-        illusion_bubble="안정 케이스라 평균 수준 오인률이지만, 3개월차 검증은 필수.",
+        illusion_bubble="안정적인 편이라 착각은 덜하지만, 3개월차에 한 번 더 확인해 보세요.",
     ),
     "기토": DoyoonP4IlganData(
         illusion_multiplier="1.2배",
         illusion_signs=_COMMON_SIGNS,
-        illusion_bubble="헌신 케이스라 초기 도움 신호를 운명으로 인지하기 쉬워요.",
+        illusion_bubble="잘 챙겨주는 성향이라 초기의 다정한 신호를 운명으로 받아들이기 쉬워요.",
     ),
     "경금": DoyoonP4IlganData(
         illusion_multiplier="1.0배",
         illusion_signs=_COMMON_SIGNS,
-        illusion_bubble="명확성 케이스라 오인률 낮지만, 첫 만남 강도에 한 번은 흔들려요.",
+        illusion_bubble="분명한 성향이라 착각은 덜하지만, 첫 만남의 강한 인상엔 한 번은 흔들려요.",
     ),
     "신금": DoyoonP4IlganData(
         illusion_multiplier="1.3배",
         illusion_signs=_COMMON_SIGNS,
-        illusion_bubble="섬세 케이스라 디테일 신호 한 가지가 운명 인식 트리거가 돼요.",
+        illusion_bubble="섬세한 편이라 사소한 신호 하나가 운명처럼 느껴지기 쉬워요.",
     ),
     "계수": DoyoonP4IlganData(
         illusion_multiplier="1.4배",
         illusion_signs=_COMMON_SIGNS,
-        illusion_bubble="섬세 잠재 신호 케이스라 미세 끌림이 누적되어 오인되기 쉬워요.",
+        illusion_bubble="섬세한 편이라 작은 끌림이 쌓이면서 운명으로 착각하기 쉬워요.",
     ),
 }
 

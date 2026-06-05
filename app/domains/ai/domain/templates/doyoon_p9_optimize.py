@@ -30,12 +30,12 @@ def compose_doyoon_p9_ohang(*, user_name: str, ilgan: str, ohang_lack: str) -> s
     lack_hanja = OHANG_HANJA.get(ohang_lack, ohang_lack)
 
     return (
-        f"{ilgan}({ilgan_hanja}) 일간 {user_name}님께 {ohang_lack}({lack_hanja}) 보완 효과를 카드로 정리해드렸어요. "
-        f"세 가지 방법의 효과를 합하면 평균 {OHANG_BOOST_PCT} 인연 접촉 확률이 올라가요.\n\n"
-        "보완 방법 1(+9%) 색채 노출이 가장 진입 장벽이 낮아요. 옷차림 비율 늘리시는 정도로도 시작 가능해요. "
-        "방법 2(+7%) 공간 변수와 방법 3(+7%) 행동 변수는 누적 시간이 필요한 변수예요.\n\n"
-        f"세 가지를 30일간 유지하시면 23% 효과가 안정적으로 잡혀요. "
-        f"{user_name}님께 우선순위는 효과 +9%인 색채 노출부터 권장드려요."
+        f"{ilgan}({ilgan_hanja}) 일간 {user_name}님께 {ohang_lack}({lack_hanja})을 채워주는 방법을 카드로 정리해드렸어요. "
+        f"세 가지를 함께 챙기시면 인연이 들어올 가능성이 평균 {OHANG_BOOST_PCT}만큼 높아져요.\n\n"
+        "보완 방법 1(+9%) 색을 더하는 건 가장 가볍게 시작할 수 있어요. 옷차림 비율을 조금 늘리시는 정도면 돼요. "
+        "방법 2(+7%) 방향을 가까이 두기와 방법 3(+7%) 몸으로 채우기는 시간을 두고 천천히 쌓이는 방법이에요.\n\n"
+        f"세 가지를 30일쯤 이어가시면 23%의 변화가 차분히 자리 잡아요. "
+        f"{user_name}님은 효과 +9%인 색 더하기부터 먼저 해보시길 권해드려요."
     )
 
 
@@ -47,10 +47,10 @@ def compose_doyoon_p9_risk(*, user_name: str, ilgan: str) -> str:
     """
     _validate(user_name, ilgan)
     return (
-        "리스크 카드 세 장 정리해드렸어요. 즉시 변수 81%가 가장 위험도 높고, 단기 64%, 중기 47% 순서예요. "
-        "위험도 라벨 자체가 우선순위를 그대로 가리켜요.\n\n"
+        "주의하면 좋을 카드 세 장을 정리해드렸어요. 즉시 81%가 가장 신경 쓰이는 부분이고, 단기 64%, 중기 47% 순서예요. "
+        "위험도 숫자가 그대로 챙기는 순서를 알려줘요.\n\n"
         f"{user_name}님, 세 가지를 한꺼번에 다 신경 쓰실 필요는 없어요. "
-        "즉시(81%) 변수부터 하나씩 정리하시는 게 가장 효율적이에요. 위험도 라벨이 그대로 진행 순서니까요."
+        "즉시(81%)부터 하나씩 차근차근 정리하시는 게 가장 좋아요. 숫자 큰 것부터 위에서 아래로 차례대로 보시면 돼요."
     )
 
 
@@ -63,10 +63,10 @@ def compose_doyoon_p9_optimize(*, user_name: str, ilgan: str) -> str:
 
     return (
         f"{d.current_score}에서 {d.target_score}까지 딱 {gap}점 남았어요. "
-        "이 격차는 세 가지 변수에서 발생해요 — 침묵 활용, 시선 안정, 표현 빈도.\n\n"
-        f"{ilgan}({ilgan_hanja}) 일간은 침묵 활용 하나만 올려도 매력 발현 효율이 {d.gap_per_action}씩 오르거든요. "
-        "30일 의식적으로 해보시면 6~8점은 올라요. "
-        f"{d.target_score}점을 넘기면 전체 호감 유발 효율이 {d.overall_boost_pct} 상승해요.\n\n"
+        "이 차이는 세 가지에서 생겨요 — 잠깐 멈추기, 시선 안정, 표현 빈도.\n\n"
+        f"{ilgan}({ilgan_hanja}) 일간은 잠깐 멈추기 하나만 챙겨도 매력이 {d.gap_per_action}씩 살아나요. "
+        "30일 의식해서 해보시면 6~8점은 올라요. "
+        f"{d.target_score}점을 넘기면 호감을 사는 흐름이 {d.overall_boost_pct}만큼 좋아져요.\n\n"
         f"별거 없어요. 그냥 시작하시면 돼요. 분석은 다 끝났어요. 이제 공은 {user_name}님한테 있어요."
     )
 

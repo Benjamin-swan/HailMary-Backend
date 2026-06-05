@@ -185,7 +185,7 @@ DOYOON_P2_DATA: dict[str, DoyoonP2IlganData] = {
     # ── 경금 ─────────────────────────────────────────────────
     "경금": DoyoonP2IlganData(
         hurt_type_1=HurtType(
-            keyword="불확실 입력",
+            keyword="불확실한 신호",
             risk_pct="69%",
             desc="판단 명확성 1.7배 케이스에서 모호한 응답 시 차단율이 평균보다 빠릅니다.",
         ),

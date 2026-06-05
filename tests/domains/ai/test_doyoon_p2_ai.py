@@ -80,7 +80,7 @@ def test_all_10_ilgan_have_data() -> None:
 def test_all_10_ilgan_compose_hurt() -> None:
     for ilgan in VALID_DOYOON_P2_ILGAN:
         out = compose_doyoon_p2_hurt(user_name="홍길동", ilgan=ilgan)
-        assert "두 유형" in out["ai_hurt"]
+        assert "두 가지" in out["ai_hurt"]
 
 
 def test_all_10_ilgan_compose_recovery() -> None:
@@ -147,7 +147,7 @@ async def test_hurt_usecase_falls_back_on_error() -> None:
         user_name="홍길동", ilgan="임수"
     )
     assert "무관심 신호 인지" in out
-    assert "78%" in out
+    assert "의도 미독해" in out
 
 
 # ── RECOVERY ─────────────────────────────────────────────────────

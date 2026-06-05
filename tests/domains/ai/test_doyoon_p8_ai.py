@@ -65,7 +65,7 @@ def test_compose_all_ilgan() -> None:
             user_name="홍길동", ilgan=ilgan,
             raw_months=_fake_raw_months(), start_year=2026, start_month=5,
         )
-        assert "12개월" in str(out["ai_intro"]) or "피크" in str(out["ai_intro"])
+        assert "1년" in str(out["ai_intro"]) or "흐름" in str(out["ai_intro"])
 
 
 def test_compose_invalid_ilgan() -> None:
@@ -97,12 +97,12 @@ def test_facts_imsu() -> None:
 
 def _valid(facts):
     return (
-        "향후 12개월 접촉 확률 분포 정리해드릴게요. 이번 달부터 1년이에요.\n\n"
-        f"연간 평균 대비 피크 구간이 두 곳이에요. {facts['peak_1_label']}과 {facts['peak_2_label']}. "
-        "이 두 달은 신규 인연 접촉 확률이 평균 대비 2.3배까지 올라가요. "
-        "그 사이 구간은 변수 정리·매력 변수 보완에 효율적인 충전 구간입니다.\n\n"
-        "임수 일간 표본에서 흐름 거스르는 행동의 ROI가 가장 낮게 측정돼요. "
-        "피크에 적극 움직이고, 정체기엔 변수 정리에 집중하시는 게 가장 효율적입니다."
+        "앞으로 1년, 새 인연이 들어오기 좋은 시기를 달별로 정리해드릴게요. 이번 달부터 1년이에요.\n\n"
+        f"인연의 흐름이 특히 도드라지는 시기가 두 번 있어요. {facts['peak_1_label']}과 {facts['peak_2_label']}. "
+        "이 두 달은 새 인연을 만날 가능성이 한 해 중 가장 크게 올라가는 때예요. "
+        "그 사이 시기는 마음을 차분히 정리하며 다음을 준비하기 좋은 때고요.\n\n"
+        "임수 일간은 흐름을 억지로 거스를수록 오히려 지치기 쉬워요. "
+        "좋은 시기엔 마음을 적극적으로 내고, 잔잔한 시기엔 자신을 차분히 가다듬는 게 잘 맞아요."
     )
 
 
@@ -122,5 +122,5 @@ async def test_usecase_falls_back() -> None:
         user_name="홍길동", ilgan="임수",
         raw_months=_fake_raw_months(), start_year=2026, start_month=5,
     )
-    assert "12개월" in out
-    assert "피크" in out
+    assert "1년" in out
+    assert "흐름" in out

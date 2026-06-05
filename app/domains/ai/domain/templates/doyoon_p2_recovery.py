@@ -30,13 +30,16 @@ def compose_doyoon_p2_recovery(
     residual = [100 - m.pct for m in data.meters]
 
     ai_recovery = (
-        f"회복 데이터도 정리해 드릴게요. {ilgan}({ilgan_hanja}) 일간 표본의 평균 회복 곡선이에요.\n\n"
-        f"직후 — 감정 강도 {residual[0]}% 유지. 1개월 차 — {residual[1]}%까지 내려와요. "
-        f"3개월 차 — {residual[2]}% 수준. 6개월 차 — {residual[3]}%까지 감소합니다.\n\n"
-        f"평균 대비 회복 지연이 {data.recovery_lag_multiplier}로 측정돼요. "
-        f"{user_name}님 케이스에서는 자연 인덱스 감소를 기다리는 게 가장 안전한 경로입니다. "
-        "강제 삭제 시도는 곡선을 오히려 늦춥니다.\n\n"
-        "회복 구간 내 새 매칭 시도는 충돌 확률이 높아져요. 기존 데이터가 정리된 후에 새 변수를 받으세요."
+        f"이별 후 마음이 어떻게 가라앉는지 정리해 드릴게요. "
+        f"{ilgan}({ilgan_hanja}) 일간을 가진 분들의 평균적인 회복 흐름이에요.\n\n"
+        f"헤어진 직후엔 감정이 거의 그대로 {residual[0]}%만큼 남아 있어요. "
+        f"한 달이 지나면 {residual[1]}% 정도로 천천히 가라앉고, "
+        f"세 달쯤엔 {residual[2]}% 수준, 여섯 달이 되면 {residual[3]}%까지 옅어집니다.\n\n"
+        f"평균보다 회복이 {data.recovery_lag_multiplier} 정도 더디게 흘러가는 편이에요. "
+        f"{user_name}님은 마음이 자연스럽게 가라앉기를 기다려 주는 게 가장 편안한 길입니다. "
+        "억지로 잊으려 애쓰면 오히려 더 오래 머물러요.\n\n"
+        "마음이 정리되기 전에 새 인연을 서두르면 부딪히기 쉬워요. "
+        "충분히 비워낸 다음에 새 사람을 받아들이는 게 좋아요."
     )
 
     return {

@@ -71,7 +71,7 @@ DOYOON_P7_DATA: dict[str, DoyoonP7IlganData] = {
         sc1_six_month_pct="24%", sc2_six_month_pct="68%", sc3_six_month_pct="40%",
         initiative_multiplier="1.3배", wait_cost_multiplier="2.4배",
         expected_value_ratio="2.8배", sd_ending_asset="dy_05",
-        ending_bubble="결단력이 핵심 변수예요. 망설이지 마시고 한 번 보내세요.",
+        ending_bubble="결단력이 가장 큰 무기예요. 망설이지 마시고 한 번 보내세요.",
     ),
     "을목": DoyoonP7IlganData(
         scenarios=_build_scenarios(),
@@ -85,7 +85,7 @@ DOYOON_P7_DATA: dict[str, DoyoonP7IlganData] = {
         sc1_six_month_pct="20%", sc2_six_month_pct="73%", sc3_six_month_pct="35%",
         initiative_multiplier="1.2배", wait_cost_multiplier="3.0배",
         expected_value_ratio="3.6배", sd_ending_asset="dy_05",
-        ending_bubble="발산형 매력 케이스라 먼저 움직일 때 효율이 가장 높아요.",
+        ending_bubble="매력을 환하게 드러내는 분이라, 먼저 다가갈 때 가장 잘 풀려요.",
     ),
     "정화": DoyoonP7IlganData(
         scenarios=_build_scenarios(),
@@ -99,7 +99,7 @@ DOYOON_P7_DATA: dict[str, DoyoonP7IlganData] = {
         sc1_six_month_pct="23%", sc2_six_month_pct="69%", sc3_six_month_pct="42%",
         initiative_multiplier="1.4배", wait_cost_multiplier="2.6배",
         expected_value_ratio="3배", sd_ending_asset="dy_05",
-        ending_bubble="안정 케이스라 신호 보내면 받는 쪽이 안정감을 느껴요.",
+        ending_bubble="안정감을 주는 분이라, 신호를 보내면 상대가 마음을 놓아요.",
     ),
     "기토": DoyoonP7IlganData(
         scenarios=_build_scenarios(),
@@ -127,7 +127,7 @@ DOYOON_P7_DATA: dict[str, DoyoonP7IlganData] = {
         sc1_six_month_pct="18%", sc2_six_month_pct="74%", sc3_six_month_pct="34%",
         initiative_multiplier="1.5배", wait_cost_multiplier="3.0배",
         expected_value_ratio="4배", sd_ending_asset="dy_05",
-        ending_bubble="잠재력이 큰 케이스예요. 한 신호로 모든 게 움직입니다.",
+        ending_bubble="잠재력이 큰 분이에요. 신호 하나로 모든 게 움직입니다.",
     ),
 }
 

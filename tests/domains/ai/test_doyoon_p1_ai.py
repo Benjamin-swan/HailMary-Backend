@@ -93,7 +93,7 @@ def test_opening_facts_html_dummy() -> None:
     assert f["ilju_hanja"] == "임술(壬戌)"
     assert f["pct_value"] == "8%"
     assert f["distribution_pct"] == "12.4%"
-    assert f["love_type"] == "정보 처리형 신중 진입자"
+    assert f["love_type"] == "생각이 깊은 신중한 사람"
     assert "홍길동님" in f["rule_text"]
 
 
@@ -182,8 +182,8 @@ def test_trigger_facts_html_dummy() -> None:
     assert f["trigger_completion_pct"] == "88%"
     assert f["peak_window_days"] == "30일"
     assert f["self_control_pct"] == "17%"
-    assert f["trigger_1"] == "공유된 지적 발견"
-    assert f["trigger_2"] == "답 빠른 메시지 응답"
+    assert f["trigger_1"] == "대화가 잘 통하는 느낌"
+    assert f["trigger_2"] == "답장이 빨리 오가는 흐름"
     assert "홍길동님" in f["rule_text"]
 
 
@@ -193,7 +193,7 @@ def test_trigger_prompt_substitutes_facts() -> None:
     assert "88%" in system
     assert "30일" in system
     assert "17%" in system
-    assert "공유된 지적 발견" in user
+    assert "대화가 잘 통하는 느낌" in user
 
 
 def _trigger_valid_text(facts: dict[str, str]) -> str:

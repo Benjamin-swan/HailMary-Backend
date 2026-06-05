@@ -36,12 +36,14 @@ def compose_doyoon_p2_hurt(
     h1, h2 = data.hurt_type_1, data.hurt_type_2
 
     ai_hurt = (
-        f"두 유형이 {ilgan}({ilgan_hanja}) 일간 표본에서 가장 자주 나와요. 하나씩 보여드릴게요.\n\n"
-        f"첫 번째는 {h1.keyword}예요. 위험도 {h1.risk_pct}. {h1.desc} "
-        f"{user_name}님 케이스에서 가장 빈번한 변수입니다.\n\n"
-        f"두 번째는 {h2.keyword}예요. 위험도 {h2.risk_pct}. {h2.desc}\n\n"
-        f"둘 다 통제 가능한 영역이에요. 신호 해석 전에 24시간 텀을 두시면 두 패턴 모두 "
-        f"발생률이 {data.intervention_drop_pct} 떨어져요. 조금만 의식해보세요."
+        f"이별 상황에서 {user_name}님이 가장 크게 흔들리기 쉬운 두 가지를 짚어드릴게요. "
+        f"{ilgan}({ilgan_hanja}) 일간을 가진 분들에게 자주 보이는 결입니다.\n\n"
+        f"첫 번째는 {h1.keyword}예요. {h1.desc} "
+        f"{user_name}님에게 특히 자주 나타나는 부분이에요.\n\n"
+        f"두 번째는 {h2.keyword}예요. {h2.desc}\n\n"
+        "두 가지 모두 조금만 의식하면 스스로 다잡을 수 있는 부분이에요. "
+        "상대의 말이나 행동이 신경 쓰일 때 바로 결론 내리지 말고 하루 정도 시간을 두고 "
+        "다시 보면, 두 흐름 다 한결 가벼워집니다. 조금만 의식해보세요."
     )
 
     return {

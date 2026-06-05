@@ -105,7 +105,8 @@ async def test_charm_index_usecase_falls_back() -> None:
         user_name="홍길동", ilgan="임수", charm_pct=8
     )
     assert "8%" in out
-    assert "1.7배" in out
+    assert "존재감" in out
+    assert "깊이감" in out
 
 
 # ── conversion ──
@@ -141,8 +142,8 @@ async def test_conversion_usecase_falls_back() -> None:
     out = await GenerateP5ConversionUseCase(ai_client=fake).execute(
         user_name="홍길동", ilgan="임수"
     )
-    assert "1.4배" in out
-    assert "38%p" in out
+    assert "홍길동님" in out
+    assert "두 번째 만남" in out
 
 
 # ── appeal ──
@@ -184,4 +185,4 @@ async def test_appeal_usecase_falls_back() -> None:
         user_name="홍길동", ilgan="임수"
     )
     assert "표현 일관성" in out
-    assert "26%" in out
+    assert "반응 속도" in out
