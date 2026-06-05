@@ -1613,6 +1613,35 @@ DOYOON_BOX3_TAIL: str = (
     "오늘 밤은 편하게 주무셨으면 좋겠네요."
 )
 
+# 도윤 전용 존댓말 quote 라벨 / box3 폴백 (QA F-063: 연우 반말 상수 공유로 도윤이 반말 출력하던 문제).
+DOYOON_QUOTE_LABEL_WITH_TEXT: str = "— 적어주신 고민"
+DOYOON_QUOTE_LABEL_EMPTY: str = "— 미처 적지 못한 고민"
+
+DOYOON_BOX3_FALLBACK_INTRO: str = (
+    "말로 다 적기 어려운 고민이 있으셨나 봐요. 괜찮습니다. 적지 않으셔도 데이터에 그 결이 남아 있어요."
+)
+DOYOON_BOX3_FALLBACK_OUTRO: str = "그 마음, 굳이 적지 않으셔도 충분히 읽힙니다."
+
+# step1 1순위 슬러그별 존댓말 폴백 본문 (일간 무관 — 폴백용 일반 분석 톤).
+DOYOON_BOX3_FALLBACK_BODY_BY_STEP1: dict[str, str] = {
+    "waiting_new": (
+        "이 유형은 새로운 인연을 기다리는 시간이 가장 크게 다가옵니다. 언제 올지 모른다는 불확실함이 길게 느껴지실 수 있어요. "
+        "데이터상 이건 조급함이 아니라, 기준이 분명한 분들에게 자연스럽게 나타나는 흐름입니다."
+    ),
+    "crushing": (
+        "이 유형은 아직 정의되지 않은 관계가 가장 큰 고민으로 잡힙니다. 답이 흐릿한 자리에서 마음이 흔들리는 건 "
+        "분명함을 중요하게 여기시기 때문이에요. 흐림은 성향의 문제가 아니라 상황의 문제입니다."
+    ),
+    "in_relationship": (
+        "이 유형은 지금 곁에 있는 분과의 앞날이 가장 큰 고민으로 측정됩니다. 좋으면서도 자꾸 확인하게 되는 마음은 "
+        "관계를 깊이 들이는 분들에게 흔한 흐름이에요. 작은 흔들림이 크게 느껴지는 것뿐입니다."
+    ),
+    "missing_ex": (
+        "이 유형은 지나간 인연을 쉽게 놓지 못하는 게 가장 큰 고민으로 잡힙니다. 시간이 약이라는 말이 잘 와닿지 않으실 수 있어요. "
+        "한 번 들인 마음을 천천히 정리하는 건 깊이가 있다는 뜻이지 약함이 아닙니다."
+    ),
+}
+
 
 # ═════════════════════════════════════════════════════════════════
 # 박스 3 합성 함수
@@ -1649,26 +1678,34 @@ def compose_box3(
     """
     has_step3 = step3 is not None and step3.strip() != ""
 
-    # ① Quote 영역
-    if has_step3:
+    # ① Quote 영역 — 라벨은 character 분기 (도윤 존댓말 / 연우 반말)
+    label_with_text = DOYOON_QUOTE_LABEL_WITH_TEXT if character == "doyoon" else QUOTE_LABEL_WITH_TEXT
+    label_empty = DOYOON_QUOTE_LABEL_EMPTY if character == "doyoon" else QUOTE_LABEL_EMPTY
+    if has_step3 and step3 is not None:
         quote_text = step3.strip()
-        quote_label = QUOTE_LABEL_WITH_TEXT
+        quote_label = label_with_text
     else:
         quote_text = QUOTE_TEXT_EMPTY
-        quote_label = QUOTE_LABEL_EMPTY
+        quote_label = label_empty
 
     # ② 답장 단락
     if has_step3 and ai_letter_body:
         body = ai_letter_body
         uses_ai = True
     else:
-        # 폴백 합성 (도입 + 본문 + 마무리)
+        # 폴백 합성 (도입 + 본문 + 마무리) — character 분기 (도윤 존댓말 / 연우 반말)
         primary_step1 = _priority_pick_step1(step1)
-        fallback_body = BOX3_FALLBACK_BODY_BY_STEP1_ILGAN.get(
-            (ilgan, primary_step1),
-            BOX3_FALLBACK_BODY_BY_STEP1_ILGAN[(ilgan, "waiting_new")],  # 안전 폴백
-        )
-        body = f"{BOX3_FALLBACK_INTRO}\n\n{fallback_body}\n\n{BOX3_FALLBACK_OUTRO}"
+        if character == "doyoon":
+            fallback_body = DOYOON_BOX3_FALLBACK_BODY_BY_STEP1.get(
+                primary_step1, DOYOON_BOX3_FALLBACK_BODY_BY_STEP1["waiting_new"],
+            )
+            body = f"{DOYOON_BOX3_FALLBACK_INTRO}\n\n{fallback_body}\n\n{DOYOON_BOX3_FALLBACK_OUTRO}"
+        else:
+            fallback_body = BOX3_FALLBACK_BODY_BY_STEP1_ILGAN.get(
+                (ilgan, primary_step1),
+                BOX3_FALLBACK_BODY_BY_STEP1_ILGAN[(ilgan, "waiting_new")],  # 안전 폴백
+            )
+            body = f"{BOX3_FALLBACK_INTRO}\n\n{fallback_body}\n\n{BOX3_FALLBACK_OUTRO}"
         uses_ai = False
 
     # ③ 강조구 + ④ 꼬리 — character 분기
