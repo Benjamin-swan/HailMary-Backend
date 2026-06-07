@@ -16,7 +16,7 @@ await해도 PayApp 응답("SUCCESS")을 막지 않는다. → payment_completed 
 from __future__ import annotations
 
 import logging
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta, timezone
 from typing import Any
 
 from app.domains.payment.application.payment_ports import (
@@ -270,12 +270,20 @@ class HandlePayAppFeedbackUseCase:
             )
 
 
+# PayApp pay_date 는 KST 벽시계 — 라벨만 UTC 로 바꾸면 approved_at 이 9시간 미래가 되어
+# 이메일 폴백 스위퍼의 grace 비교(approved_at < now-5분)가 9시간 밀린다. (CS #1, HM-BE-81)
+_KST = timezone(timedelta(hours=9))
+
+
 def _parse_pay_date(value: Any) -> datetime | None:
-    """PayApp pay_date 형식: 'YYYY-MM-DD HH:MM:SS' (KST). UTC로 변환해서 저장."""
+    """PayApp pay_date 형식: 'YYYY-MM-DD HH:MM:SS' (KST). KST로 해석 후 UTC 변환 저장."""
     if not isinstance(value, str) or not value:
         return None
     try:
-        # 단순 파싱 (timezone 없음 → naive). KST 가정 후 UTC 변환은 운영 정책에 따라 추후.
-        return datetime.strptime(value, "%Y-%m-%d %H:%M:%S").replace(tzinfo=UTC)
+        return (
+            datetime.strptime(value, "%Y-%m-%d %H:%M:%S")
+            .replace(tzinfo=_KST)
+            .astimezone(UTC)
+        )
     except ValueError:
         return None
