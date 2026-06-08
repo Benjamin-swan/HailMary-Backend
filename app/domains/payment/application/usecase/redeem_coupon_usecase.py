@@ -67,6 +67,7 @@ class RedeemCouponUseCase:
         character: CharacterCode,
         customer_email: str,
         code: str,
+        account_id: int | None = None,
     ) -> str:
         """쿠폰 소진 + 무료 결과지 발급. 응답: orderId.
 
@@ -111,5 +112,6 @@ class RedeemCouponUseCase:
             log_tag="COUPON",
             method="coupon",  # 무료 쿠폰 결제 — 분석 구분용
             background_composer=self._background_composer,  # 합성은 백그라운드(응답 비대기)
+            account_id=account_id,  # 로그인 시 보관함 귀속
         )
         return saved.order_id

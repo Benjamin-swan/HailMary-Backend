@@ -184,6 +184,7 @@ dev_router = APIRouter(prefix="/api/payments/dev", tags=["payments-dev"])
 @dev_router.post("/bypass", status_code=status.HTTP_201_CREATED)
 async def dev_bypass_payment(
     body: DevBypassRequest,
+    account_id: int | None = Depends(get_optional_account_id),
     usecase: DevBypassPaymentUseCase = Depends(get_dev_bypass_usecase),
 ) -> dict[str, str]:
     """결제 통과 처리. FE는 응답의 orderId로 /saju/paid/{orderId}/loading 진입."""
@@ -192,6 +193,7 @@ async def dev_bypass_payment(
             session_token=body.session_token,
             character=body.character,
             customer_email=body.customer_email,
+            account_id=account_id,
         )
     except ValueError as e:
         raise HTTPException(

@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 
+from app.domains.auth.adapter.inbound.api.auth_router import get_optional_account_id
 from app.domains.payment.application.request.redeem_coupon_request import (
     RedeemCouponRequest,
 )
@@ -41,6 +42,7 @@ async def validate_coupon(
 @router.post("/redeem", status_code=status.HTTP_201_CREATED)
 async def redeem_coupon(
     body: RedeemCouponRequest,
+    account_id: int | None = Depends(get_optional_account_id),
     usecase: RedeemCouponUseCase = Depends(get_redeem_coupon_usecase),
 ) -> dict[str, str]:
     """쿠폰 "무료로 받기" — 소진 + 무료 결과지 발급. FE는 orderId로 결과 폴링 진입."""
@@ -50,6 +52,7 @@ async def redeem_coupon(
             character=body.character,
             customer_email=body.customer_email,
             code=body.code,
+            account_id=account_id,
         )
     except CouponNotRedeemableError as e:
         raise HTTPException(

@@ -58,6 +58,7 @@ async def grant_paid_report(
     log_tag: str,
     method: str | None = None,
     background_composer: Callable[..., Coroutine[Any, Any, None]] | None = None,
+    account_id: int | None = None,
 ) -> Payment:
     """DONE 결제를 생성하고 유료 결과지 합성을 트리거한다. 저장된 Payment 반환.
 
@@ -76,6 +77,7 @@ async def grant_paid_report(
         status=PaymentStatus.DONE,
         customer_email=customer_email,
         approved_at=now,
+        account_id=account_id,  # 로그인 시 계정 귀속 → 보관함 노출 (HM-BE-80)
     )
     saved = await repo.save(payment)
     logger.warning(
