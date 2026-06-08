@@ -4,7 +4,7 @@ from collections.abc import AsyncGenerator, Coroutine
 from datetime import datetime
 from typing import Any
 
-from fastapi import Depends, FastAPI
+from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -108,6 +108,29 @@ from app.domains.ai.application.usecase.get_paid_report_usecase import (
 from app.domains.ai.application.usecase.send_result_link_email_usecase import (
     SendResultLinkEmailUseCase,
 )
+from app.domains.auth.adapter.inbound.api.auth_router import (
+    get_me_usecase,
+    get_social_login_usecase,
+    get_token_issuer,
+)
+from app.domains.auth.adapter.inbound.api.auth_router import (
+    router as auth_router,
+)
+from app.domains.auth.adapter.outbound.external.google_oauth_client import (
+    GoogleOAuthClient,
+)
+from app.domains.auth.adapter.outbound.external.kakao_oauth_client import (
+    KakaoOAuthClient,
+)
+from app.domains.auth.adapter.outbound.persistence.account_repository import (
+    AccountRepository,
+)
+from app.domains.auth.application.usecase.get_me_usecase import GetMeUseCase
+from app.domains.auth.application.usecase.social_login_usecase import (
+    SocialLoginUseCase,
+)
+from app.domains.auth.domain.port.oauth_client_port import OAuthClientPort
+from app.domains.auth.domain.value_object.provider import Provider
 from app.domains.kkebi.adapter.inbound.api.kkebi_router import (
     get_daily_fortune_usecase,
 )
@@ -210,6 +233,7 @@ from app.infrastructure.database.session import AsyncSessionLocal
 from app.infrastructure.external.amplitude.client import AmplitudeClient
 from app.infrastructure.external.fortuneteller.client import FortuneTellerClient
 from app.infrastructure.external.ses.client import SESClient
+from app.infrastructure.security.jwt_provider import JwtTokenProvider
 
 app = FastAPI(title="HailMary Backend", version="0.1.0")
 
@@ -258,6 +282,64 @@ _redis_cache_instance: RedisCache | None = (
 
 def _get_redis_cache() -> RedisCache | None:
     return _redis_cache_instance
+
+
+# ── Auth Domain (소셜 로그인, HM-BE-77) ──────────────────────────────────────
+# JWT provider/OAuth 클라이언트는 stateless — 모듈 로드 시 1회 구성.
+# 키 미설정 환경(예: 시크릿 등록 전 staging)에서도 앱은 뜨고 /api/auth/*만 비활성.
+
+_token_provider_instance: JwtTokenProvider | None = (
+    JwtTokenProvider(secret=_settings.jwt_secret, expires_days=_settings.jwt_expires_days)
+    if _settings.jwt_secret
+    else None
+)
+
+
+def _get_token_provider() -> JwtTokenProvider:
+    if _token_provider_instance is None:
+        raise HTTPException(
+            status_code=503, detail="로그인 기능이 설정되지 않았습니다 (JWT_SECRET 미설정)"
+        )
+    return _token_provider_instance
+
+
+def _build_oauth_clients() -> dict[Provider, OAuthClientPort]:
+    # Windows 로컬은 asyncmy 동봉 OpenSSL 충돌로 SSLContext 생성이 크래시(OPENSSL_Uplink)
+    # → local 환경에서만 TLS 검증 비활성 (PayApp verify=False 선례). staging/prod는 검증 유지.
+    verify_tls = _settings.app_env != "local"
+    clients: dict[Provider, OAuthClientPort] = {}
+    if _settings.kakao_client_id and _settings.kakao_client_secret:
+        clients[Provider.KAKAO] = KakaoOAuthClient(
+            client_id=_settings.kakao_client_id,
+            client_secret=_settings.kakao_client_secret,
+            verify_tls=verify_tls,
+        )
+    if _settings.google_client_id and _settings.google_client_secret:
+        clients[Provider.GOOGLE] = GoogleOAuthClient(
+            client_id=_settings.google_client_id,
+            client_secret=_settings.google_client_secret,
+            verify_tls=verify_tls,
+        )
+    return clients
+
+
+_oauth_clients: dict[Provider, OAuthClientPort] = _build_oauth_clients()
+
+
+def _make_social_login_usecase(
+    session: AsyncSession = Depends(_get_session),
+) -> SocialLoginUseCase:
+    return SocialLoginUseCase(
+        oauth_clients=_oauth_clients,
+        account_repo=AccountRepository(session),
+        token_issuer=_get_token_provider(),
+    )
+
+
+def _make_get_me_usecase(
+    session: AsyncSession = Depends(_get_session),
+) -> GetMeUseCase:
+    return GetMeUseCase(account_repo=AccountRepository(session))
 
 
 # ── 인증 의존성용 UserRepository 팩토리 ───────────────────────────────────────
@@ -668,8 +750,12 @@ app.dependency_overrides[get_redeem_coupon_usecase] = _make_redeem_coupon_usecas
 app.dependency_overrides[get_validate_coupon_usecase] = _make_validate_coupon_usecase
 app.dependency_overrides[get_frontend_base_url] = lambda: _settings.frontend_base_url
 app.dependency_overrides[get_paid_report_usecase] = _make_get_paid_report_usecase
+app.dependency_overrides[get_social_login_usecase] = _make_social_login_usecase
+app.dependency_overrides[get_me_usecase] = _make_get_me_usecase
+app.dependency_overrides[get_token_issuer] = _get_token_provider
 
 app.include_router(user_router)
+app.include_router(auth_router)
 app.include_router(payment_router)
 app.include_router(paid_report_router)
 app.include_router(kkebi_router)

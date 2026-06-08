@@ -1,6 +1,6 @@
 from datetime import date, datetime, time
 
-from sqlalchemy import Boolean, Date, DateTime, Enum, String, Time, func
+from sqlalchemy import Boolean, Date, DateTime, Enum, ForeignKey, Integer, String, Time, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.domains.user.domain.value_object.calendar_type import CalendarType
@@ -28,4 +28,9 @@ class UserORM(Base):
     )
     created_at: Mapped[datetime | None] = mapped_column(
         DateTime, nullable=True, server_default=func.now()
+    )
+    # 소셜 로그인 계정 귀속 (HM-BE-77). NULL = 비로그인 제출.
+    # 로그인 상태로 무료사주 제출 시 연결 (P5에서 배선) — 마지막 사용값 추적 근거.
+    account_id: Mapped[int | None] = mapped_column(
+        Integer, ForeignKey("accounts.id"), nullable=True, index=True
     )

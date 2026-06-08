@@ -20,6 +20,11 @@ class PaymentORM(Base):
     user_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("users.id"), nullable=False, index=True
     )
+    # 소셜 로그인 계정 귀속 (HM-BE-77). NULL = 비로그인 결제.
+    # 로그인 시 인증 이메일 매칭 backfill로 채워지거나, 로그인 상태 결제 시 즉시 연결.
+    account_id: Mapped[int | None] = mapped_column(
+        Integer, ForeignKey("accounts.id"), nullable=True, index=True
+    )
     character: Mapped[CharacterCode] = mapped_column(
         Enum(CharacterCode, values_callable=lambda e: [x.value for x in e]),
         nullable=False,

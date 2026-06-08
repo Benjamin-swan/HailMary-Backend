@@ -44,6 +44,14 @@ class Settings(BaseSettings):
     qa_username: str | None = None
     qa_password: str | None = None
     qa_access_token: str | None = None
+    # 소셜 로그인 (HM-BE-77, 카카오/구글 OAuth + 계정 JWT)
+    # 전부 미설정이어도 기존 플로 영향 0 — /api/auth/* 만 503/400으로 비활성.
+    jwt_secret: str | None = None
+    jwt_expires_days: int = 30
+    kakao_client_id: str | None = None       # 카카오 REST API 키
+    kakao_client_secret: str | None = None   # 카카오 로그인용 Client Secret
+    google_client_id: str | None = None
+    google_client_secret: str | None = None
     # Redis 캐시 (HM-BE-67, 깨비 일일사주). cache_enabled=False면 캐시 미사용.
     redis_url: str = "redis://127.0.0.1:6379/0"
     cache_enabled: bool = True
