@@ -8,6 +8,9 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 
 from app.domains.auth.application.request.social_login_request import SocialLoginRequest
+from app.domains.auth.application.request.update_last_used_request import (
+    UpdateLastUsedRequest,
+)
 from app.domains.auth.application.response.account_profile_response import (
     AccountProfileResponse,
 )
@@ -18,6 +21,9 @@ from app.domains.auth.application.usecase.get_me_usecase import GetMeUseCase
 from app.domains.auth.application.usecase.social_login_usecase import (
     SocialLoginUseCase,
     UnsupportedProviderError,
+)
+from app.domains.auth.application.usecase.update_last_used_usecase import (
+    UpdateLastUsedUseCase,
 )
 from app.domains.auth.domain.port.oauth_client_port import OAuthExchangeError
 from app.domains.auth.domain.port.token_port import TokenDecodeError, TokenIssuerPort
@@ -33,6 +39,10 @@ def get_social_login_usecase() -> SocialLoginUseCase:
 
 
 def get_me_usecase() -> GetMeUseCase:
+    raise NotImplementedError
+
+
+def get_update_last_used_usecase() -> UpdateLastUsedUseCase:
     raise NotImplementedError
 
 
@@ -90,6 +100,23 @@ async def get_me(
 ) -> AccountProfileResponse:
     try:
         return await usecase.execute(account_id)
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=str(e),
+            headers={"WWW-Authenticate": "Bearer"},
+        ) from e
+
+
+@router.post("/last-used", status_code=status.HTTP_204_NO_CONTENT)
+async def update_last_used(
+    body: UpdateLastUsedRequest,
+    account_id: int = Depends(get_current_account_id),
+    usecase: UpdateLastUsedUseCase = Depends(get_update_last_used_usecase),
+) -> None:
+    """로그인 사용자가 설문 제출 시 계정 마지막 사용값 갱신 (FE fire-and-forget)."""
+    try:
+        await usecase.execute(account_id, body)
     except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

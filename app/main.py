@@ -112,6 +112,7 @@ from app.domains.auth.adapter.inbound.api.auth_router import (
     get_me_usecase,
     get_social_login_usecase,
     get_token_issuer,
+    get_update_last_used_usecase,
 )
 from app.domains.auth.adapter.inbound.api.auth_router import (
     router as auth_router,
@@ -128,6 +129,9 @@ from app.domains.auth.adapter.outbound.persistence.account_repository import (
 from app.domains.auth.application.usecase.get_me_usecase import GetMeUseCase
 from app.domains.auth.application.usecase.social_login_usecase import (
     SocialLoginUseCase,
+)
+from app.domains.auth.application.usecase.update_last_used_usecase import (
+    UpdateLastUsedUseCase,
 )
 from app.domains.auth.domain.port.oauth_client_port import OAuthClientPort
 from app.domains.auth.domain.value_object.provider import Provider
@@ -340,6 +344,12 @@ def _make_get_me_usecase(
     session: AsyncSession = Depends(_get_session),
 ) -> GetMeUseCase:
     return GetMeUseCase(account_repo=AccountRepository(session))
+
+
+def _make_update_last_used_usecase(
+    session: AsyncSession = Depends(_get_session),
+) -> UpdateLastUsedUseCase:
+    return UpdateLastUsedUseCase(account_repo=AccountRepository(session))
 
 
 # ── 인증 의존성용 UserRepository 팩토리 ───────────────────────────────────────
@@ -752,6 +762,7 @@ app.dependency_overrides[get_frontend_base_url] = lambda: _settings.frontend_bas
 app.dependency_overrides[get_paid_report_usecase] = _make_get_paid_report_usecase
 app.dependency_overrides[get_social_login_usecase] = _make_social_login_usecase
 app.dependency_overrides[get_me_usecase] = _make_get_me_usecase
+app.dependency_overrides[get_update_last_used_usecase] = _make_update_last_used_usecase
 app.dependency_overrides[get_token_issuer] = _get_token_provider
 
 app.include_router(user_router)
