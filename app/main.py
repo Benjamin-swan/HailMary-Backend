@@ -108,6 +108,18 @@ from app.domains.ai.application.usecase.get_paid_report_usecase import (
 from app.domains.ai.application.usecase.send_result_link_email_usecase import (
     SendResultLinkEmailUseCase,
 )
+from app.domains.archive.adapter.inbound.api.archive_router import (
+    get_archive_usecase,
+)
+from app.domains.archive.adapter.inbound.api.archive_router import (
+    router as archive_router,
+)
+from app.domains.archive.adapter.outbound.persistence.archive_repository import (
+    ArchiveRepository,
+)
+from app.domains.archive.application.usecase.get_archive_usecase import (
+    GetArchiveUseCase,
+)
 from app.domains.auth.adapter.inbound.api.auth_router import (
     get_me_usecase,
     get_optional_account_id,
@@ -448,6 +460,12 @@ def _make_get_saved_daily_result_usecase(
     return GetSavedDailyResultUseCase(result_repo=KkebiResultRepository(session))
 
 
+def _make_get_archive_usecase(
+    session: AsyncSession = Depends(_get_session),
+) -> GetArchiveUseCase:
+    return GetArchiveUseCase(archive_repo=ArchiveRepository(session))
+
+
 # ── Payment Domain UseCase 팩토리 ────────────────────────────────────────────
 
 def _make_payapp_client() -> PayAppClient:
@@ -785,6 +803,7 @@ app.dependency_overrides[get_free_result_usecase] = _make_get_free_result_usecas
 app.dependency_overrides[get_daily_fortune_usecase] = _make_get_daily_fortune_usecase
 app.dependency_overrides[get_saved_daily_result_usecase] = _make_get_saved_daily_result_usecase
 app.dependency_overrides[get_optional_account_id] = _optional_account_id
+app.dependency_overrides[get_archive_usecase] = _make_get_archive_usecase
 app.dependency_overrides[get_request_payment_usecase] = _make_request_payment_usecase
 app.dependency_overrides[get_handle_feedback_usecase] = _make_handle_feedback_usecase
 app.dependency_overrides[get_payment_status_usecase] = _make_payment_status_usecase
@@ -801,6 +820,7 @@ app.dependency_overrides[get_token_issuer] = _get_token_provider
 
 app.include_router(user_router)
 app.include_router(auth_router)
+app.include_router(archive_router)
 app.include_router(payment_router)
 app.include_router(paid_report_router)
 app.include_router(kkebi_router)
