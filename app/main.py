@@ -121,6 +121,7 @@ from app.domains.archive.application.usecase.get_archive_usecase import (
     GetArchiveUseCase,
 )
 from app.domains.auth.adapter.inbound.api.auth_router import (
+    get_delete_account_usecase,
     get_me_usecase,
     get_optional_account_id,
     get_social_login_usecase,
@@ -136,8 +137,14 @@ from app.domains.auth.adapter.outbound.external.google_oauth_client import (
 from app.domains.auth.adapter.outbound.external.kakao_oauth_client import (
     KakaoOAuthClient,
 )
+from app.domains.auth.adapter.outbound.persistence.account_deletion_repository import (
+    AccountDeletionRepository,
+)
 from app.domains.auth.adapter.outbound.persistence.account_repository import (
     AccountRepository,
+)
+from app.domains.auth.application.usecase.delete_account_usecase import (
+    DeleteAccountUseCase,
 )
 from app.domains.auth.application.usecase.get_me_usecase import GetMeUseCase
 from app.domains.auth.application.usecase.social_login_usecase import (
@@ -371,6 +378,12 @@ def _make_update_last_used_usecase(
     session: AsyncSession = Depends(_get_session),
 ) -> UpdateLastUsedUseCase:
     return UpdateLastUsedUseCase(account_repo=AccountRepository(session))
+
+
+def _make_delete_account_usecase(
+    session: AsyncSession = Depends(_get_session),
+) -> DeleteAccountUseCase:
+    return DeleteAccountUseCase(deletion=AccountDeletionRepository(session))
 
 
 async def _optional_account_id(request: Request) -> int | None:
@@ -816,6 +829,7 @@ app.dependency_overrides[get_paid_report_usecase] = _make_get_paid_report_usecas
 app.dependency_overrides[get_social_login_usecase] = _make_social_login_usecase
 app.dependency_overrides[get_me_usecase] = _make_get_me_usecase
 app.dependency_overrides[get_update_last_used_usecase] = _make_update_last_used_usecase
+app.dependency_overrides[get_delete_account_usecase] = _make_delete_account_usecase
 app.dependency_overrides[get_token_issuer] = _get_token_provider
 
 app.include_router(user_router)

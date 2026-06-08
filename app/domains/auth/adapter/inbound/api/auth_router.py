@@ -17,6 +17,9 @@ from app.domains.auth.application.response.account_profile_response import (
 from app.domains.auth.application.response.social_login_response import (
     SocialLoginResponse,
 )
+from app.domains.auth.application.usecase.delete_account_usecase import (
+    DeleteAccountUseCase,
+)
 from app.domains.auth.application.usecase.get_me_usecase import GetMeUseCase
 from app.domains.auth.application.usecase.social_login_usecase import (
     SocialLoginUseCase,
@@ -43,6 +46,10 @@ def get_me_usecase() -> GetMeUseCase:
 
 
 def get_update_last_used_usecase() -> UpdateLastUsedUseCase:
+    raise NotImplementedError
+
+
+def get_delete_account_usecase() -> DeleteAccountUseCase:
     raise NotImplementedError
 
 
@@ -111,6 +118,15 @@ async def get_me(
             detail=str(e),
             headers={"WWW-Authenticate": "Bearer"},
         ) from e
+
+
+@router.delete("/me", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_me(
+    account_id: int = Depends(get_current_account_id),
+    usecase: DeleteAccountUseCase = Depends(get_delete_account_usecase),
+) -> None:
+    """회원탈퇴 — 계정 + 귀속 데이터 정리(결제 기록은 법적 보관, account_id만 언링크)."""
+    await usecase.execute(account_id)
 
 
 @router.post("/last-used", status_code=status.HTTP_204_NO_CONTENT)
