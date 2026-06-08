@@ -16,6 +16,7 @@
 """
 from __future__ import annotations
 
+import logging
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
@@ -38,6 +39,9 @@ from app.domains.kkebi.domain.port.daily_template_repository_port import (
     DailyTemplateRepositoryPort,
 )
 from app.domains.kkebi.domain.port.fortuneteller_port import FortuneTellerPort
+from app.domains.kkebi.domain.port.kkebi_result_repository_port import (
+    KkebiResultRepositoryPort,
+)
 from app.domains.kkebi.domain.service.ganzhi_calendar import (
     cycle_id,
     day_ganzhi,
@@ -60,6 +64,8 @@ from app.infrastructure.cache.cache_key_builder import (
 )
 from app.infrastructure.cache.redis_client import RedisCache
 
+logger = logging.getLogger(__name__)
+
 _KST = timezone(timedelta(hours=9))
 _MONTH_DAY_KO = "{y}년 {m}월 {d}일"
 # 기본 TTL — main.py에서 settings로 오버라이드. 캐시 비활성 시 무관.
@@ -75,14 +81,18 @@ class GetDailyFortuneUseCase:
         cache: RedisCache | None = None,
         pillars_ttl_seconds: int = _DEFAULT_PILLARS_TTL,
         result_ttl_seconds: int = _DEFAULT_RESULT_TTL,
+        result_repo: KkebiResultRepositoryPort | None = None,
     ) -> None:
         self._ft = fortuneteller
         self._repo = template_repo
         self._cache = cache
         self._pillars_ttl = pillars_ttl_seconds
         self._result_ttl = result_ttl_seconds
+        self._result_repo = result_repo
 
-    async def execute(self, request: KkebiFortuneRequest) -> DailyFortuneResponse:
+    async def execute(
+        self, request: KkebiFortuneRequest, account_id: int | None = None
+    ) -> DailyFortuneResponse:
         # 1. 사용자 일주 — pillars 캐시 우선
         user_stem, user_branch = await self._resolve_pillars(request)
 
@@ -96,7 +106,9 @@ class GetDailyFortuneUseCase:
                 kkebi_result_key(user_stem, user_branch, today_iso)
             )
             if result_cached is not None:
-                return self._assemble_from_cache(request, result_cached)
+                response = self._assemble_from_cache(request, result_cached)
+                await self._maybe_save(account_id, request, response)
+                return response
 
         # 4. cache miss → 합성 (기존 흐름)
         today_stem, today_branch = day_ganzhi(today)
@@ -172,7 +184,7 @@ class GetDailyFortuneUseCase:
             )
 
         # 7. 최종 응답 — user 필드는 request에서 직접 조립 (캐시 비경유)
-        return DailyFortuneResponse(
+        response = DailyFortuneResponse(
             user=self._build_user_view(request),
             cycle=cycle_view,
             total=total_view,
@@ -180,8 +192,29 @@ class GetDailyFortuneUseCase:
             areas=areas_view,
             lucky=lucky_view,
         )
+        await self._maybe_save(account_id, request, response)
+        return response
 
     # ─── 내부 헬퍼 ─────────────────────────────────────────────────────────────
+
+    async def _maybe_save(
+        self,
+        account_id: int | None,
+        request: KkebiFortuneRequest,
+        response: DailyFortuneResponse,
+    ) -> None:
+        """로그인 사용자면 당일 결과 저장(다시보기용). 저장 실패는 비치명 — 응답엔 영향 없음."""
+        if account_id is None or self._result_repo is None:
+            return
+        try:
+            await self._result_repo.save_today(
+                account_id=account_id,
+                cycle_id=response.cycle.id,
+                name=request.name,
+                result=response.model_dump(),
+            )
+        except Exception:  # noqa: BLE001 — 저장 실패가 운세 응답을 막지 않게
+            logger.warning("[kkebi] 결과 저장 실패 (account_id=%s)", account_id)
 
     async def _resolve_pillars(self, request: KkebiFortuneRequest) -> tuple[str, str]:
         """일주(stem/branch) 추출. pillars 캐시 hit 시 FortuneTeller 호출 skip."""

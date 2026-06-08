@@ -50,6 +50,11 @@ def get_token_issuer() -> TokenIssuerPort:
     raise NotImplementedError
 
 
+# main.py에서 override — JWT 미설정/누락/위조 시 None(401 안 던짐). 선택적 계정 인지용.
+async def get_optional_account_id(request: Request) -> int | None:
+    raise NotImplementedError
+
+
 async def get_current_account_id(
     request: Request,
     token_issuer: TokenIssuerPort = Depends(get_token_issuer),

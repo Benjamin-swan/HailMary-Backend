@@ -4,7 +4,7 @@ from collections.abc import AsyncGenerator, Coroutine
 from datetime import datetime
 from typing import Any
 
-from fastapi import Depends, FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -110,6 +110,7 @@ from app.domains.ai.application.usecase.send_result_link_email_usecase import (
 )
 from app.domains.auth.adapter.inbound.api.auth_router import (
     get_me_usecase,
+    get_optional_account_id,
     get_social_login_usecase,
     get_token_issuer,
     get_update_last_used_usecase,
@@ -134,9 +135,11 @@ from app.domains.auth.application.usecase.update_last_used_usecase import (
     UpdateLastUsedUseCase,
 )
 from app.domains.auth.domain.port.oauth_client_port import OAuthClientPort
+from app.domains.auth.domain.port.token_port import TokenDecodeError
 from app.domains.auth.domain.value_object.provider import Provider
 from app.domains.kkebi.adapter.inbound.api.kkebi_router import (
     get_daily_fortune_usecase,
+    get_saved_daily_result_usecase,
 )
 from app.domains.kkebi.adapter.inbound.api.kkebi_router import (
     router as kkebi_router,
@@ -144,8 +147,14 @@ from app.domains.kkebi.adapter.inbound.api.kkebi_router import (
 from app.domains.kkebi.adapter.outbound.persistence.daily_template_repository import (
     DailyTemplateRepository,
 )
+from app.domains.kkebi.adapter.outbound.persistence.kkebi_result_repository import (
+    KkebiResultRepository,
+)
 from app.domains.kkebi.application.usecase.get_daily_fortune_usecase import (
     GetDailyFortuneUseCase,
+)
+from app.domains.kkebi.application.usecase.get_saved_daily_result_usecase import (
+    GetSavedDailyResultUseCase,
 )
 from app.domains.payment.adapter.inbound.api.coupon_router import (
     get_redeem_coupon_usecase,
@@ -352,6 +361,22 @@ def _make_update_last_used_usecase(
     return UpdateLastUsedUseCase(account_repo=AccountRepository(session))
 
 
+async def _optional_account_id(request: Request) -> int | None:
+    """선택적 계정 인지 — JWT 미설정/누락/위조면 None (401 안 던짐). /api/kkebi/fortune 등."""
+    if _token_provider_instance is None:
+        return None
+    auth = request.headers.get("Authorization", "")
+    if not auth.startswith("Bearer "):
+        return None
+    token = auth[len("Bearer "):].strip()
+    if not token:
+        return None
+    try:
+        return _token_provider_instance.decode(token)
+    except TokenDecodeError:
+        return None
+
+
 # ── 인증 의존성용 UserRepository 팩토리 ───────────────────────────────────────
 
 def _make_user_repository(
@@ -413,7 +438,14 @@ def _make_get_daily_fortune_usecase(
         cache=_get_redis_cache(),
         pillars_ttl_seconds=_settings.kkebi_pillars_ttl_seconds,
         result_ttl_seconds=_settings.kkebi_result_ttl_seconds,
+        result_repo=KkebiResultRepository(session),  # 로그인 시 결과 저장 (HM-BE-79)
     )
+
+
+def _make_get_saved_daily_result_usecase(
+    session: AsyncSession = Depends(_get_session),
+) -> GetSavedDailyResultUseCase:
+    return GetSavedDailyResultUseCase(result_repo=KkebiResultRepository(session))
 
 
 # ── Payment Domain UseCase 팩토리 ────────────────────────────────────────────
@@ -751,6 +783,8 @@ app.dependency_overrides[get_submit_user_info_usecase] = _make_submit_user_info_
 app.dependency_overrides[get_submit_survey_usecase] = _make_submit_survey_usecase
 app.dependency_overrides[get_free_result_usecase] = _make_get_free_result_usecase
 app.dependency_overrides[get_daily_fortune_usecase] = _make_get_daily_fortune_usecase
+app.dependency_overrides[get_saved_daily_result_usecase] = _make_get_saved_daily_result_usecase
+app.dependency_overrides[get_optional_account_id] = _optional_account_id
 app.dependency_overrides[get_request_payment_usecase] = _make_request_payment_usecase
 app.dependency_overrides[get_handle_feedback_usecase] = _make_handle_feedback_usecase
 app.dependency_overrides[get_payment_status_usecase] = _make_payment_status_usecase
