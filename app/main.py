@@ -662,13 +662,15 @@ def _make_handle_feedback_usecase(
         raise RuntimeError(
             "PAYAPP_LINKKEY/PAYAPP_LINKVAL 환경변수가 설정되지 않았습니다."
         )
-    creator, resolver, _user_lookup, user_demographics, analytics = _build_paid_report_pipeline(session)
+    # 합성은 백그라운드(_compose_report_background, 자기 DB 세션)로 분리 — 쿠폰 경로와 동일.
+    # 요청 세션엔 analytics/demographics 만(Amplitude inline, 빠름). 합성 inline await 제거로
+    # DONE 즉시 커밋 → 이메일 팝업/결과 로딩이 합성을 가려주는 원래 UX 복원 + checkretry 중복 위험↓.
+    _creator, _resolver, _user_lookup, user_demographics, analytics = _build_paid_report_pipeline(session)
     return HandlePayAppFeedbackUseCase(
         repo=PaymentRepository(session),
         expected_linkkey=_settings.payapp_linkkey,
         expected_linkval=_settings.payapp_linkval,
-        paid_report_creator=creator,
-        saju_hash_resolver=resolver,
+        background_composer=_compose_report_background,
         analytics=analytics,
         user_demographics=user_demographics,
     )

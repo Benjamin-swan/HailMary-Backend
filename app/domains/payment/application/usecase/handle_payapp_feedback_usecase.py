@@ -16,6 +16,7 @@ await해도 PayApp 응답("SUCCESS")을 막지 않는다. → payment_completed 
 from __future__ import annotations
 
 import logging
+from collections.abc import Callable, Coroutine
 from datetime import UTC, datetime, timedelta, timezone
 from typing import Any
 
@@ -25,6 +26,9 @@ from app.domains.payment.application.payment_ports import (
     UserDemographicsPort,
     safe_track_payment_amount_mismatch,
     safe_track_payment_completed,
+)
+from app.domains.payment.application.usecase._grant_paid_report import (
+    _spawn_background,
 )
 from app.domains.payment.domain.port.analytics_port import AnalyticsPort
 from app.domains.payment.domain.port.payment_repository_port import (
@@ -96,6 +100,7 @@ class HandlePayAppFeedbackUseCase:
         repo: PaymentRepositoryPort,
         expected_linkkey: str,
         expected_linkval: str,
+        background_composer: Callable[..., Coroutine[Any, Any, None]] | None = None,
         paid_report_creator: PaidReportCreatorPort | None = None,
         saju_hash_resolver: SajuHashResolverPort | None = None,
         analytics: AnalyticsPort | None = None,
@@ -104,6 +109,7 @@ class HandlePayAppFeedbackUseCase:
         self._repo = repo
         self._expected_linkkey = expected_linkkey
         self._expected_linkval = expected_linkval
+        self._background_composer = background_composer
         self._paid_report_creator = paid_report_creator
         self._saju_hash_resolver = saju_hash_resolver
         self._analytics = analytics
@@ -207,8 +213,22 @@ class HandlePayAppFeedbackUseCase:
         card_name: Any = None,
         vbank: Any = None,
     ) -> None:
-        # PaidReport 합성 트리거
-        if self._paid_report_creator is not None:
+        # PaidReport 합성 트리거 — 백그라운드(자기 DB 세션)로 분리.
+        # inline await면 합성이 끝날 때까지 webhook 트랜잭션 커밋이 지연돼 ① DONE이 늦게 보여
+        # 이메일 팝업/결과 로딩(이탈방지 몰입 콘텐츠)이 마스킹할 시간 없이 합성이 먼저 끝나버리고
+        # ② 응답 지연으로 checkretry 재시도→중복 합성 위험. 쿠폰 경로와 동일한 background_composer 사용.
+        if self._background_composer is not None:
+            _spawn_background(
+                self._background_composer(
+                    order_id=payment.order_id,
+                    user_id=payment.user_id,
+                    customer_email=payment.customer_email,
+                    expires_at=payment.expires_at,
+                    character=payment.character.value,
+                )
+            )
+        elif self._paid_report_creator is not None:
+            # fallback: composer 미주입 구성(테스트 등)에서는 기존대로 inline.
             saju_hash: str | None = None
             if self._saju_hash_resolver is not None:
                 saju_hash = await self._saju_hash_resolver.resolve(payment.user_id)
