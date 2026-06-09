@@ -867,7 +867,8 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=_allowed_origins(),
     allow_credentials=False,
-    allow_methods=["GET", "POST", "OPTIONS"],
+    # DELETE 누락 시 회원탈퇴(DELETE /api/auth/me) 브라우저 프리플라이트가 400(Disallowed CORS method)로 막힘 → HM-BE-82 후속 수정.
+    allow_methods=["GET", "POST", "DELETE", "OPTIONS"],
     allow_headers=["Authorization", "Content-Type", "X-QA-Token"],
 )
 
