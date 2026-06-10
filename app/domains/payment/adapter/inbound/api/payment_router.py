@@ -3,6 +3,7 @@ from urllib.parse import quote
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.responses import PlainTextResponse, RedirectResponse
 
+from app.domains.auth.adapter.inbound.api.auth_router import get_optional_account_id
 from app.domains.payment.application.request.dev_bypass_request import (
     DevBypassRequest,
 )
@@ -66,11 +67,15 @@ def get_dev_bypass_usecase() -> DevBypassPaymentUseCase:
 )
 async def request_payment(
     body: RequestPaymentRequest,
+    account_id: int | None = Depends(get_optional_account_id),
     usecase: RequestPaymentUseCase = Depends(get_request_payment_usecase),
 ) -> RequestPaymentResponse:
-    """PayApp 결제 요청. 응답의 payurl로 FE가 리다이렉트."""
+    """PayApp 결제 요청. 응답의 payurl로 FE가 리다이렉트.
+
+    로그인 상태면 account_id로 결제를 계정에 귀속(보관함). 비로그인이면 None.
+    """
     try:
-        return await usecase.execute(body)
+        return await usecase.execute(body, account_id)
     except PayAppGatewayError as e:
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
@@ -179,6 +184,7 @@ dev_router = APIRouter(prefix="/api/payments/dev", tags=["payments-dev"])
 @dev_router.post("/bypass", status_code=status.HTTP_201_CREATED)
 async def dev_bypass_payment(
     body: DevBypassRequest,
+    account_id: int | None = Depends(get_optional_account_id),
     usecase: DevBypassPaymentUseCase = Depends(get_dev_bypass_usecase),
 ) -> dict[str, str]:
     """결제 통과 처리. FE는 응답의 orderId로 /saju/paid/{orderId}/loading 진입."""
@@ -187,6 +193,7 @@ async def dev_bypass_payment(
             session_token=body.session_token,
             character=body.character,
             customer_email=body.customer_email,
+            account_id=account_id,
         )
     except ValueError as e:
         raise HTTPException(

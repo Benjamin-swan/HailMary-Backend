@@ -43,7 +43,10 @@ class RequestPaymentUseCase:
         self._repo = repo
         self._user_lookup = user_lookup
 
-    async def execute(self, request: RequestPaymentRequest) -> RequestPaymentResponse:
+    async def execute(
+        self, request: RequestPaymentRequest, account_id: int | None = None
+    ) -> RequestPaymentResponse:
+        # account_id: 로그인 상태면 계정 JWT에서 추출(선택). 결제를 계정에 귀속(보관함).
         # 1. sessionToken → user_id (만료/위조 차단)
         user_id = await self._user_lookup.find_user_id_by_session_token(
             request.session_token
@@ -79,6 +82,7 @@ class RequestPaymentUseCase:
             status=PaymentStatus.READY,
             customer_email=request.customer_email,
             approved_at=now,
+            account_id=account_id,
         )
         await self._repo.save(payment)
 

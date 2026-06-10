@@ -4,7 +4,7 @@ from collections.abc import AsyncGenerator, Coroutine
 from datetime import datetime
 from typing import Any
 
-from fastapi import Depends, FastAPI
+from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -108,8 +108,57 @@ from app.domains.ai.application.usecase.get_paid_report_usecase import (
 from app.domains.ai.application.usecase.send_result_link_email_usecase import (
     SendResultLinkEmailUseCase,
 )
+from app.domains.archive.adapter.inbound.api.archive_router import (
+    get_archive_usecase,
+)
+from app.domains.archive.adapter.inbound.api.archive_router import (
+    router as archive_router,
+)
+from app.domains.archive.adapter.outbound.persistence.archive_repository import (
+    ArchiveRepository,
+)
+from app.domains.archive.application.usecase.get_archive_usecase import (
+    GetArchiveUseCase,
+)
+from app.domains.auth.adapter.inbound.api.auth_router import (
+    get_delete_account_usecase,
+    get_me_usecase,
+    get_optional_account_id,
+    get_social_login_usecase,
+    get_token_issuer,
+    get_update_last_used_usecase,
+)
+from app.domains.auth.adapter.inbound.api.auth_router import (
+    router as auth_router,
+)
+from app.domains.auth.adapter.outbound.external.google_oauth_client import (
+    GoogleOAuthClient,
+)
+from app.domains.auth.adapter.outbound.external.kakao_oauth_client import (
+    KakaoOAuthClient,
+)
+from app.domains.auth.adapter.outbound.persistence.account_deletion_repository import (
+    AccountDeletionRepository,
+)
+from app.domains.auth.adapter.outbound.persistence.account_repository import (
+    AccountRepository,
+)
+from app.domains.auth.application.usecase.delete_account_usecase import (
+    DeleteAccountUseCase,
+)
+from app.domains.auth.application.usecase.get_me_usecase import GetMeUseCase
+from app.domains.auth.application.usecase.social_login_usecase import (
+    SocialLoginUseCase,
+)
+from app.domains.auth.application.usecase.update_last_used_usecase import (
+    UpdateLastUsedUseCase,
+)
+from app.domains.auth.domain.port.oauth_client_port import OAuthClientPort
+from app.domains.auth.domain.port.token_port import TokenDecodeError
+from app.domains.auth.domain.value_object.provider import Provider
 from app.domains.kkebi.adapter.inbound.api.kkebi_router import (
     get_daily_fortune_usecase,
+    get_saved_daily_result_usecase,
 )
 from app.domains.kkebi.adapter.inbound.api.kkebi_router import (
     router as kkebi_router,
@@ -117,8 +166,14 @@ from app.domains.kkebi.adapter.inbound.api.kkebi_router import (
 from app.domains.kkebi.adapter.outbound.persistence.daily_template_repository import (
     DailyTemplateRepository,
 )
+from app.domains.kkebi.adapter.outbound.persistence.kkebi_result_repository import (
+    KkebiResultRepository,
+)
 from app.domains.kkebi.application.usecase.get_daily_fortune_usecase import (
     GetDailyFortuneUseCase,
+)
+from app.domains.kkebi.application.usecase.get_saved_daily_result_usecase import (
+    GetSavedDailyResultUseCase,
 )
 from app.domains.payment.adapter.inbound.api.coupon_router import (
     get_redeem_coupon_usecase,
@@ -210,6 +265,7 @@ from app.infrastructure.database.session import AsyncSessionLocal
 from app.infrastructure.external.amplitude.client import AmplitudeClient
 from app.infrastructure.external.fortuneteller.client import FortuneTellerClient
 from app.infrastructure.external.ses.client import SESClient
+from app.infrastructure.security.jwt_provider import JwtTokenProvider
 
 app = FastAPI(title="HailMary Backend", version="0.1.0")
 
@@ -258,6 +314,92 @@ _redis_cache_instance: RedisCache | None = (
 
 def _get_redis_cache() -> RedisCache | None:
     return _redis_cache_instance
+
+
+# ── Auth Domain (소셜 로그인, HM-BE-77) ──────────────────────────────────────
+# JWT provider/OAuth 클라이언트는 stateless — 모듈 로드 시 1회 구성.
+# 키 미설정 환경(예: 시크릿 등록 전 staging)에서도 앱은 뜨고 /api/auth/*만 비활성.
+
+_token_provider_instance: JwtTokenProvider | None = (
+    JwtTokenProvider(secret=_settings.jwt_secret, expires_days=_settings.jwt_expires_days)
+    if _settings.jwt_secret
+    else None
+)
+
+
+def _get_token_provider() -> JwtTokenProvider:
+    if _token_provider_instance is None:
+        raise HTTPException(
+            status_code=503, detail="로그인 기능이 설정되지 않았습니다 (JWT_SECRET 미설정)"
+        )
+    return _token_provider_instance
+
+
+def _build_oauth_clients() -> dict[Provider, OAuthClientPort]:
+    # Windows 로컬은 asyncmy 동봉 OpenSSL 충돌로 SSLContext 생성이 크래시(OPENSSL_Uplink)
+    # → local 환경에서만 TLS 검증 비활성 (PayApp verify=False 선례). staging/prod는 검증 유지.
+    verify_tls = _settings.app_env != "local"
+    clients: dict[Provider, OAuthClientPort] = {}
+    if _settings.kakao_client_id and _settings.kakao_client_secret:
+        clients[Provider.KAKAO] = KakaoOAuthClient(
+            client_id=_settings.kakao_client_id,
+            client_secret=_settings.kakao_client_secret,
+            verify_tls=verify_tls,
+        )
+    if _settings.google_client_id and _settings.google_client_secret:
+        clients[Provider.GOOGLE] = GoogleOAuthClient(
+            client_id=_settings.google_client_id,
+            client_secret=_settings.google_client_secret,
+            verify_tls=verify_tls,
+        )
+    return clients
+
+
+_oauth_clients: dict[Provider, OAuthClientPort] = _build_oauth_clients()
+
+
+def _make_social_login_usecase(
+    session: AsyncSession = Depends(_get_session),
+) -> SocialLoginUseCase:
+    return SocialLoginUseCase(
+        oauth_clients=_oauth_clients,
+        account_repo=AccountRepository(session),
+        token_issuer=_get_token_provider(),
+    )
+
+
+def _make_get_me_usecase(
+    session: AsyncSession = Depends(_get_session),
+) -> GetMeUseCase:
+    return GetMeUseCase(account_repo=AccountRepository(session))
+
+
+def _make_update_last_used_usecase(
+    session: AsyncSession = Depends(_get_session),
+) -> UpdateLastUsedUseCase:
+    return UpdateLastUsedUseCase(account_repo=AccountRepository(session))
+
+
+def _make_delete_account_usecase(
+    session: AsyncSession = Depends(_get_session),
+) -> DeleteAccountUseCase:
+    return DeleteAccountUseCase(deletion=AccountDeletionRepository(session))
+
+
+async def _optional_account_id(request: Request) -> int | None:
+    """선택적 계정 인지 — JWT 미설정/누락/위조면 None (401 안 던짐). /api/kkebi/fortune 등."""
+    if _token_provider_instance is None:
+        return None
+    auth = request.headers.get("Authorization", "")
+    if not auth.startswith("Bearer "):
+        return None
+    token = auth[len("Bearer "):].strip()
+    if not token:
+        return None
+    try:
+        return _token_provider_instance.decode(token)
+    except TokenDecodeError:
+        return None
 
 
 # ── 인증 의존성용 UserRepository 팩토리 ───────────────────────────────────────
@@ -321,7 +463,20 @@ def _make_get_daily_fortune_usecase(
         cache=_get_redis_cache(),
         pillars_ttl_seconds=_settings.kkebi_pillars_ttl_seconds,
         result_ttl_seconds=_settings.kkebi_result_ttl_seconds,
+        result_repo=KkebiResultRepository(session),  # 로그인 시 결과 저장 (HM-BE-79)
     )
+
+
+def _make_get_saved_daily_result_usecase(
+    session: AsyncSession = Depends(_get_session),
+) -> GetSavedDailyResultUseCase:
+    return GetSavedDailyResultUseCase(result_repo=KkebiResultRepository(session))
+
+
+def _make_get_archive_usecase(
+    session: AsyncSession = Depends(_get_session),
+) -> GetArchiveUseCase:
+    return GetArchiveUseCase(archive_repo=ArchiveRepository(session))
 
 
 # ── Payment Domain UseCase 팩토리 ────────────────────────────────────────────
@@ -507,13 +662,15 @@ def _make_handle_feedback_usecase(
         raise RuntimeError(
             "PAYAPP_LINKKEY/PAYAPP_LINKVAL 환경변수가 설정되지 않았습니다."
         )
-    creator, resolver, _user_lookup, user_demographics, analytics = _build_paid_report_pipeline(session)
+    # 합성은 백그라운드(_compose_report_background, 자기 DB 세션)로 분리 — 쿠폰 경로와 동일.
+    # 요청 세션엔 analytics/demographics 만(Amplitude inline, 빠름). 합성 inline await 제거로
+    # DONE 즉시 커밋 → 이메일 팝업/결과 로딩이 합성을 가려주는 원래 UX 복원 + checkretry 중복 위험↓.
+    _creator, _resolver, _user_lookup, user_demographics, analytics = _build_paid_report_pipeline(session)
     return HandlePayAppFeedbackUseCase(
         repo=PaymentRepository(session),
         expected_linkkey=_settings.payapp_linkkey,
         expected_linkval=_settings.payapp_linkval,
-        paid_report_creator=creator,
-        saju_hash_resolver=resolver,
+        background_composer=_compose_report_background,
         analytics=analytics,
         user_demographics=user_demographics,
     )
@@ -659,6 +816,9 @@ app.dependency_overrides[get_submit_user_info_usecase] = _make_submit_user_info_
 app.dependency_overrides[get_submit_survey_usecase] = _make_submit_survey_usecase
 app.dependency_overrides[get_free_result_usecase] = _make_get_free_result_usecase
 app.dependency_overrides[get_daily_fortune_usecase] = _make_get_daily_fortune_usecase
+app.dependency_overrides[get_saved_daily_result_usecase] = _make_get_saved_daily_result_usecase
+app.dependency_overrides[get_optional_account_id] = _optional_account_id
+app.dependency_overrides[get_archive_usecase] = _make_get_archive_usecase
 app.dependency_overrides[get_request_payment_usecase] = _make_request_payment_usecase
 app.dependency_overrides[get_handle_feedback_usecase] = _make_handle_feedback_usecase
 app.dependency_overrides[get_payment_status_usecase] = _make_payment_status_usecase
@@ -668,8 +828,15 @@ app.dependency_overrides[get_redeem_coupon_usecase] = _make_redeem_coupon_usecas
 app.dependency_overrides[get_validate_coupon_usecase] = _make_validate_coupon_usecase
 app.dependency_overrides[get_frontend_base_url] = lambda: _settings.frontend_base_url
 app.dependency_overrides[get_paid_report_usecase] = _make_get_paid_report_usecase
+app.dependency_overrides[get_social_login_usecase] = _make_social_login_usecase
+app.dependency_overrides[get_me_usecase] = _make_get_me_usecase
+app.dependency_overrides[get_update_last_used_usecase] = _make_update_last_used_usecase
+app.dependency_overrides[get_delete_account_usecase] = _make_delete_account_usecase
+app.dependency_overrides[get_token_issuer] = _get_token_provider
 
 app.include_router(user_router)
+app.include_router(auth_router)
+app.include_router(archive_router)
 app.include_router(payment_router)
 app.include_router(paid_report_router)
 app.include_router(kkebi_router)
@@ -700,7 +867,8 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=_allowed_origins(),
     allow_credentials=False,
-    allow_methods=["GET", "POST", "OPTIONS"],
+    # DELETE 누락 시 회원탈퇴(DELETE /api/auth/me) 브라우저 프리플라이트가 400(Disallowed CORS method)로 막힘 → HM-BE-82 후속 수정.
+    allow_methods=["GET", "POST", "DELETE", "OPTIONS"],
     allow_headers=["Authorization", "Content-Type", "X-QA-Token"],
 )
 

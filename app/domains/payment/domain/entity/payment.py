@@ -30,6 +30,8 @@ class Payment:
     # 결과지 메일 확정 후 발송 (2026-06-05): 확정 시각 / 발송 시각 (NULL=미발송)
     email_confirmed_at: datetime | None = None
     result_email_sent_at: datetime | None = None
+    # 소셜 로그인 계정 귀속 (HM-BE-80). 로그인 상태 결제 시 요청 시점에 연결. NULL=비로그인 결제.
+    account_id: int | None = None
     id: int | None = None
 
     @classmethod
@@ -48,6 +50,7 @@ class Payment:
         easy_pay_provider: str | None = None,
         card_issuer_code: str | None = None,
         bank_code: str | None = None,
+        account_id: int | None = None,
     ) -> "Payment":
         return cls(
             payment_key=payment_key,
@@ -63,6 +66,7 @@ class Payment:
             easy_pay_provider=easy_pay_provider,
             card_issuer_code=card_issuer_code,
             bank_code=bank_code,
+            account_id=account_id,
         )
 
     def is_active(self, now: datetime) -> bool:

@@ -22,6 +22,7 @@ class PaymentMapper:
             bank_code=entity.bank_code,
             email_confirmed_at=entity.email_confirmed_at,
             result_email_sent_at=entity.result_email_sent_at,
+            account_id=entity.account_id,
         )
 
     @staticmethod
@@ -43,4 +44,5 @@ class PaymentMapper:
             bank_code=orm.bank_code,
             email_confirmed_at=orm.email_confirmed_at,
             result_email_sent_at=orm.result_email_sent_at,
+            account_id=orm.account_id,
         )
